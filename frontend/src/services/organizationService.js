@@ -24,3 +24,8 @@ export async function getEmployees() {
   const res = await apiClient.get('/organization/employees/')
   return res.data
 }
+
+export async function createEmployee(payload) {
+  const res = await apiClient.post('/organization/employees/', payload)
+  return res.data
+}
