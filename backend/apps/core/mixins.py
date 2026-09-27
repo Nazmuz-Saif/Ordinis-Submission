@@ -43,7 +43,12 @@ class AuditLoggingMixin:
         if not employee:
             return
 
-        from audit_log.models import AuditLog
+        try:
+            from audit_log.models import AuditLog
+        except ModuleNotFoundError:
+            # audit_log app not present in this build scope yet — skip logging
+            return
+
         AuditLog.objects.create(
             actor=employee,
             action=action,
