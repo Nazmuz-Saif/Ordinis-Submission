@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import { IdCard, Plus } from 'lucide-react'
-import { getDesignations, createDesignation } from '../../services/organizationService'
+import { IdCard, Plus, Pencil, Check, X } from 'lucide-react'
+import { getDesignations, createDesignation, updateDesignation } from '../../services/organizationService'
 
 function DesignationsPage() {
   const [designations, setDesignations] = useState([])
   const [loading, setLoading] = useState(true)
   const [title, setTitle] = useState('')
   const [error, setError] = useState('')
+  const [editingId, setEditingId] = useState(null)
+  const [editValue, setEditValue] = useState('')
 
   async function loadDesignations() {
     setLoading(true)
@@ -33,6 +35,27 @@ function DesignationsPage() {
       loadDesignations()
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to create designation.')
+    }
+  }
+
+  function startEdit(d) {
+    setEditingId(d.id)
+    setEditValue(d.title)
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditValue('')
+  }
+
+  async function saveEdit(id) {
+    setError('')
+    try {
+      await updateDesignation(id, editValue)
+      setEditingId(null)
+      loadDesignations()
+    } catch (err) {
+      setError(err.response?.data?.error?.message || 'Failed to update designation.')
     }
   }
 
@@ -77,7 +100,31 @@ function DesignationsPage() {
               <div className="w-8 h-8 rounded-lg bg-[#3B82F6]/10 text-[#3B82F6] flex items-center justify-center shrink-0">
                 <IdCard size={16} />
               </div>
-              <span className="text-sm text-[#14142B] font-medium">{d.title}</span>
+
+              {editingId === d.id ? (
+                <>
+                  <input
+                    type="text"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    className="flex-1 border border-[#6C31D6]/40 rounded-lg px-2 py-1 text-sm outline-none focus:border-[#6C31D6]"
+                    autoFocus
+                  />
+                  <button onClick={() => saveEdit(d.id)} className="text-[#16A34A] hover:opacity-70 transition">
+                    <Check size={18} />
+                  </button>
+                  <button onClick={cancelEdit} className="text-[#71717A] hover:opacity-70 transition">
+                    <X size={18} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="flex-1 text-sm text-[#14142B] font-medium">{d.title}</span>
+                  <button onClick={() => startEdit(d)} className="text-[#71717A] hover:text-[#6C31D6] transition">
+                    <Pencil size={15} />
+                  </button>
+                </>
+              )}
             </div>
           ))}
         </div>

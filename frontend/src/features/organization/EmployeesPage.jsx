@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Users, Plus } from 'lucide-react'
+import { Users, Plus, Pencil, Check, X } from 'lucide-react'
 import {
-  getEmployees, createEmployee, getDepartments, getDesignations,
+  getEmployees, createEmployee, updateEmployee, getDepartments, getDesignations,
 } from '../../services/organizationService'
 
 function EmployeesPage() {
@@ -14,6 +14,11 @@ function EmployeesPage() {
   const [form, setForm] = useState({
     email: '', password: '', employee_code: '',
     department: '', designation: '', reports_to: '',
+  })
+
+  const [editingId, setEditingId] = useState(null)
+  const [editForm, setEditForm] = useState({
+    employee_code: '', department: '', designation: '', reports_to: '',
   })
 
   async function loadAll() {
@@ -56,6 +61,40 @@ function EmployeesPage() {
       loadAll()
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to create employee.')
+    }
+  }
+
+  function startEdit(emp) {
+    setEditingId(emp.id)
+    setEditForm({
+      employee_code: emp.employee_code,
+      department: emp.department || '',
+      designation: emp.designation || '',
+      reports_to: emp.reports_to || '',
+    })
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+  }
+
+  function handleEditChange(e) {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value })
+  }
+
+  async function saveEdit(id) {
+    setError('')
+    try {
+      await updateEmployee(id, {
+        employee_code: editForm.employee_code,
+        department: editForm.department || null,
+        designation: editForm.designation || null,
+        reports_to: editForm.reports_to || null,
+      })
+      setEditingId(null)
+      loadAll()
+    } catch (err) {
+      setError(err.response?.data?.error?.message || 'Failed to update employee.')
     }
   }
 
@@ -127,22 +166,81 @@ function EmployeesPage() {
                 <th className="px-4 py-3 font-medium">Employee</th>
                 <th className="px-4 py-3 font-medium">Designation</th>
                 <th className="px-4 py-3 font-medium">Department</th>
+                <th className="px-4 py-3 font-medium">Reports To</th>
+                <th className="px-4 py-3 font-medium w-10"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EEEEF2]">
               {employees.map((emp) => (
-                <tr key={emp.id} className="text-[#14142B] hover:bg-[#FAFAFA] transition-colors duration-150">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#6C31D6]/10 text-[#6C31D6] flex items-center justify-center text-xs font-semibold shrink-0">
-                        {emp.employee_code?.slice(-2) || '??'}
+                editingId === emp.id ? (
+                  <tr key={emp.id} className="bg-[#FAFAFA]">
+                    <td className="px-4 py-3">
+                      <input
+                        type="text" name="employee_code" value={editForm.employee_code}
+                        onChange={handleEditChange}
+                        className="border border-[#6C31D6]/40 rounded-lg px-2 py-1 text-sm outline-none focus:border-[#6C31D6] w-full"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <select
+                        name="designation" value={editForm.designation} onChange={handleEditChange}
+                        className="border border-[#EEEEF2] rounded-lg px-2 py-1 text-sm outline-none focus:border-[#6C31D6] w-full"
+                      >
+                        <option value="">—</option>
+                        {designations.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
+                      </select>
+                    </td>
+                    <td className="px-4 py-3">
+                      <select
+                        name="department" value={editForm.department} onChange={handleEditChange}
+                        className="border border-[#EEEEF2] rounded-lg px-2 py-1 text-sm outline-none focus:border-[#6C31D6] w-full"
+                      >
+                        <option value="">—</option>
+                        {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                      </select>
+                    </td>
+                    <td className="px-4 py-3">
+                      <select
+                        name="reports_to" value={editForm.reports_to} onChange={handleEditChange}
+                        className="border border-[#EEEEF2] rounded-lg px-2 py-1 text-sm outline-none focus:border-[#6C31D6] w-full"
+                      >
+                        <option value="">—</option>
+                        {employees.filter((e) => e.id !== emp.id).map((e) => (
+                          <option key={e.id} value={e.id}>{e.employee_code}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-4 py-3 flex gap-2">
+                      <button onClick={() => saveEdit(emp.id)} className="text-[#16A34A] hover:opacity-70 transition">
+                        <Check size={18} />
+                      </button>
+                      <button onClick={cancelEdit} className="text-[#71717A] hover:opacity-70 transition">
+                        <X size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={emp.id} className="text-[#14142B] hover:bg-[#FAFAFA] transition-colors duration-150">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[#6C31D6]/10 text-[#6C31D6] flex items-center justify-center text-xs font-semibold shrink-0">
+                          {emp.employee_code?.slice(-2) || '??'}
+                        </div>
+                        <span className="font-medium">{emp.employee_code}</span>
                       </div>
-                      <span className="font-medium">{emp.employee_code}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-[#71717A]">{emp.designation_title || '—'}</td>
-                  <td className="px-4 py-3 text-[#71717A]">{emp.department_name || '—'}</td>
-                </tr>
+                    </td>
+                    <td className="px-4 py-3 text-[#71717A]">{emp.designation_title || '—'}</td>
+                    <td className="px-4 py-3 text-[#71717A]">{emp.department_name || '—'}</td>
+                    <td className="px-4 py-3 text-[#71717A]">
+                      {employees.find((e) => e.id === emp.reports_to)?.employee_code || '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button onClick={() => startEdit(emp)} className="text-[#71717A] hover:text-[#6C31D6] transition">
+                        <Pencil size={15} />
+                      </button>
+                    </td>
+                  </tr>
+                )
               ))}
             </tbody>
           </table>

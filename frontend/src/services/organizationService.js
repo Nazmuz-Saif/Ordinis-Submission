@@ -29,3 +29,18 @@ export async function createEmployee(payload) {
   const res = await apiClient.post('/organization/employees/', payload)
   return res.data
 }
+
+export async function updateDepartment(id, name) {
+  const res = await apiClient.patch(`/organization/departments/${id}/`, { name })
+  return res.data
+}
+
+export async function updateDesignation(id, title) {
+  const res = await apiClient.patch(`/organization/designations/${id}/`, { title })
+  return res.data
+}
+
+export async function updateEmployee(id, payload) {
+  const res = await apiClient.patch(`/organization/employees/${id}/`, payload)
+  return res.data
+}
