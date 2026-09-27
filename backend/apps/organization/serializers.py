@@ -1,4 +1,6 @@
+from django.db import transaction
 from rest_framework import serializers
+from accounts.models import User
 from .models import Department, Designation, Employee
 
 
@@ -19,11 +21,22 @@ class DesignationSerializer(serializers.ModelSerializer):
 class EmployeeSerializer(serializers.ModelSerializer):
     department_name = serializers.CharField(source='department.name', read_only=True)
     designation_title = serializers.CharField(source='designation.title', read_only=True)
+    email = serializers.EmailField(write_only=True)
+    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
 
     class Meta:
         model = Employee
         fields = [
-            'id', 'user', 'company', 'department', 'department_name',
+            'id', 'email', 'password', 'company', 'department', 'department_name',
             'designation', 'designation_title', 'reports_to', 'employee_code',
         ]
         read_only_fields = ['id', 'company']
+
+    def create(self, validated_data):
+        email = validated_data.pop('email')
+        password = validated_data.pop('password')
+        company = validated_data.pop('company')
+        with transaction.atomic():
+            user = User.objects.create_user(email=email, password=password, company=company)
+            employee = Employee.objects.create(user=user, company=company, **validated_data)
+        return employee

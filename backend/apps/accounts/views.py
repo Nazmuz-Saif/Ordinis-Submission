@@ -66,11 +66,7 @@ class MeView(APIView):
                 "employee_code": employee.employee_code,
                 "designation_title": employee.designation.title if employee.designation_id else None,
                 "department_name": employee.department.name if employee.department_id else None,
-                "permissions": list(set(
-                    codename
-                    for er in employee.employee_roles.all()
-                    for codename in er.role.permissions.values_list('codename', flat=True)
-                )),
+                "permissions": [],  # RBAC not yet built for this scope — Sprint 2+ (ST-108/109/110)
             })
 
         return Response({"success": True, "data": data})
