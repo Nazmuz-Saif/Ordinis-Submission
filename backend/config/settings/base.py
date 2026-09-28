@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'tenants',
     'accounts',
     'organization',
+    'rbac',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
