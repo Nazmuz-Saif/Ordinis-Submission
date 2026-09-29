@@ -30,17 +30,10 @@ class DepartmentViewSet(AuditLoggingMixin, viewsets.ModelViewSet):
 class DesignationViewSet(AuditLoggingMixin, viewsets.ModelViewSet):
     serializer_class = DesignationSerializer
     permission_required = {
-<<<<<<< HEAD
-        "create": "manage_designations",
-        "update": "manage_designations",
-        "partial_update": "manage_designations",
-        "destroy": "manage_designations",
-=======
-        'create': 'manage_departments',
-        'update': 'manage_departments',
-        'partial_update': 'manage_departments',
-        'destroy': 'manage_departments',
->>>>>>> bdf8fed (build EmployeeRoleSerializer and ViewSet)
+        'create': 'manage_designations',
+        'update': 'manage_designations',
+        'partial_update': 'manage_designations',
+        'destroy': 'manage_designations',
     }
 
     def get_queryset(self):
