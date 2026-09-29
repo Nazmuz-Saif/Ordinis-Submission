@@ -18,8 +18,12 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const hasPermission = (permission) => {
+    return me?.permissions?.includes(permission) ?? false
+  }
+
   return (
-    <AuthContext.Provider value={{ me, setMe, loading }}>
+    <AuthContext.Provider value={{ me, setMe, loading, hasPermission }}>
       {children}
     </AuthContext.Provider>
   )
