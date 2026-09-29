@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Building2, Plus, Pencil, Check, X } from 'lucide-react'
-import { getDepartments, createDepartment, updateDepartment } from '../../services/organizationService'
+import { Building2, Plus, Pencil, Check, X, Trash2 } from 'lucide-react'
+import { getDepartments, createDepartment, updateDepartment, deleteDepartment } from '../../services/organizationService'
 import { useAuth } from '../../store/AuthContext'
 
 function DepartmentsPage() {
@@ -60,6 +60,17 @@ function DepartmentsPage() {
       loadDepartments()
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to update department.')
+    }
+  }
+
+  async function handleDelete(id) {
+    if (!confirm('Are you sure you want to delete this department?')) return
+    setError('')
+    try {
+      await deleteDepartment(id)
+      loadDepartments()
+    } catch (err) {
+      setError(err.response?.data?.error?.message || 'Failed to delete department.')
     }
   }
 
@@ -124,9 +135,14 @@ function DepartmentsPage() {
               ) : (
                 <>
                   <span className="flex-1 text-sm text-[#14142B] font-medium">{dept.name}</span>
-                  <button onClick={() => startEdit(dept)} className="text-[#71717A] hover:text-[#6C31D6] transition">
-                    <Pencil size={15} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => startEdit(dept)} className="text-[#71717A] hover:text-[#6C31D6] p-1 transition" title="Edit">
+                      <Pencil size={15} />
+                    </button>
+                    <button onClick={() => handleDelete(dept.id)} className="text-[#71717A] hover:text-[#DC2626] p-1 transition" title="Delete">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 </>
               )}
             </div>

@@ -61,4 +61,20 @@ export async function assignEmployeeRole(employeeId, roleId) {
 export async function deleteEmployeeRole(id) {
   const res = await apiClient.delete(`/organization/employee-roles/${id}/`)
   return res.data
-}
+}
+
+export async function deleteDepartment(id) {
+  const res = await apiClient.delete(`/organization/departments/${id}/`)
+  return res.data
+}
+
+export async function deleteDesignation(id) {
+  const res = await apiClient.delete(`/organization/designations/${id}/`)
+  return res.data
+}
+
+export async function deleteEmployee(id) {
+  const res = await apiClient.delete(`/organization/employees/${id}/`)
+  return res.data
+}
+

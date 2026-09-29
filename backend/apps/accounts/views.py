@@ -52,12 +52,21 @@ class MeView(APIView):
 
     def get(self, request):
         user = request.user
+        from core.mixins import get_effective_company
+        company = get_effective_company(user)
         employee = getattr(user, 'employee', None)
+        if not employee and company:
+            from organization.models import Designation, Employee
+            desig, _ = Designation.objects.get_or_create(company=company, title="CEO")
+            employee, _ = Employee.objects.get_or_create(
+                user=user,
+                defaults={"company": company, "designation": desig, "employee_code": "CEO-001"}
+            )
 
         data = {
             "email": user.email,
-            "company_id": str(user.company_id) if user.company_id else None,
-            "company_name": user.company.name if user.company_id else None,
+            "company_id": str(company.id) if company else None,
+            "company_name": company.name if company else None,
         }
 
         if employee:

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Users, Plus, Pencil, Check, X } from 'lucide-react'
+import { Users, Plus, Pencil, Check, X, Trash2 } from 'lucide-react'
 import {
   getEmployees,
   createEmployee,
   updateEmployee,
+  deleteEmployee,
   getDepartments,
   getDesignations,
 } from '../../services/organizationService'
@@ -132,6 +133,17 @@ function EmployeesPage() {
       loadAll()
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to update employee.')
+    }
+  }
+
+  async function handleDelete(id) {
+    if (!confirm('Are you sure you want to delete this employee?')) return
+    setError('')
+    try {
+      await deleteEmployee(id)
+      loadAll()
+    } catch (err) {
+      setError(err.response?.data?.error?.message || 'Failed to delete employee.')
     }
   }
 
@@ -314,9 +326,14 @@ function EmployeesPage() {
                       {employees.find((e) => e.id === emp.reports_to)?.employee_code || '—'}
                     </td>
                     <td className="px-4 py-3">
-                      <button onClick={() => startEdit(emp)} className="text-[#71717A] hover:text-[#6C31D6] transition">
-                        <Pencil size={15} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => startEdit(emp)} className="text-[#71717A] hover:text-[#6C31D6] p-1 transition" title="Edit">
+                          <Pencil size={15} />
+                        </button>
+                        <button onClick={() => handleDelete(emp.id)} className="text-[#71717A] hover:text-[#DC2626] p-1 transition" title="Delete">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )

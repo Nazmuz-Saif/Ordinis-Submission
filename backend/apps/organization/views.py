@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 
-from core.mixins import AuditLoggingMixin, PermissionRequiredMixin
+from core.mixins import AuditLoggingMixin, PermissionRequiredMixin, get_effective_company
 
 from .models import Department, Designation, Employee, EmployeeRole
 from .serializers import (
@@ -26,14 +26,12 @@ class DepartmentViewSet(
     }
 
     def get_queryset(self):
-        return Department.objects.filter(
-            company=self.request.user.company
-        )
+        company = get_effective_company(self.request.user)
+        return Department.objects.filter(company=company)
 
     def perform_create(self, serializer):
-        instance = serializer.save(
-            company=self.request.user.company
-        )
+        company = get_effective_company(self.request.user)
+        instance = serializer.save(company=company)
         self._log("CREATE", instance)
 
 
@@ -52,14 +50,12 @@ class DesignationViewSet(
     }
 
     def get_queryset(self):
-        return Designation.objects.filter(
-            company=self.request.user.company
-        )
+        company = get_effective_company(self.request.user)
+        return Designation.objects.filter(company=company)
 
     def perform_create(self, serializer):
-        instance = serializer.save(
-            company=self.request.user.company
-        )
+        company = get_effective_company(self.request.user)
+        instance = serializer.save(company=company)
         self._log("CREATE", instance)
 
 
@@ -78,14 +74,12 @@ class EmployeeViewSet(
     }
 
     def get_queryset(self):
-        return Employee.objects.filter(
-            company=self.request.user.company
-        )
+        company = get_effective_company(self.request.user)
+        return Employee.objects.filter(company=company)
 
     def perform_create(self, serializer):
-        instance = serializer.save(
-            company=self.request.user.company
-        )
+        company = get_effective_company(self.request.user)
+        instance = serializer.save(company=company)
         self._log("CREATE", instance)
 
 
@@ -104,15 +98,13 @@ class EmployeeRoleViewSet(
     }
 
     def get_queryset(self):
-        return EmployeeRole.objects.filter(
-            company=self.request.user.company
-        ).select_related(
+        company = get_effective_company(self.request.user)
+        return EmployeeRole.objects.filter(company=company).select_related(
             "employee__user",
             "role",
         )
 
     def perform_create(self, serializer):
-        instance = serializer.save(
-            company=self.request.user.company
-        )
+        company = get_effective_company(self.request.user)
+        instance = serializer.save(company=company)
         self._log("CREATE", instance)

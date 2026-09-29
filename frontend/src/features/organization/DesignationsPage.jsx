@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { IdCard, Plus, Pencil, Check, X } from 'lucide-react'
-import { getDesignations, createDesignation, updateDesignation } from '../../services/organizationService'
+import { IdCard, Plus, Pencil, Check, X, Trash2 } from 'lucide-react'
+import { getDesignations, createDesignation, updateDesignation, deleteDesignation } from '../../services/organizationService'
 import { useAuth } from '../../store/AuthContext'
 
 
@@ -66,6 +66,17 @@ function DesignationsPage() {
       loadDesignations()
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to update designation.')
+    }
+  }
+
+  async function handleDelete(id) {
+    if (!confirm('Are you sure you want to delete this designation?')) return
+    setError('')
+    try {
+      await deleteDesignation(id)
+      loadDesignations()
+    } catch (err) {
+      setError(err.response?.data?.error?.message || 'Failed to delete designation.')
     }
   }
 
@@ -151,9 +162,14 @@ function DesignationsPage() {
               ) : (
                 <>
                   <span className="flex-1 text-sm text-[#14142B] font-medium">{d.title}</span>
-                  <button onClick={() => startEdit(d)} className="text-[#71717A] hover:text-[#6C31D6] transition">
-                    <Pencil size={15} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => startEdit(d)} className="text-[#71717A] hover:text-[#6C31D6] p-1 transition" title="Edit">
+                      <Pencil size={15} />
+                    </button>
+                    <button onClick={() => handleDelete(d.id)} className="text-[#71717A] hover:text-[#DC2626] p-1 transition" title="Delete">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 </>
               )}
             </div>

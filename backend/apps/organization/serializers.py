@@ -53,6 +53,7 @@ class EmployeeRoleSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'company']
 
     def create(self, validated_data):
-        company = self.context['request'].user.company
+        from core.mixins import get_effective_company
+        company = validated_data.pop('company', None) or get_effective_company(self.context['request'].user)
         return EmployeeRole.objects.create(company=company, **validated_data)
 

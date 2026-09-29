@@ -4,6 +4,19 @@ from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsCompanyActive, HasPermission
 
 
+def get_effective_company(user):
+    from tenants.models import Company
+    if user and user.is_authenticated and getattr(user, 'company', None):
+        return user.company
+    company = Company.objects.first()
+    if not company:
+        company = Company.objects.create(name="Ordinis", subdomain="ordinis")
+    if user and user.is_authenticated and not getattr(user, 'company', None):
+        user.company = company
+        user.save(update_fields=['company'])
+    return company
+
+
 class StandardResponseMixin:
     """
     Ensures every successful response follows the same envelope:

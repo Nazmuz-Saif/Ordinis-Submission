@@ -139,11 +139,14 @@ function RolesPage() {
       setSelectedRole('')
       loadData()
     } catch (err) {
-      setError(
-        err.response?.data?.error?.message ||
-        err.response?.data?.non_field_errors?.[0] ||
+      const data = err.response?.data
+      const message =
+        data?.error?.message ||
+        data?.non_field_errors?.[0] ||
+        data?.detail ||
+        (typeof data === 'string' ? data : null) ||
         'Failed to assign role. The employee might already have this role.'
-      )
+      setError(message)
     }
   }
 
@@ -209,7 +212,7 @@ function RolesPage() {
                     onChange={() => togglePerm(key)}
                     className="rounded border-[#D1D5DB] text-[#6C31D6] focus:ring-[#6C31D6] w-4 h-4"
                   />
-                  <span className="font-mono text-xs text-[#52525B]">
+                  <span className="text-sm font-normal text-[#14142B]">
                     {perm.codename}
                   </span>
                 </label>
