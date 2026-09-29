@@ -44,10 +44,10 @@ class DesignationViewSet(
     serializer_class = DesignationSerializer
 
     permission_required = {
-        "create": "manage_departments",
-        "update": "manage_departments",
-        "partial_update": "manage_departments",
-        "destroy": "manage_departments",
+        "create": "manage_designations",
+        "update": "manage_designations",
+        "partial_update": "manage_designations",
+        "destroy": "manage_designations",
     }
 
     def get_queryset(self):
