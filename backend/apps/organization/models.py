@@ -91,7 +91,7 @@ class Employee(BaseModel):
 
     def has_permission(self, codename: str) -> bool:
         """
-        Checks whether this employee has a specific permission
+        Checks whether this employee has a specific permission codename,
         through any of their assigned roles.
         """
         return self.employee_roles.filter(
