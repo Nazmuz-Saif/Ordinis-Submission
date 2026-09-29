@@ -1,35 +1,76 @@
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsCompanyActive
 from core.mixins import AuditLoggingMixin
-from .models import Permission, Role
-from .serializers import PermissionSerializer, RoleSerializer
+from .models import Department, Designation, Employee, EmployeeRole
+from .serializers import (
+    DepartmentSerializer,
+    DesignationSerializer,
+    EmployeeSerializer,
+    EmployeeRoleSerializer,
+)
 
 
-class PermissionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    """
-    GET /api/v1/roles/permissions/
-    Read-only — returns all system-wide permissions.
-    Any authenticated user can see the list.
-    """
-    queryset = Permission.objects.all()
-    serializer_class = PermissionSerializer
-    permission_classes = [IsAuthenticated, IsCompanyActive]
-
-
-class RoleViewSet(AuditLoggingMixin, viewsets.ModelViewSet):
-    """
-    CRUD /api/v1/roles/roles/
-    Company-scoped — each company only sees its own roles.
-    """
-    serializer_class = RoleSerializer
-    permission_classes = [IsAuthenticated, IsCompanyActive]
+class DepartmentViewSet(AuditLoggingMixin, viewsets.ModelViewSet):
+    serializer_class = DepartmentSerializer
+    permission_required = {
+        'create': 'manage_departments',
+        'update': 'manage_departments',
+        'partial_update': 'manage_departments',
+        'destroy': 'manage_departments',
+    }
 
     def get_queryset(self):
-        return Role.objects.filter(
-            company=self.request.user.company
-        ).prefetch_related('permissions')
+        return Department.objects.filter(company=self.request.user.company)
 
     def perform_create(self, serializer):
         serializer.save(company=self.request.user.company)
 
+
+class DesignationViewSet(AuditLoggingMixin, viewsets.ModelViewSet):
+    serializer_class = DesignationSerializer
+    permission_required = {
+        'create': 'manage_departments',
+        'update': 'manage_departments',
+        'partial_update': 'manage_departments',
+        'destroy': 'manage_departments',
+    }
+
+    def get_queryset(self):
+        return Designation.objects.filter(company=self.request.user.company)
+
+    def perform_create(self, serializer):
+        serializer.save(company=self.request.user.company)
+
+
+class EmployeeViewSet(AuditLoggingMixin, viewsets.ModelViewSet):
+    serializer_class = EmployeeSerializer
+    permission_required = {
+        'create': 'manage_employees',
+        'update': 'manage_employees',
+        'partial_update': 'manage_employees',
+        'destroy': 'manage_employees',
+    }
+
+    def get_queryset(self):
+        return Employee.objects.filter(company=self.request.user.company)
+
+    def perform_create(self, serializer):
+        serializer.save(company=self.request.user.company)
+
+
+class EmployeeRoleViewSet(AuditLoggingMixin, viewsets.ModelViewSet):
+    """
+    CRUD /api/v1/organization/employee-roles/
+    Assign or revoke roles to employees within the company.
+    """
+    serializer_class = EmployeeRoleSerializer
+    permission_classes = [IsAuthenticated, IsCompanyActive]
+
+    def get_queryset(self):
+        return EmployeeRole.objects.filter(
+            company=self.request.user.company
+        ).select_related('employee__user', 'role')
+
+    def perform_create(self, serializer):
+        serializer.save(company=self.request.user.company)
