@@ -7,7 +7,6 @@ import DepartmentsPage from './features/organization/DepartmentsPage'
 import DesignationsPage from './features/organization/DesignationsPage'
 import EmployeesPage from './features/organization/EmployeesPage'
 import RolesPage from './features/roles/RolesPage'
-import EmployeeRolesPage from './features/roles/EmployeeRolesPage'
 
 function App() {
   return (
@@ -57,14 +56,8 @@ function App() {
           />
           <Route
             path="/roles/employee-roles"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout>
-                    <EmployeeRolesPage />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-         />
+            element={<Navigate to="/roles" replace />}
+          />
           <Route path="/" element={<Navigate to="/organization" replace />} />
         </Routes>
       </BrowserRouter>

@@ -140,7 +140,6 @@ function EmployeesPage() {
       <h1 className="text-2xl font-bold text-[#14142B]">Employees</h1>
       <p className="text-sm text-[#71717A] mt-1 mb-6">Everyone in your company.</p>
 
-      {canManageEmployees && (
       <form
         onSubmit={handleCreate}
         className="bg-white rounded-xl border border-[#EEEEF2] p-4 mb-6 grid grid-cols-2 md:grid-cols-3 gap-3"
@@ -225,7 +224,6 @@ function EmployeesPage() {
           Add Employee
         </button>
       </form>
-    )}
 
     {error && (
       <p className="text-sm text-[#DC2626] mb-4">

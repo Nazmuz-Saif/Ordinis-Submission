@@ -44,3 +44,21 @@ export async function updateEmployee(id, payload) {
   const res = await apiClient.patch(`/organization/employees/${id}/`, payload)
   return res.data
 }
+
+export async function getEmployeeRoles() {
+  const res = await apiClient.get('/organization/employee-roles/')
+  return res.data
+}
+
+export async function assignEmployeeRole(employeeId, roleId) {
+  const res = await apiClient.post('/organization/employee-roles/', {
+    employee: employeeId,
+    role: roleId,
+  })
+  return res.data
+}
+
+export async function deleteEmployeeRole(id) {
+  const res = await apiClient.delete(`/organization/employee-roles/${id}/`)
+  return res.data
+}

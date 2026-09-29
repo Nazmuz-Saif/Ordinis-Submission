@@ -9,7 +9,6 @@ const menuItems = [
   { label: 'Attendance', path: '/attendance' },
   { label: 'Notifications', path: '/notifications' },
   { label: 'Roles', path: '/roles' },
-  { label: 'Employee Roles', path: '/roles/employee-roles' },
   { label: 'Payroll', path: '/payroll' },
   { label: 'Approvals', path: '/approvals' },
 ]
