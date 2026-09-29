@@ -1,9 +1,6 @@
-
 import { useEffect, useState } from 'react'
 import { IdCard, Plus, Pencil, Check, X } from 'lucide-react'
 import { getDesignations, createDesignation, updateDesignation } from '../../services/organizationService'
-import { IdCard, Plus } from 'lucide-react'
-import { getDesignations, createDesignation } from '../../services/organizationService'
 import { useAuth } from '../../store/AuthContext'
 
 
@@ -161,9 +158,6 @@ function DesignationsPage() {
                   </button>
                 </>
               )}
-              <span className="text-sm text-[#14142B] font-medium">
-                {d.title}
-              </span>
             </div>
           ))}
         </div>

@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Building2, Plus } from 'lucide-react'
-import { getDepartments, createDepartment } from '../../services/organizationService'
-import { useAuth } from '../../store/AuthContext'
 import { Building2, Plus, Pencil, Check, X } from 'lucide-react'
 import { getDepartments, createDepartment, updateDepartment } from '../../services/organizationService'
+import { useAuth } from '../../store/AuthContext'
 
 function DepartmentsPage() {
   const { hasPermission } = useAuth()

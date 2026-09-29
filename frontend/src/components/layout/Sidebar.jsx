@@ -1,25 +1,21 @@
 import { NavLink } from 'react-router-dom'
-import { useAuth } from '../../store/AuthContext'
 
 const menuItems = [
   { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Departments', path: '/organization', permission: 'manage_departments' },
-  { label: 'Designations', path: '/organization/designations', permission: 'manage_designations' },
-  { label: 'Employees', path: '/organization/employees', permission: 'manage_employees' },
+  { label: 'Departments', path: '/organization' },
+  { label: 'Designations', path: '/organization/designations' },
+  { label: 'Employees', path: '/organization/employees' },
   { label: 'Tasks', path: '/tasks' },
   { label: 'Attendance', path: '/attendance' },
   { label: 'Notifications', path: '/notifications' },
-  { label: 'Roles', path: '/roles', permission: 'manage_roles' },
+  { label: 'Roles', path: '/roles' },
+  { label: 'Employee Roles', path: '/roles/employee-roles' },
   { label: 'Payroll', path: '/payroll' },
   { label: 'Approvals', path: '/approvals' },
 ]
 
 function Sidebar() {
-  const { hasPermission } = useAuth()
-
-  const visibleMenuItems = menuItems.filter(
-    (item) => !item.permission || hasPermission(item.permission)
-  )
+  const visibleMenuItems = menuItems
 
   return (
     <aside className="w-60 min-h-screen bg-[#14142B] text-white flex flex-col">
