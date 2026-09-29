@@ -22,24 +22,29 @@ class HasPermission(BasePermission):
     """
     Checks whether the logged-in user's Employee has a specific
     permission codename, via any of their assigned Roles.
-
-    Usage:
-        permission_classes = [IsCompanyActive, HasPermission]
-        required_permission = "approve_leave"
-
-    If a view doesn't declare required_permission, access is denied
-    by default.
     """
 
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
 
-        required_permission = getattr(view, "required_permission", None)
+        required_permission = None
+
+        if hasattr(view, "get_required_permission"):
+            required_permission = view.get_required_permission()
+        else:
+            required_permission = getattr(
+                view,
+                "required_permission",
+                None,
+            )
+
+      
         if not required_permission:
-            return False
+            return True
 
         employee = getattr(request.user, "employee", None)
+
         if not employee:
             return False
 

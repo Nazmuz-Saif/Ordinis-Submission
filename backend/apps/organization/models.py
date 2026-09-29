@@ -1,11 +1,14 @@
 from django.db import models
+
 from core.models import BaseModel
 from tenants.models import Company
 
 
 class Permission(BaseModel):
     company = models.ForeignKey(
-        Company, on_delete=models.CASCADE, related_name="permissions"
+        Company,
+        on_delete=models.CASCADE,
+        related_name="permissions",
     )
     name = models.CharField(max_length=100)
     codename = models.CharField(max_length=100)
@@ -24,7 +27,9 @@ class Permission(BaseModel):
 
 class Role(BaseModel):
     company = models.ForeignKey(
-        Company, on_delete=models.CASCADE, related_name="roles"
+        Company,
+        on_delete=models.CASCADE,
+        related_name="roles",
     )
     name = models.CharField(max_length=100)
     permissions = models.ManyToManyField(
@@ -47,7 +52,9 @@ class Role(BaseModel):
 
 class Department(BaseModel):
     company = models.ForeignKey(
-        Company, on_delete=models.CASCADE, related_name="departments"
+        Company,
+        on_delete=models.CASCADE,
+        related_name="departments",
     )
     name = models.CharField(max_length=100)
 
@@ -57,7 +64,9 @@ class Department(BaseModel):
 
 class Designation(BaseModel):
     company = models.ForeignKey(
-        Company, on_delete=models.CASCADE, related_name="designations"
+        Company,
+        on_delete=models.CASCADE,
+        related_name="designations",
     )
     title = models.CharField(max_length=100)
 
@@ -67,22 +76,35 @@ class Designation(BaseModel):
 
 class Employee(BaseModel):
     user = models.OneToOneField(
-        "accounts.User", on_delete=models.CASCADE, related_name="employee"
+        "accounts.User",
+        on_delete=models.CASCADE,
+        related_name="employee",
     )
     company = models.ForeignKey(
-        Company, on_delete=models.CASCADE, related_name="employees"
+        Company,
+        on_delete=models.CASCADE,
+        related_name="employees",
     )
     department = models.ForeignKey(
-        Department, on_delete=models.SET_NULL, null=True, blank=True,
-        related_name="employees"
+        Department,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="employees",
     )
     designation = models.ForeignKey(
-        Designation, on_delete=models.SET_NULL, null=True, blank=True,
-        related_name="employees"
+        Designation,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="employees",
     )
     reports_to = models.ForeignKey(
-        "self", on_delete=models.SET_NULL, null=True, blank=True,
-        related_name="direct_reports"
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="direct_reports",
     )
     employee_code = models.CharField(max_length=50, unique=True)
 
@@ -91,11 +113,15 @@ class Employee(BaseModel):
 
     def has_permission(self, codename: str) -> bool:
         """
-        Checks whether this employee has a specific permission codename,
-        through any of their assigned roles.
+        Checks whether this employee has a specific permission
+        through a role belonging to the same company.
         """
+
         return self.employee_roles.filter(
-            role__permissions__codename=codename
+            company=self.company,
+            role__company=self.company,
+            role__permissions__company=self.company,
+            role__permissions__codename=codename,
         ).exists()
 
 
