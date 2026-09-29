@@ -1,7 +1,9 @@
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
+
 from core.permissions import IsCompanyActive
 from core.mixins import AuditLoggingMixin
+
 from .models import Permission, Role
 from .serializers import PermissionSerializer, RoleSerializer
 
@@ -28,8 +30,7 @@ class RoleViewSet(AuditLoggingMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         return Role.objects.filter(
             company=self.request.user.company
-        ).prefetch_related('permissions')
+        ).prefetch_related("permissions")
 
     def perform_create(self, serializer):
         serializer.save(company=self.request.user.company)
-

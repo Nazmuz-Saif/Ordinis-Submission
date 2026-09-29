@@ -2,6 +2,7 @@ from django.db import transaction
 from rest_framework import serializers
 from accounts.models import User
 from .models import Department, Designation, Employee
+from .models import EmployeeRole
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -40,3 +41,18 @@ class EmployeeSerializer(serializers.ModelSerializer):
             user = User.objects.create_user(email=email, password=password, company=company)
             employee = Employee.objects.create(user=user, company=company, **validated_data)
         return employee
+
+class EmployeeRoleSerializer(serializers.ModelSerializer):
+    role_name = serializers.CharField(source='role.name', read_only=True)
+    employee_code = serializers.CharField(source='employee.employee_code', read_only=True)
+    employee_email = serializers.CharField(source='employee.user.email', read_only=True)
+
+    class Meta:
+        model = EmployeeRole
+        fields = ['id', 'employee', 'role', 'role_name', 'employee_code', 'employee_email', 'company']
+        read_only_fields = ['id', 'company']
+
+    def create(self, validated_data):
+        company = self.context['request'].user.company
+        return EmployeeRole.objects.create(company=company, **validated_data)
+

@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     'tenants',
     'accounts',
     'organization',
-    'rbac',
     'roles',
 ]
 
