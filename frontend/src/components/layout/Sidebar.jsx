@@ -1,35 +1,41 @@
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '../../store/AuthContext'
 
 const menuItems = [
   { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Departments', path: '/organization' },
-  { label: 'Designations', path: '/organization/designations' },
-  { label: 'Employees', path: '/organization/employees' },
+  { label: 'Departments', path: '/organization', permission: 'manage_departments' },
+  { label: 'Designations', path: '/organization/designations', permission: 'manage_designations' },
+  { label: 'Employees', path: '/organization/employees', permission: 'manage_employees' },
   { label: 'Tasks', path: '/tasks' },
   { label: 'Attendance', path: '/attendance' },
   { label: 'Notifications', path: '/notifications' },
-  { label: 'Roles', path: '/roles' },
+  { label: 'Roles', path: '/roles', permission: 'manage_roles' },
   { label: 'Payroll', path: '/payroll' },
   { label: 'Approvals', path: '/approvals' },
 ]
 
 function Sidebar() {
+  const { hasPermission } = useAuth()
+
+  const visibleMenuItems = menuItems.filter(
+    (item) => !item.permission || hasPermission(item.permission)
+  )
+
   return (
     <aside className="w-60 min-h-screen bg-[#14142B] text-white flex flex-col">
       <div className="px-6 py-5 text-xl font-bold border-b border-white/10">
         Ordinis
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {menuItems.map((item) => (
+        {visibleMenuItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             end
             className={({ isActive }) =>
-              `block px-3 py-2 rounded-lg text-sm transition-colors duration-150 ${
-                isActive
-                  ? 'bg-[#6C31D6] text-white'
-                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+              `block px-3 py-2 rounded-lg text-sm transition-colors duration-150 ${isActive
+                ? 'bg-[#6C31D6] text-white'
+                : 'text-white/70 hover:bg-white/10 hover:text-white'
               }`
             }
           >

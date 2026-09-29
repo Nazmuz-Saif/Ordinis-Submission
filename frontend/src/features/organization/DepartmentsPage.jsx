@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react'
+import { Building2, Plus } from 'lucide-react'
+import { getDepartments, createDepartment } from '../../services/organizationService'
+import { useAuth } from '../../store/AuthContext'
 import { Building2, Plus, Pencil, Check, X } from 'lucide-react'
 import { getDepartments, createDepartment, updateDepartment } from '../../services/organizationService'
 
 function DepartmentsPage() {
+  const { hasPermission } = useAuth()
+  const canManageDepartments = hasPermission('manage_departments')
+
   const [departments, setDepartments] = useState([])
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState('')
@@ -64,22 +70,24 @@ function DepartmentsPage() {
       <h1 className="text-2xl font-bold text-[#14142B]">Departments</h1>
       <p className="text-sm text-[#71717A] mt-1 mb-6">Organize your company into departments.</p>
 
-      <form onSubmit={handleCreate} className="flex gap-2 mb-6">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="New department name"
-          className="border border-[#EEEEF2] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6C31D6] focus:ring-2 focus:ring-[#6C31D6]/15 transition w-64"
-          required
-        />
-        <button
-          type="submit"
-          className="flex items-center gap-1.5 bg-[#6C31D6] hover:bg-[#5A28B0] active:scale-[0.98] text-white rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150"
-        >
-          <Plus size={16} /> Add
-        </button>
-      </form>
+      {canManageDepartments && (
+        <form onSubmit={handleCreate} className="flex gap-2 mb-6">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="New department name"
+            className="border border-[#EEEEF2] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6C31D6] focus:ring-2 focus:ring-[#6C31D6]/15 transition w-64"
+            required
+          />
+          <button
+            type="submit"
+            className="flex items-center gap-1.5 bg-[#6C31D6] hover:bg-[#5A28B0] active:scale-[0.98] text-white rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150"
+          >
+            <Plus size={16} /> Add
+          </button>
+        </form>
+      )}
 
       {error && <p className="text-sm text-[#DC2626] mb-4">{error}</p>}
 

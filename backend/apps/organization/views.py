@@ -1,53 +1,118 @@
 from rest_framework import viewsets
-from core.permissions import IsCompanyActive
-from core.mixins import AuditLoggingMixin
-from .models import Department, Designation, Employee
-from .serializers import DepartmentSerializer, DesignationSerializer, EmployeeSerializer
+
+from core.mixins import AuditLoggingMixin, PermissionRequiredMixin
+
+from .models import Department, Designation, Employee, EmployeeRole
+from .serializers import (
+    DepartmentSerializer,
+    DesignationSerializer,
+    EmployeeSerializer,
+    EmployeeRoleSerializer,
+)
 
 
-class DepartmentViewSet(AuditLoggingMixin, viewsets.ModelViewSet):
+class DepartmentViewSet(
+    PermissionRequiredMixin,
+    AuditLoggingMixin,
+    viewsets.ModelViewSet,
+):
     serializer_class = DepartmentSerializer
+
     permission_required = {
-        'create': 'manage_departments',
-        'update': 'manage_departments',
-        'partial_update': 'manage_departments',
-        'destroy': 'manage_departments',
+        "create": "manage_departments",
+        "update": "manage_departments",
+        "partial_update": "manage_departments",
+        "destroy": "manage_departments",
     }
 
     def get_queryset(self):
-        return Department.objects.filter(company=self.request.user.company)
+        return Department.objects.filter(
+            company=self.request.user.company
+        )
 
     def perform_create(self, serializer):
-        serializer.save(company=self.request.user.company)
+        instance = serializer.save(
+            company=self.request.user.company
+        )
+        self._log("CREATE", instance)
 
 
-class DesignationViewSet(AuditLoggingMixin, viewsets.ModelViewSet):
+class DesignationViewSet(
+    PermissionRequiredMixin,
+    AuditLoggingMixin,
+    viewsets.ModelViewSet,
+):
     serializer_class = DesignationSerializer
+
     permission_required = {
-        'create': 'manage_departments',
-        'update': 'manage_departments',
-        'partial_update': 'manage_departments',
-        'destroy': 'manage_departments',
+        "create": "manage_designations",
+        "update": "manage_designations",
+        "partial_update": "manage_designations",
+        "destroy": "manage_designations",
     }
 
     def get_queryset(self):
-        return Designation.objects.filter(company=self.request.user.company)
+        return Designation.objects.filter(
+            company=self.request.user.company
+        )
 
     def perform_create(self, serializer):
-        serializer.save(company=self.request.user.company)
+        instance = serializer.save(
+            company=self.request.user.company
+        )
+        self._log("CREATE", instance)
 
 
-class EmployeeViewSet(AuditLoggingMixin, viewsets.ModelViewSet):
+class EmployeeViewSet(
+    PermissionRequiredMixin,
+    AuditLoggingMixin,
+    viewsets.ModelViewSet,
+):
     serializer_class = EmployeeSerializer
+
     permission_required = {
-        'create': 'manage_employees',
-        'update': 'manage_employees',
-        'partial_update': 'manage_employees',
-        'destroy': 'manage_employees',
+        "create": "manage_employees",
+        "update": "manage_employees",
+        "partial_update": "manage_employees",
+        "destroy": "manage_employees",
     }
 
     def get_queryset(self):
-        return Employee.objects.filter(company=self.request.user.company)
+        return Employee.objects.filter(
+            company=self.request.user.company
+        )
 
     def perform_create(self, serializer):
-        serializer.save(company=self.request.user.company)
+        instance = serializer.save(
+            company=self.request.user.company
+        )
+        self._log("CREATE", instance)
+
+
+class EmployeeRoleViewSet(
+    PermissionRequiredMixin,
+    AuditLoggingMixin,
+    viewsets.ModelViewSet,
+):
+    serializer_class = EmployeeRoleSerializer
+
+    permission_required = {
+        "create": "manage_roles",
+        "update": "manage_roles",
+        "partial_update": "manage_roles",
+        "destroy": "manage_roles",
+    }
+
+    def get_queryset(self):
+        return EmployeeRole.objects.filter(
+            company=self.request.user.company
+        ).select_related(
+            "employee__user",
+            "role",
+        )
+
+    def perform_create(self, serializer):
+        instance = serializer.save(
+            company=self.request.user.company
+        )
+        self._log("CREATE", instance)
