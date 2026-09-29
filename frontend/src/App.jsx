@@ -6,6 +6,7 @@ import DashboardLayout from './layouts/DashboardLayout'
 import DepartmentsPage from './features/organization/DepartmentsPage'
 import DesignationsPage from './features/organization/DesignationsPage'
 import EmployeesPage from './features/organization/EmployeesPage'
+import RolesPage from './features/roles/RolesPage'
 
 function App() {
   return (
@@ -39,6 +40,16 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <EmployeesPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/roles"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <RolesPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }
