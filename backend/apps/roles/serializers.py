@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Permission, Role, EmployeeRole
+from .models import Permission, Role
 
 
 class PermissionSerializer(serializers.ModelSerializer):
@@ -33,16 +33,3 @@ class RoleSerializer(serializers.ModelSerializer):
             'permissions', 'permission_details',
         ]
         read_only_fields = ['id', 'is_system_default']
-
-
-class EmployeeRoleSerializer(serializers.ModelSerializer):
-    """
-    Serializer to assign/remove a role to/from an employee.
-    """
-    role_name = serializers.CharField(source='role.name', read_only=True)
-    employee_email = serializers.CharField(source='employee.user.email', read_only=True)
-
-    class Meta:
-        model = EmployeeRole
-        fields = ['id', 'employee', 'role', 'role_name', 'employee_email', 'assigned_at']
-        read_only_fields = ['id', 'assigned_at']

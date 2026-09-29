@@ -51,24 +51,3 @@ class Role(BaseModel):
     def __str__(self):
         return f"{self.name} ({self.company.name})"
 
-
-class EmployeeRole(BaseModel):
-    """
-    Links an Employee to a Role (many-to-many with metadata).
-    One employee can have multiple roles.
-    """
-    employee = models.ForeignKey(
-        'organization.Employee',
-        on_delete=models.CASCADE,
-        related_name="employee_roles"
-    )
-    role = models.ForeignKey(
-        Role, on_delete=models.CASCADE, related_name="employee_roles"
-    )
-    assigned_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ['employee', 'role']
-
-    def __str__(self):
-        return f"{self.employee.user.email} -> {self.role.name}"

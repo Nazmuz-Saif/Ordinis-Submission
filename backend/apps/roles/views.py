@@ -2,8 +2,8 @@ from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsCompanyActive
 from core.mixins import AuditLoggingMixin
-from .models import Permission, Role, EmployeeRole
-from .serializers import PermissionSerializer, RoleSerializer, EmployeeRoleSerializer
+from .models import Permission, Role
+from .serializers import PermissionSerializer, RoleSerializer
 
 
 class PermissionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -33,16 +33,3 @@ class RoleViewSet(AuditLoggingMixin, viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(company=self.request.user.company)
 
-
-class EmployeeRoleViewSet(AuditLoggingMixin, viewsets.ModelViewSet):
-    """
-    CRUD /api/v1/roles/assignments/
-    Assign/remove roles to employees within the same company.
-    """
-    serializer_class = EmployeeRoleSerializer
-    permission_classes = [IsAuthenticated, IsCompanyActive]
-
-    def get_queryset(self):
-        return EmployeeRole.objects.filter(
-            employee__company=self.request.user.company
-        ).select_related('role', 'employee__user')
