@@ -42,14 +42,23 @@ class Employee(BaseModel):
         "self", on_delete=models.SET_NULL, null=True, blank=True,
         related_name="direct_reports"
     )
-    employee_code = models.CharField(max_length=50, unique=True)
+    employee_code = models.CharField(max_length=50)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "employee_code"],
+                name="unique_employee_code_per_company",
+            )
+        ]
 
     def __str__(self):
         return f"{self.user.email} — {self.designation}"
+
     def has_permission(self, codename: str) -> bool:
         """
-        Checks whether this employee has a specific permission,
-        via any of their assigned Roles.
+        Checks whether this employee has a specific permission codename,
+        through any of their assigned roles (rbac.EmployeeRole -> Role -> Permission).
         """
         return self.employee_roles.filter(
             role__permissions__codename=codename

@@ -46,3 +46,19 @@ def can_view_employee_data(viewer: Employee, target: Employee) -> bool:
 
     subordinates = get_all_subordinates(viewer)
     return target in subordinates
+
+
+def creates_reporting_cycle(employee: Employee, new_manager: Employee) -> bool:
+    """
+    True if making `new_manager` the manager of `employee` would make an
+    employee report (directly or indirectly) to themselves.
+    Walks UP from the new manager; if we meet `employee`, it is a cycle.
+    """
+    seen = set()
+    current = new_manager
+    while current is not None and current.id not in seen:
+        if current.id == employee.id:
+            return True
+        seen.add(current.id)
+        current = current.reports_to
+    return False

@@ -3,11 +3,12 @@ import { logout } from '../../services/authService'
 import { useNavigate } from 'react-router-dom'
 
 function Navbar() {
-  const { me } = useAuth()
+  const { me, clearMe } = useAuth()
   const navigate = useNavigate()
 
   function handleLogout() {
     logout()
+    clearMe()
     navigate('/login')
   }
 

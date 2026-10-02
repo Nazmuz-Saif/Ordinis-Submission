@@ -52,21 +52,26 @@ class MeView(APIView):
 
     def get(self, request):
         user = request.user
+        company = user.company
         employee = getattr(user, 'employee', None)
 
         data = {
             "email": user.email,
-            "company_id": str(user.company_id) if user.company_id else None,
-            "company_name": user.company.name if user.company_id else None,
+            "company_id": str(company.id) if company else None,
+            "company_name": company.name if company else None,
+            "permissions": [],
         }
 
         if employee:
+            codenames = employee.employee_roles.values_list(
+                'role__permissions__codename', flat=True
+            ).distinct()
             data.update({
                 "employee_id": str(employee.id),
                 "employee_code": employee.employee_code,
                 "designation_title": employee.designation.title if employee.designation_id else None,
                 "department_name": employee.department.name if employee.department_id else None,
-                "permissions": [],  # RBAC not yet built for this scope — Sprint 2+ (ST-108/109/110)
+                "permissions": sorted(c for c in codenames if c),
             })
 
         return Response({"success": True, "data": data})

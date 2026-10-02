@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { login } from '../../services/authService'
+import { useAuth } from '../../store/AuthContext'
 
 function LoginPage() {
   const [email, setEmail] = useState('')
@@ -8,6 +9,7 @@ function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { refreshMe } = useAuth()
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -15,6 +17,7 @@ function LoginPage() {
     setLoading(true)
     try {
       await login(email, password)
+      await refreshMe()
       navigate('/organization')
     } catch (err) {
       setError('Invalid email or password.')
@@ -62,6 +65,13 @@ function LoginPage() {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        <p className="text-sm text-[#71717A] mt-6 text-center">
+          New company?{' '}
+          <Link to="/register" className="text-[#6C31D6] hover:underline font-medium">
+            Register here
+          </Link>
+        </p>
       </div>
     </div>
   )
