@@ -1,20 +1,4 @@
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-
-from core.permissions import IsCompanyActive, HasPermission
-
-
-def get_effective_company(user):
-    from tenants.models import Company
-    if user and user.is_authenticated and getattr(user, 'company', None):
-        return user.company
-    company = Company.objects.first()
-    if not company:
-        company = Company.objects.create(name="Ordinis", subdomain="ordinis")
-    if user and user.is_authenticated and not getattr(user, 'company', None):
-        user.company = company
-        user.save(update_fields=['company'])
-    return company
 
 
 class StandardResponseMixin:
@@ -82,24 +66,6 @@ class AuditLoggingMixin:
         return self.request.META.get("REMOTE_ADDR")
 
 
-class PermissionRequiredMixin:
-    """
-    Applies authentication, company-active checking, and
-    action-based permission checking to a DRF ViewSet.
-    """
-
-    permission_classes = [
-        IsAuthenticated,
-        IsCompanyActive,
-        HasPermission,
-    ]
-
-    permission_required = None
-
-    def get_required_permission(self):
-        required = self.permission_required
-
-        if isinstance(required, dict):
-            return required.get(getattr(self, "action", None))
-
-        return required
+# PermissionRequiredMixin lives in rbac/decorators.py (per the SDS); re-exported here
+# so existing `from core.mixins import PermissionRequiredMixin` imports keep working.
+from rbac.decorators import PermissionRequiredMixin  # noqa: E402,F401

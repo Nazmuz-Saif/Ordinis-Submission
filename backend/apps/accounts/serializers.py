@@ -72,4 +72,7 @@ class CompanyRegisterSerializer(serializers.Serializer):
             employee_code=employee_code,
         )
 
+        from rbac.services import create_ceo_role
+        create_ceo_role(company, employee)
+
         return {"company": company, "user": user, "employee": employee}

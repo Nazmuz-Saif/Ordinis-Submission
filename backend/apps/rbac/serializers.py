@@ -1,68 +1,57 @@
 from rest_framework import serializers
 
-from .models import Permission, Role, EmployeeRole
+from core.serializer_utils import company_of, scope_queryset
+from organization.models import Employee
+from .models import EmployeeRole, Permission, Role
 
 
 class PermissionSerializer(serializers.ModelSerializer):
-
+    """
+    Read-only serializer — permissions are system-defined,
+    users cannot create/edit/delete them.
+    """
     class Meta:
         model = Permission
-        fields = ["id", "company", "name", "codename"]
-        read_only_fields = ["company"]
+        fields = ['id', 'codename', 'name', 'module']
+        read_only_fields = fields
 
 
 class RoleSerializer(serializers.ModelSerializer):
+    """
+    Full CRUD serializer for Roles.
+    - 'permissions' field: accepts a list of Permission UUIDs (for create/update)
+    - 'permission_details' field: returns full Permission objects (for reading)
+    """
+    permissions = serializers.PrimaryKeyRelatedField(
+        queryset=Permission.objects.all(), many=True, required=False
+    )
+    permission_details = PermissionSerializer(
+        source='permissions', many=True, read_only=True
+    )
 
     class Meta:
         model = Role
-        fields = ["id", "company", "name", "permissions"]
-        read_only_fields = ["company"]
-
-    def validate_permissions(self, permissions):
-        request = self.context.get("request")
-
-        if not request or not request.user.is_authenticated:
-            raise serializers.ValidationError(
-                "Authentication is required."
-            )
-
-        user_company = request.user.company
-
-        for permission in permissions:
-            if permission.company_id != user_company.id:
-                raise serializers.ValidationError(
-                    "You cannot assign a permission from another company."
-                )
-
-        return permissions
+        fields = [
+            'id', 'name', 'description', 'is_system_default',
+            'permissions', 'permission_details',
+        ]
+        read_only_fields = ['id', 'is_system_default']
 
 
 class EmployeeRoleSerializer(serializers.ModelSerializer):
+    role_name = serializers.CharField(source='role.name', read_only=True)
+    employee_code = serializers.CharField(source='employee.employee_code', read_only=True)
+    employee_email = serializers.CharField(source='employee.user.email', read_only=True)
 
     class Meta:
         model = EmployeeRole
-        fields = ["id", "employee", "role"]
+        fields = ['id', 'employee', 'role', 'role_name', 'employee_code', 'employee_email', 'company']
+        read_only_fields = ['id', 'company']
 
-    def validate(self, attrs):
-        request = self.context.get("request")
-
-        if not request or not request.user.is_authenticated:
-            raise serializers.ValidationError(
-                "Authentication is required."
-            )
-
-        employee = attrs.get("employee")
-        role = attrs.get("role")
-        user_company = request.user.company
-
-        if employee.company_id != user_company.id:
-            raise serializers.ValidationError(
-                "You cannot assign a role to an employee from another company."
-            )
-
-        if role.company_id != user_company.id:
-            raise serializers.ValidationError(
-                "You cannot assign a role from another company."
-            )
-
-        return attrs
+    def get_fields(self):
+        fields = super().get_fields()
+        company = company_of(self)
+        # Cannot assign another company's Role (or Employee) — prevents cross-tenant privilege escalation.
+        scope_queryset(fields['employee'], Employee, company)
+        scope_queryset(fields['role'], Role, company)
+        return fields

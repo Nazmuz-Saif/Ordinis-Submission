@@ -1,7 +1,6 @@
 from django.db import models
 from core.models import BaseModel
 from tenants.models import Company
-from roles.models import Role
 
 
 class Department(BaseModel):
@@ -43,7 +42,15 @@ class Employee(BaseModel):
         "self", on_delete=models.SET_NULL, null=True, blank=True,
         related_name="direct_reports"
     )
-    employee_code = models.CharField(max_length=50, unique=True)
+    employee_code = models.CharField(max_length=50)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "employee_code"],
+                name="unique_employee_code_per_company",
+            )
+        ]
 
     def __str__(self):
         return f"{self.user.email} — {self.designation}"
@@ -51,37 +58,8 @@ class Employee(BaseModel):
     def has_permission(self, codename: str) -> bool:
         """
         Checks whether this employee has a specific permission codename,
-        through any of their assigned roles.
+        through any of their assigned roles (rbac.EmployeeRole -> Role -> Permission).
         """
         return self.employee_roles.filter(
             role__permissions__codename=codename
         ).exists()
-
-
-class EmployeeRole(BaseModel):
-    employee = models.ForeignKey(
-        Employee,
-        on_delete=models.CASCADE,
-        related_name="employee_roles",
-    )
-    role = models.ForeignKey(
-        Role,
-        on_delete=models.CASCADE,
-        related_name="employee_roles",
-    )
-    company = models.ForeignKey(
-        Company,
-        on_delete=models.CASCADE,
-        related_name="employee_roles",
-    )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["employee", "role"],
-                name="unique_employee_role_assignment",
-            )
-        ]
-
-    def __str__(self):
-        return f"{self.employee.employee_code} — {self.role.name}"

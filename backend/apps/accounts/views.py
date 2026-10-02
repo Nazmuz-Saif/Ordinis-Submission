@@ -52,34 +52,26 @@ class MeView(APIView):
 
     def get(self, request):
         user = request.user
-        from core.mixins import get_effective_company
-        company = get_effective_company(user)
+        company = user.company
         employee = getattr(user, 'employee', None)
-        if not employee and company:
-            from organization.models import Designation, Employee
-            desig, _ = Designation.objects.get_or_create(company=company, title="CEO")
-            employee, _ = Employee.objects.get_or_create(
-                user=user,
-                defaults={"company": company, "designation": desig, "employee_code": "CEO-001"}
-            )
 
         data = {
             "email": user.email,
             "company_id": str(company.id) if company else None,
             "company_name": company.name if company else None,
+            "permissions": [],
         }
 
         if employee:
+            codenames = employee.employee_roles.values_list(
+                'role__permissions__codename', flat=True
+            ).distinct()
             data.update({
                 "employee_id": str(employee.id),
                 "employee_code": employee.employee_code,
                 "designation_title": employee.designation.title if employee.designation_id else None,
                 "department_name": employee.department.name if employee.department_id else None,
-                "permissions": list(
-                    employee.employee_roles.values_list(
-                        'role__permissions__codename', flat=True
-                    ).distinct()
-                ),
+                "permissions": sorted(c for c in codenames if c),
             })
 
         return Response({"success": True, "data": data})

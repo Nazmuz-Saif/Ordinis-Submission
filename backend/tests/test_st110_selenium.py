@@ -24,8 +24,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from organization.models import Designation, Employee, EmployeeRole
-from roles.models import Permission, Role
+from organization.models import Designation, Employee
+from rbac.models import EmployeeRole
+from rbac.models import Permission, Role
 from tenants.models import Company
 
 
