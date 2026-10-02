@@ -1,11 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './features/auth/LoginPage'
+import RegisterPage from './features/auth/RegisterPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import { AuthProvider } from './store/AuthContext'
 import DashboardLayout from './layouts/DashboardLayout'
 import DepartmentsPage from './features/organization/DepartmentsPage'
 import DesignationsPage from './features/organization/DesignationsPage'
 import EmployeesPage from './features/organization/EmployeesPage'
+import EmployeeDetailPage from './features/organization/EmployeeDetailPage'
 import RolesPage from './features/roles/RolesPage'
 
 function App() {
@@ -14,6 +16,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route
             path="/organization"
             element={
@@ -40,6 +43,16 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <EmployeesPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organization/employees/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <EmployeeDetailPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

@@ -46,12 +46,12 @@ export async function updateEmployee(id, payload) {
 }
 
 export async function getEmployeeRoles() {
-  const res = await apiClient.get('/organization/employee-roles/')
+  const res = await apiClient.get('/rbac/employee-roles/')
   return res.data
 }
 
 export async function assignEmployeeRole(employeeId, roleId) {
-  const res = await apiClient.post('/organization/employee-roles/', {
+  const res = await apiClient.post('/rbac/employee-roles/', {
     employee: employeeId,
     role: roleId,
   })
@@ -59,7 +59,7 @@ export async function assignEmployeeRole(employeeId, roleId) {
 }
 
 export async function deleteEmployeeRole(id) {
-  const res = await apiClient.delete(`/organization/employee-roles/${id}/`)
+  const res = await apiClient.delete(`/rbac/employee-roles/${id}/`)
   return res.data
 }
 
@@ -77,4 +77,13 @@ export async function deleteEmployee(id) {
   const res = await apiClient.delete(`/organization/employees/${id}/`)
   return res.data
 }
-
+
+export async function getEmployee(id) {
+  const res = await apiClient.get(`/organization/employees/${id}/`)
+  return res.data
+}
+
+export async function getSubordinates(id) {
+  const res = await apiClient.get(`/organization/employees/${id}/subordinates/`)
+  return res.data
+}

@@ -90,7 +90,8 @@ function DesignationsPage() {
         Job titles used across your company.
       </p>
 
-      <form
+      {canManageDesignations && (
+<form
         onSubmit={handleCreate}
         className="flex gap-2 mb-6"
       >
@@ -111,6 +112,7 @@ function DesignationsPage() {
           Add
         </button>
       </form>
+)}
 
       {error && (
         <p className="text-sm text-[#DC2626] mb-4">
@@ -130,7 +132,7 @@ function DesignationsPage() {
           />
 
           <p className="text-sm text-[#71717A]">
-            No designations yet. Add your first one above.
+            {canManageDesignations ? 'No designations yet. Add your first one above.' : 'No designations yet.'}
           </p>
         </div>
       ) : (
@@ -162,7 +164,8 @@ function DesignationsPage() {
               ) : (
                 <>
                   <span className="flex-1 text-sm text-[#14142B] font-medium">{d.title}</span>
-                  <div className="flex items-center gap-1">
+                  {canManageDesignations && (
+<div className="flex items-center gap-1">
                     <button onClick={() => startEdit(d)} className="text-[#71717A] hover:text-[#6C31D6] p-1 transition" title="Edit">
                       <Pencil size={15} />
                     </button>
@@ -170,6 +173,7 @@ function DesignationsPage() {
                       <Trash2 size={15} />
                     </button>
                   </div>
+)}
                 </>
               )}
             </div>

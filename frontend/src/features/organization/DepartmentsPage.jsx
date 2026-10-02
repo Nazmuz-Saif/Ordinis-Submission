@@ -79,7 +79,8 @@ function DepartmentsPage() {
       <h1 className="text-2xl font-bold text-[#14142B]">Departments</h1>
       <p className="text-sm text-[#71717A] mt-1 mb-6">Organize your company into departments.</p>
 
-      <form onSubmit={handleCreate} className="flex gap-2 mb-6">
+      {canManageDepartments && (
+<form onSubmit={handleCreate} className="flex gap-2 mb-6">
         <input
           type="text"
           value={name}
@@ -95,6 +96,7 @@ function DepartmentsPage() {
           <Plus size={16} /> Add
         </button>
       </form>
+)}
 
       {error && <p className="text-sm text-[#DC2626] mb-4">{error}</p>}
 
@@ -103,7 +105,7 @@ function DepartmentsPage() {
       ) : departments.length === 0 ? (
         <div className="bg-white rounded-xl border border-dashed border-[#EEEEF2] py-14 flex flex-col items-center text-center">
           <Building2 className="text-[#71717A]/40 mb-3" size={36} />
-          <p className="text-sm text-[#71717A]">No departments yet. Add your first one above.</p>
+          <p className="text-sm text-[#71717A]">{canManageDepartments ? 'No departments yet. Add your first one above.' : 'No departments yet.'}</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-[#EEEEF2] divide-y divide-[#EEEEF2]">
@@ -135,7 +137,8 @@ function DepartmentsPage() {
               ) : (
                 <>
                   <span className="flex-1 text-sm text-[#14142B] font-medium">{dept.name}</span>
-                  <div className="flex items-center gap-1">
+                  {canManageDepartments && (
+<div className="flex items-center gap-1">
                     <button onClick={() => startEdit(dept)} className="text-[#71717A] hover:text-[#6C31D6] p-1 transition" title="Edit">
                       <Pencil size={15} />
                     </button>
@@ -143,6 +146,7 @@ function DepartmentsPage() {
                       <Trash2 size={15} />
                     </button>
                   </div>
+)}
                 </>
               )}
             </div>

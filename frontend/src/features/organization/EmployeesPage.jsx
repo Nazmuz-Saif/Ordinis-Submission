@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Users, Plus, Pencil, Check, X, Trash2 } from 'lucide-react'
 import {
   getEmployees,
@@ -152,7 +153,8 @@ function EmployeesPage() {
       <h1 className="text-2xl font-bold text-[#14142B]">Employees</h1>
       <p className="text-sm text-[#71717A] mt-1 mb-6">Everyone in your company.</p>
 
-      <form
+      {canManageEmployees && (
+<form
         onSubmit={handleCreate}
         className="bg-white rounded-xl border border-[#EEEEF2] p-4 mb-6 grid grid-cols-2 md:grid-cols-3 gap-3"
       >
@@ -236,6 +238,7 @@ function EmployeesPage() {
           Add Employee
         </button>
       </form>
+)}
 
     {error && (
       <p className="text-sm text-[#DC2626] mb-4">
@@ -247,7 +250,7 @@ function EmployeesPage() {
       ) : employees.length === 0 ? (
         <div className="bg-white rounded-xl border border-dashed border-[#EEEEF2] py-14 flex flex-col items-center text-center">
           <Users className="text-[#71717A]/40 mb-3" size={36} />
-          <p className="text-sm text-[#71717A]">No employees yet. Add your first one above.</p>
+          <p className="text-sm text-[#71717A]">{canManageEmployees ? 'No employees yet. Add your first one above.' : 'No employees yet.'}</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-[#EEEEF2] overflow-hidden">
@@ -317,7 +320,7 @@ function EmployeesPage() {
                         <div className="w-8 h-8 rounded-full bg-[#6C31D6]/10 text-[#6C31D6] flex items-center justify-center text-xs font-semibold shrink-0">
                           {emp.employee_code?.slice(-2) || '??'}
                         </div>
-                        <span className="font-medium">{emp.employee_code}</span>
+                        <Link to={`/organization/employees/${emp.id}`} className="font-medium hover:text-[#6C31D6] hover:underline">{emp.employee_code}</Link>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-[#71717A]">{emp.designation_title || '—'}</td>
@@ -326,7 +329,8 @@ function EmployeesPage() {
                       {employees.find((e) => e.id === emp.reports_to)?.employee_code || '—'}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
+                      {canManageEmployees && (
+<div className="flex items-center gap-1">
                         <button onClick={() => startEdit(emp)} className="text-[#71717A] hover:text-[#6C31D6] p-1 transition" title="Edit">
                           <Pencil size={15} />
                         </button>
@@ -334,6 +338,7 @@ function EmployeesPage() {
                           <Trash2 size={15} />
                         </button>
                       </div>
+)}
                     </td>
                   </tr>
                 )

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus, Shield, Trash2, UserPlus } from 'lucide-react'
+import { useAuth } from '../../store/AuthContext'
 import { getPermissions, getRoles, createRole, deleteRole } from '../../services/rolesService'
 import { getEmployees, getEmployeeRoles, assignEmployeeRole, deleteEmployeeRole } from '../../services/organizationService'
 
@@ -20,6 +21,9 @@ const DEFAULT_PERMISSION_CODENAMES = [
 ]
 
 function RolesPage() {
+  const { hasPermission } = useAuth()
+  const canManageRoles = hasPermission('manage_roles')
+  const canAssignRoles = hasPermission('assign_roles')
   const [roles, setRoles] = useState([])
   const [permissions, setPermissions] = useState([])
   const [employees, setEmployees] = useState([])
@@ -183,7 +187,8 @@ function RolesPage() {
       )}
 
       {/* ---------------- 1. CREATE A ROLE ---------------- */}
-      <div className="bg-white rounded-xl border border-[#EEEEF2] p-6 mb-8">
+      {canManageRoles && (
+<div className="bg-white rounded-xl border border-[#EEEEF2] p-6 mb-8">
         <h2 className="text-base font-semibold text-[#14142B] mb-4">Create a Role</h2>
 
         <form onSubmit={handleCreateRole}>
@@ -228,6 +233,7 @@ function RolesPage() {
           </button>
         </form>
       </div>
+)}
 
       {/* ---------------- 2. EXISTING ROLES ---------------- */}
       <div className="mb-8">
@@ -258,7 +264,7 @@ function RolesPage() {
                         </span>
                       )}
                     </div>
-                    {!r.is_system_default && (
+                    {canManageRoles && !r.is_system_default && (
                       <button
                         onClick={() => handleDeleteRole(r.id)}
                         title="Delete Role"
@@ -293,7 +299,8 @@ function RolesPage() {
       </div>
 
       {/* ---------------- 3. ASSIGN ROLE TO EMPLOYEE ---------------- */}
-      <div className="mb-8">
+      {canAssignRoles && (
+<div className="mb-8">
         <h2 className="text-base font-semibold text-[#14142B] mb-3">
           Assign Role to Employee
         </h2>
@@ -338,6 +345,7 @@ function RolesPage() {
           </button>
         </form>
       </div>
+)}
 
       {/* ---------------- 4. EMPLOYEE → ROLE ASSIGNMENTS ---------------- */}
       <div>
@@ -377,13 +385,15 @@ function RolesPage() {
                     <span className="inline-block bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE] px-3 py-1 rounded-full text-xs font-medium">
                       {item.role_name || (roles.find((r) => r.id === item.role)?.name ?? 'Role')}
                     </span>
-                    <button
-                      onClick={() => handleRevokeRole(item.id)}
-                      title="Revoke role"
-                      className="text-[#71717A] hover:text-[#DC2626] transition p-1"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    {canAssignRoles && (
+                      <button
+                        onClick={() => handleRevokeRole(item.id)}
+                        title="Revoke role"
+                        className="text-[#71717A] hover:text-[#DC2626] transition p-1"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
