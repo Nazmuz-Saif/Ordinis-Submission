@@ -49,6 +49,8 @@ class RoleViewSet(PermissionRequiredMixin, AuditLoggingMixin, viewsets.ModelView
     def perform_destroy(self, instance):
         if instance.is_system_default:
             raise ValidationError("The system CEO role cannot be deleted.")
+        if instance.approval_steps.exists():
+            raise ValidationError("This role is used by an approval chain step. Change that step first.")
         super().perform_destroy(instance)
 
 

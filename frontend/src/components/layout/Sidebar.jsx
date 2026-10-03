@@ -10,7 +10,7 @@ const menuItems = [
   { label: 'Notifications', path: '/notifications' },
   { label: 'Roles', path: '/roles' },
   { label: 'Payroll', path: '/payroll' },
-  { label: 'Approvals', path: '/approvals' },
+  { label: 'Approval Chains', path: '/approvals/chains' },
 ]
 
 function Sidebar() {
