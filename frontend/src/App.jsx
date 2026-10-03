@@ -11,6 +11,7 @@ import EmployeeDetailPage from './features/organization/EmployeeDetailPage'
 import RolesPage from './features/roles/RolesPage'
 import ApprovalChainsPage from './features/approvals/ApprovalChainsPage'
 import PendingApprovalsPage from './features/approvals/PendingApprovalsPage'
+import UiKitPage from './features/dev/UiKitPage'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          {import.meta.env.DEV && <Route path="/dev/ui-kit" element={<UiKitPage />} />}
           <Route path="/register" element={<RegisterPage />} />
           <Route
             path="/organization"
