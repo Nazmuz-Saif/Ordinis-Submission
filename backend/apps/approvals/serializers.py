@@ -2,8 +2,8 @@ from rest_framework import serializers
 
 from core.serializer_utils import company_of, scope_queryset
 from rbac.models import Role
-from .models import ApprovalChain, ApprovalStep
-from .services import next_step_order
+from .models import ApprovalAction, ApprovalChain, ApprovalInstance, ApprovalStep
+from .services import can_act, next_step_order
 
 
 class ApprovalStepSerializer(serializers.ModelSerializer):
@@ -61,3 +61,52 @@ class ApprovalChainSerializer(serializers.ModelSerializer):
         if clash.exists():
             raise serializers.ValidationError('Your company already has a chain with this name.')
         return value
+
+
+class ApprovalActionSerializer(serializers.ModelSerializer):
+    actor_email = serializers.CharField(source='actor.user.email', read_only=True)
+
+    class Meta:
+        model = ApprovalAction
+        fields = ['id', 'step_order', 'actor', 'actor_email', 'decision', 'comment', 'created_at']
+        read_only_fields = fields
+
+
+class ApprovalInstanceSerializer(serializers.ModelSerializer):
+    chain_name = serializers.CharField(source='approval_chain.name', read_only=True)
+    target_type = serializers.CharField(source='content_type.model', read_only=True)
+    target_repr = serializers.SerializerMethodField()
+    requested_by_email = serializers.CharField(source='requested_by.user.email', read_only=True)
+    current_step_role_name = serializers.SerializerMethodField()
+    total_steps = serializers.SerializerMethodField()
+    can_act = serializers.SerializerMethodField()
+    actions = ApprovalActionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ApprovalInstance
+        fields = [
+            'id', 'approval_chain', 'chain_name', 'target_type', 'target_repr',
+            'requested_by', 'requested_by_email', 'current_step', 'current_step_role_name',
+            'total_steps', 'status', 'can_act', 'actions', 'created_at',
+        ]
+        read_only_fields = fields
+
+    def _step(self, obj):
+        steps = list(obj.approval_chain.steps.all())  # prefetched by the view
+        return next((st for st in steps if st.step_order == obj.current_step), None)
+
+    def get_target_repr(self, obj):
+        return str(obj.target) if obj.target is not None else '(deleted)'
+
+    def get_current_step_role_name(self, obj):
+        if obj.status != ApprovalInstance.STATUS_PENDING:
+            return None
+        step = self._step(obj)
+        return step.approver_role.name if step else None
+
+    def get_total_steps(self, obj):
+        return len(obj.approval_chain.steps.all())
+
+    def get_can_act(self, obj):
+        employee = self.context['request'].user.employee
+        return can_act(employee, obj, step=self._step(obj), role_ids=self.context.get('role_ids'))

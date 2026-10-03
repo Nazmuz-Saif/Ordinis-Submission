@@ -34,3 +34,18 @@ export async function deleteStep(id) {
   const res = await apiClient.delete(`/approvals/steps/${id}/`)
   return res.data
 }
+
+export async function getInstances(mine) {
+  const res = await apiClient.get('/approvals/instances/', { params: mine ? { mine: 'pending' } : {} })
+  return res.data
+}
+
+export async function approveInstance(id, comment) {
+  const res = await apiClient.post(`/approvals/instances/${id}/approve/`, { comment })
+  return res.data
+}
+
+export async function rejectInstance(id, comment) {
+  const res = await apiClient.post(`/approvals/instances/${id}/reject/`, { comment })
+  return res.data
+}

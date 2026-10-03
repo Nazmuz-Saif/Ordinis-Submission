@@ -10,6 +10,7 @@ import EmployeesPage from './features/organization/EmployeesPage'
 import EmployeeDetailPage from './features/organization/EmployeeDetailPage'
 import RolesPage from './features/roles/RolesPage'
 import ApprovalChainsPage from './features/approvals/ApprovalChainsPage'
+import PendingApprovalsPage from './features/approvals/PendingApprovalsPage'
 
 function App() {
   return (
@@ -71,6 +72,16 @@ function App() {
           <Route
             path="/roles/employee-roles"
             element={<Navigate to="/roles" replace />}
+          />
+          <Route
+            path="/approvals/pending"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <PendingApprovalsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/approvals/chains"
