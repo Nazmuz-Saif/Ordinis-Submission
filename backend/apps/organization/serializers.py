@@ -23,13 +23,14 @@ class DesignationSerializer(serializers.ModelSerializer):
 class EmployeeSerializer(serializers.ModelSerializer):
     department_name = serializers.CharField(source='department.name', read_only=True)
     designation_title = serializers.CharField(source='designation.title', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
     email = serializers.EmailField(write_only=True)
     password = serializers.CharField(write_only=True, style={'input_type': 'password'})
 
     class Meta:
         model = Employee
         fields = [
-            'id', 'email', 'password', 'company', 'department', 'department_name',
+            'id', 'email', 'user_email', 'password', 'company', 'department', 'department_name',
             'designation', 'designation_title', 'reports_to', 'employee_code',
         ]
         read_only_fields = ['id', 'company']

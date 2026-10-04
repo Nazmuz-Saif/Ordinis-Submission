@@ -27,7 +27,7 @@ export const NAV = [
     type: 'group', key: 'tasks', label: 'Tasks', icon: CheckSquare,
     items: [
       { label: 'Projects', path: '/tasks/projects', soon: true },
-      { label: 'My Tasks', path: '/tasks', soon: true },
+      { label: 'My Tasks', path: '/tasks' },
     ],
   },
   {

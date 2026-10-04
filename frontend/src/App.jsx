@@ -12,6 +12,7 @@ import RolesPage from './features/roles/RolesPage'
 import ApprovalChainsPage from './features/approvals/ApprovalChainsPage'
 import PendingApprovalsPage from './features/approvals/PendingApprovalsPage'
 import UiKitPage from './features/dev/UiKitPage'
+import TasksPage from './features/tasks/TasksPage'
 
 function App() {
   return (
@@ -74,6 +75,16 @@ function App() {
           <Route
             path="/roles/employee-roles"
             element={<Navigate to="/roles" replace />}
+          />
+          <Route
+            path="/tasks"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <TasksPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/approvals/pending"
