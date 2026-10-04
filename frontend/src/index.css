@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+/* Grey shimmer used for loading placeholders (design system: skeleton, never a spinner). */
+.skeleton {
+  background: linear-gradient(90deg, #EEEEF2 25%, #F6F6F9 50%, #EEEEF2 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

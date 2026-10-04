@@ -9,6 +9,9 @@ import DesignationsPage from './features/organization/DesignationsPage'
 import EmployeesPage from './features/organization/EmployeesPage'
 import EmployeeDetailPage from './features/organization/EmployeeDetailPage'
 import RolesPage from './features/roles/RolesPage'
+import ApprovalChainsPage from './features/approvals/ApprovalChainsPage'
+import PendingApprovalsPage from './features/approvals/PendingApprovalsPage'
+import UiKitPage from './features/dev/UiKitPage'
 
 function App() {
   return (
@@ -16,6 +19,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          {import.meta.env.DEV && <Route path="/dev/ui-kit" element={<UiKitPage />} />}
           <Route path="/register" element={<RegisterPage />} />
           <Route
             path="/organization"
@@ -70,6 +74,26 @@ function App() {
           <Route
             path="/roles/employee-roles"
             element={<Navigate to="/roles" replace />}
+          />
+          <Route
+            path="/approvals/pending"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <PendingApprovalsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/approvals/chains"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ApprovalChainsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
           />
           <Route path="/" element={<Navigate to="/organization" replace />} />
         </Routes>
