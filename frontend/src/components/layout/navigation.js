@@ -20,6 +20,7 @@ export const NAV = [
     type: 'group', key: 'workflow', label: 'Workflow', icon: GitBranch,
     items: [
       { label: 'Approvals', path: '/approvals/pending' },
+      { label: 'Delegation', path: '/approvals/delegations' },
       { label: 'Approval Chains', path: '/approvals/chains', permission: 'manage_approval_chains' },
     ],
   },
@@ -27,7 +28,7 @@ export const NAV = [
     type: 'group', key: 'tasks', label: 'Tasks', icon: CheckSquare,
     items: [
       { label: 'Projects', path: '/tasks/projects', soon: true },
-      { label: 'My Tasks', path: '/tasks', soon: true },
+      { label: 'My Tasks', path: '/tasks' },
     ],
   },
   {

@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'organization',
     'rbac',
     'approvals',
+    'tasks',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

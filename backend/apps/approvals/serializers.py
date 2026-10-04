@@ -2,7 +2,12 @@ from rest_framework import serializers
 
 from core.serializer_utils import company_of, scope_queryset
 from rbac.models import Role
-from .models import ApprovalAction, ApprovalChain, ApprovalInstance, ApprovalStep
+import datetime
+
+from django.utils import timezone
+
+from organization.models import Employee
+from .models import ApprovalAction, ApprovalChain, ApprovalInstance, ApprovalStep, DelegationRule
 from .services import can_act, next_step_order
 
 
@@ -110,3 +115,36 @@ class ApprovalInstanceSerializer(serializers.ModelSerializer):
     def get_can_act(self, obj):
         employee = self.context['request'].user.employee
         return can_act(employee, obj, step=self._step(obj), role_ids=self.context.get('role_ids'))
+
+
+class DelegationRuleSerializer(serializers.ModelSerializer):
+    delegator_email = serializers.CharField(source='delegator.user.email', read_only=True)
+    delegate_email = serializers.CharField(source='delegate.user.email', read_only=True)
+    is_active = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DelegationRule
+        fields = [
+            'id', 'delegator', 'delegator_email', 'delegate', 'delegate_email',
+            'start_date', 'end_date', 'reason', 'is_active', 'created_at',
+        ]
+        read_only_fields = ['id', 'delegator', 'created_at']
+
+    def get_fields(self):
+        fields = super().get_fields()
+        # Only colleagues of the same company can be chosen.
+        scope_queryset(fields['delegate'], Employee, company_of(self))
+        return fields
+
+    def get_is_active(self, obj):
+        return obj.start_date <= timezone.localdate() <= obj.end_date
+
+    def validate(self, attrs):
+        request = self.context['request']
+        if attrs['delegate'] == request.user.employee:
+            raise serializers.ValidationError({'delegate': 'You cannot delegate to yourself.'})
+        if attrs['end_date'] < attrs['start_date']:
+            raise serializers.ValidationError({'end_date': 'The end date cannot be before the start date.'})
+        if attrs['end_date'] < timezone.localdate():
+            raise serializers.ValidationError({'end_date': 'The end date cannot be in the past.'})
+        return attrs
