@@ -107,3 +107,26 @@ class ApprovalAction(BaseModel):
 
     def __str__(self):
         return f"{self.instance_id} step {self.step_order}: {self.decision}"
+
+
+class DelegationRule(BaseModel):
+    """
+    "While I am away, <delegate> may decide the requests that wait for my roles."
+    Active on every day from start_date to end_date, both included.
+    """
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='delegation_rules')
+    delegator = models.ForeignKey('organization.Employee', on_delete=models.CASCADE, related_name='delegations_given')
+    delegate = models.ForeignKey('organization.Employee', on_delete=models.CASCADE, related_name='delegations_received')
+    start_date = models.DateField()
+    end_date = models.DateField()
+    reason = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ['-start_date']
+        constraints = [
+            models.CheckConstraint(condition=models.Q(end_date__gte=models.F('start_date')), name='delegation_end_not_before_start'),
+            models.CheckConstraint(condition=~models.Q(delegator=models.F('delegate')), name='delegation_not_to_self'),
+        ]
+
+    def __str__(self):
+        return f"{self.delegator_id} -> {self.delegate_id} ({self.start_date}..{self.end_date})"

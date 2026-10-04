@@ -13,6 +13,7 @@ import ApprovalChainsPage from './features/approvals/ApprovalChainsPage'
 import PendingApprovalsPage from './features/approvals/PendingApprovalsPage'
 import UiKitPage from './features/dev/UiKitPage'
 import TasksPage from './features/tasks/TasksPage'
+import DelegationsPage from './features/approvals/DelegationsPage'
 
 function App() {
   return (
@@ -82,6 +83,16 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <TasksPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/approvals/delegations"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <DelegationsPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

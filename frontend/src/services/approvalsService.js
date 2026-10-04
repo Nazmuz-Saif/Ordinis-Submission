@@ -49,3 +49,18 @@ export async function rejectInstance(id, comment) {
   const res = await apiClient.post(`/approvals/instances/${id}/reject/`, { comment })
   return res.data
 }
+
+export async function getDelegations() {
+  const res = await apiClient.get('/approvals/delegations/')
+  return res.data
+}
+
+export async function createDelegation(payload) {
+  const res = await apiClient.post('/approvals/delegations/', payload)
+  return res.data
+}
+
+export async function deleteDelegation(id) {
+  const res = await apiClient.delete(`/approvals/delegations/${id}/`)
+  return res.data
+}

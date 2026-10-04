@@ -5,11 +5,14 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
 from core.mixins import AuditLoggingMixin, PermissionRequiredMixin
-from .models import ApprovalAction, ApprovalChain, ApprovalInstance, ApprovalStep
-from .serializers import ApprovalChainSerializer, ApprovalInstanceSerializer, ApprovalStepSerializer
+from .models import ApprovalAction, ApprovalChain, ApprovalInstance, ApprovalStep, DelegationRule
+from .serializers import (
+    ApprovalChainSerializer, ApprovalInstanceSerializer, ApprovalStepSerializer,
+    DelegationRuleSerializer,
+)
 from .services import (
     ApprovalError, NotAnApprover, chain_has_pending, compact_steps,
-    can_act, decide, reorder_steps, role_ids_of,
+    can_act, decide, effective_role_ids, reorder_steps,
 )
 
 MANAGE = 'manage_approval_chains'
@@ -125,7 +128,7 @@ class ApprovalInstanceViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, 
             .prefetch_related('approval_chain__steps__approver_role', 'actions__actor__user')
         )
         if not employee.has_permission('manage_approval_chains'):
-            roles = role_ids_of(employee)
+            roles = effective_role_ids(employee)
             qs = qs.filter(
                 Q(requested_by=employee)
                 | Q(actions__actor=employee)
@@ -138,14 +141,14 @@ class ApprovalInstanceViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         if self.request and self.request.user.is_authenticated:
-            context['role_ids'] = role_ids_of(self._employee())
+            context['role_ids'] = effective_role_ids(self._employee())
         return context
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         items = list(queryset)
         if request.query_params.get('mine') == 'pending':
-            employee, roles = self._employee(), role_ids_of(self._employee())
+            employee, roles = self._employee(), effective_role_ids(self._employee())
             items = [i for i in items if can_act(employee, i, role_ids=roles)]
         return Response(self.get_serializer(items, many=True).data)
 
@@ -167,3 +170,34 @@ class ApprovalInstanceViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, 
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
         return self._decide(request, pk, ApprovalAction.DECISION_REJECTED)
+
+
+class DelegationRuleViewSet(
+    mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin, AuditLoggingMixin, viewsets.GenericViewSet,
+):
+    """
+    /api/v1/approvals/delegations/
+    Everyone manages only their OWN delegations: "while I am away, <delegate> may decide
+    what waits for my roles". The delegator is always the logged-in employee.
+    The list also shows delegations that were handed TO you, read-only.
+    """
+    serializer_class = DelegationRuleSerializer
+
+    def get_queryset(self):
+        employee = self.request.user.employee
+        return (
+            DelegationRule.objects.filter(company=employee.company)
+            .filter(Q(delegator=employee) | Q(delegate=employee))
+            .select_related('delegator__user', 'delegate__user')
+        )
+
+    def perform_create(self, serializer):
+        employee = self.request.user.employee
+        instance = serializer.save(company=employee.company, delegator=employee)
+        self._log('CREATE', instance)
+
+    def perform_destroy(self, instance):
+        if instance.delegator_id != self.request.user.employee.id:
+            raise PermissionDenied('Only the person who created a delegation can remove it.')
+        super().perform_destroy(instance)

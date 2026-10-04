@@ -1,9 +1,10 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Max
+from django.utils import timezone
 
 from rbac.models import EmployeeRole
-from .models import ApprovalAction, ApprovalInstance, ApprovalStep
+from .models import ApprovalAction, ApprovalInstance, ApprovalStep, DelegationRule
 
 _OFFSET = 1000  # temporary order values, so the unique (chain, step_order) rule never clashes
 
@@ -80,7 +81,27 @@ def current_step_of(instance):
 
 
 def role_ids_of(employee):
+    """Roles the employee holds himself."""
     return set(EmployeeRole.objects.filter(employee=employee).values_list('role_id', flat=True))
+
+
+def delegators_of(employee, on=None):
+    """Employees who handed their approval authority to `employee` and whose delegation is active on `on`."""
+    on = on or timezone.localdate()
+    return DelegationRule.objects.filter(
+        delegate=employee, start_date__lte=on, end_date__gte=on,
+    ).values_list('delegator_id', flat=True)
+
+
+def effective_role_ids(employee, on=None):
+    """Own roles plus the roles of everyone who currently delegates to this employee."""
+    roles = role_ids_of(employee)
+    delegator_ids = list(delegators_of(employee, on))
+    if delegator_ids:
+        roles |= set(
+            EmployeeRole.objects.filter(employee_id__in=delegator_ids).values_list('role_id', flat=True)
+        )
+    return roles
 
 
 def can_act(employee, instance, step=None, role_ids=None):
@@ -92,8 +113,8 @@ def can_act(employee, instance, step=None, role_ids=None):
     step = step or current_step_of(instance)
     if step is None:
         return False
-    # ST-117 (delegation) will extend this check: a delegate may act in place of the role holder.
-    roles = role_ids if role_ids is not None else role_ids_of(employee)
+    # Own roles plus roles delegated to the employee (see DelegationRule).
+    roles = role_ids if role_ids is not None else effective_role_ids(employee)
     return step.approver_role_id in roles
 
 
@@ -118,7 +139,7 @@ def decide(instance_id, actor, decision, comment=''):
     step = current_step_of(instance)
     if step is None:
         raise ApprovalError('The current approval step no longer exists.')
-    if step.approver_role_id not in role_ids_of(actor):
+    if step.approver_role_id not in effective_role_ids(actor):
         raise NotAnApprover('You do not hold the role required for this step.')
     if decision == ApprovalAction.DECISION_REJECTED and not comment:
         raise ApprovalError('A comment is required when rejecting.')

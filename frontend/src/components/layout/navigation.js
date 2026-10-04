@@ -20,6 +20,7 @@ export const NAV = [
     type: 'group', key: 'workflow', label: 'Workflow', icon: GitBranch,
     items: [
       { label: 'Approvals', path: '/approvals/pending' },
+      { label: 'Delegation', path: '/approvals/delegations' },
       { label: 'Approval Chains', path: '/approvals/chains', permission: 'manage_approval_chains' },
     ],
   },
