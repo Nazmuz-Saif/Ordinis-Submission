@@ -79,8 +79,7 @@ function DepartmentsPage() {
       <h1 className="text-2xl font-bold text-[#14142B]">Departments</h1>
       <p className="text-sm text-[#71717A] mt-1 mb-6">Organize your company into departments.</p>
 
-      {canManageDepartments && (
-<form onSubmit={handleCreate} className="flex gap-2 mb-6">
+      <form onSubmit={handleCreate} className="flex gap-2 mb-6">
         <input
           type="text"
           value={name}
@@ -96,7 +95,6 @@ function DepartmentsPage() {
           <Plus size={16} /> Add
         </button>
       </form>
-)}
 
       {error && <p className="text-sm text-[#DC2626] mb-4">{error}</p>}
 
