@@ -34,7 +34,7 @@ export const NAV = [
   {
     type: 'group', key: 'attendance', label: 'Attendance', icon: CalendarCheck,
     items: [
-      { label: 'Check In', path: '/attendance', soon: true },
+      { label: 'Check In', path: '/attendance' },
       { label: 'Leave', path: '/attendance/leave', soon: true },
     ],
   },

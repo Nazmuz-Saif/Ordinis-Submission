@@ -14,6 +14,7 @@ import PendingApprovalsPage from './features/approvals/PendingApprovalsPage'
 import UiKitPage from './features/dev/UiKitPage'
 import TasksPage from './features/tasks/TasksPage'
 import DelegationsPage from './features/approvals/DelegationsPage'
+import AttendancePage from './features/attendance/AttendancePage'
 
 function App() {
   return (
@@ -76,6 +77,16 @@ function App() {
           <Route
             path="/roles/employee-roles"
             element={<Navigate to="/roles" replace />}
+          />
+          <Route
+            path="/attendance"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <AttendancePage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/tasks"
