@@ -1,7 +1,9 @@
+
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
 import ProtectedRoute from './routes/ProtectedRoute'
+import FinanceRoute from './routes/FinanceRoute'
 import { AuthProvider } from './store/AuthContext'
 import DashboardLayout from './layouts/DashboardLayout'
 import DepartmentsPage from './features/organization/DepartmentsPage'
@@ -17,15 +19,19 @@ import DelegationsPage from './features/approvals/DelegationsPage'
 import AttendancePage from './features/attendance/AttendancePage'
 import SalaryStructuresPage from './features/payroll/SalaryStructuresPage'
 
-
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          {import.meta.env.DEV && <Route path="/dev/ui-kit" element={<UiKitPage />} />}
+
+          {import.meta.env.DEV && (
+            <Route path="/dev/ui-kit" element={<UiKitPage />} />
+          )}
+
           <Route path="/register" element={<RegisterPage />} />
+
           <Route
             path="/organization"
             element={
@@ -36,6 +42,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/organization/designations"
             element={
@@ -46,6 +53,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/organization/employees"
             element={
@@ -56,6 +64,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/organization/employees/:id"
             element={
@@ -66,6 +75,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/roles"
             element={
@@ -76,10 +86,12 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/roles/employee-roles"
             element={<Navigate to="/roles" replace />}
           />
+
           <Route
             path="/attendance"
             element={
@@ -90,16 +102,18 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/payroll/salary-structures"
             element={
-              <ProtectedRoute>
+              <FinanceRoute>
                 <DashboardLayout>
                   <SalaryStructuresPage />
                 </DashboardLayout>
-              </ProtectedRoute>
+              </FinanceRoute>
             }
           />
+
           <Route
             path="/tasks"
             element={
@@ -110,6 +124,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/approvals/delegations"
             element={
@@ -120,6 +135,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/approvals/pending"
             element={
@@ -130,6 +146,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/approvals/chains"
             element={
@@ -140,7 +157,11 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/organization" replace />} />
+
+          <Route
+            path="/"
+            element={<Navigate to="/organization" replace />}
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
@@ -148,3 +169,4 @@ function App() {
 }
 
 export default App
+
