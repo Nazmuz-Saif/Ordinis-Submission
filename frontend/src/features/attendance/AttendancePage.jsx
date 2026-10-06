@@ -6,16 +6,19 @@ import {
   LogOut,
   Clock3,
   Users,
+  History,
 } from 'lucide-react'
 import {
   checkIn,
   checkOut,
   getAttendance,
+  getAttendanceHistory,
 } from '../../services/attendanceService'
 import { getMe } from '../../services/authService'
 
 function AttendancePage() {
   const [attendanceList, setAttendanceList] = useState([])
+  const [historyList, setHistoryList] = useState([])
   const [myAttendance, setMyAttendance] = useState(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
@@ -27,14 +30,23 @@ function AttendancePage() {
       setLoading(true)
       setError('')
 
-      const [attendanceData, userData] = await Promise.all([
+      const [
+        attendanceData,
+        userData,
+        historyData,
+      ] = await Promise.all([
         getAttendance(),
         getMe(),
+        getAttendanceHistory(),
       ])
 
       const records = Array.isArray(attendanceData)
         ? attendanceData
         : attendanceData?.results || []
+
+      const historyRecords = Array.isArray(historyData)
+        ? historyData
+        : historyData?.results || []
 
       const myEmployeeId =
         userData?.employee?.id ||
@@ -45,6 +57,7 @@ function AttendancePage() {
       )
 
       setAttendanceList(records)
+      setHistoryList(historyRecords)
       setMyAttendance(myRecord || null)
     } catch (err) {
       setError(
@@ -79,11 +92,27 @@ function AttendancePage() {
 
         if (exists) {
           return current.map((record) =>
-            record.employee === data.employee ? data : record
+            record.employee === data.employee
+              ? data
+              : record
           )
         }
 
         return [...current, data]
+      })
+
+      setHistoryList((current) => {
+        const exists = current.some(
+          (record) => record.id === data.id
+        )
+
+        if (exists) {
+          return current.map((record) =>
+            record.id === data.id ? data : record
+          )
+        }
+
+        return [data, ...current]
       })
 
       setSuccess('Check-in successful.')
@@ -116,11 +145,27 @@ function AttendancePage() {
 
         if (exists) {
           return current.map((record) =>
-            record.employee === data.employee ? data : record
+            record.employee === data.employee
+              ? data
+              : record
           )
         }
 
         return [...current, data]
+      })
+
+      setHistoryList((current) => {
+        const exists = current.some(
+          (record) => record.id === data.id
+        )
+
+        if (exists) {
+          return current.map((record) =>
+            record.id === data.id ? data : record
+          )
+        }
+
+        return [data, ...current]
       })
 
       setSuccess('Check-out successful.')
@@ -189,14 +234,14 @@ function AttendancePage() {
               </h1>
 
               <p className="mt-1 text-sm text-gray-500">
-                Manage and monitor today's attendance
+                Manage and monitor attendance
               </p>
             </div>
           </div>
 
           <div className="hidden items-center gap-2 rounded-full bg-white px-4 py-2 text-sm text-gray-600 shadow-sm sm:flex">
             <Clock3 size={16} className="text-purple-600" />
-            Today's Attendance
+            Attendance
           </div>
         </div>
 
@@ -386,6 +431,113 @@ function AttendancePage() {
                       key={record.employee}
                       className="border-t transition hover:bg-purple-50/40"
                     >
+                      <td className="px-5 py-4 font-medium text-gray-900">
+                        {record.employee_name}
+                      </td>
+
+                      <td className="px-5 py-4 text-gray-600">
+                        {record.employee_code}
+                      </td>
+
+                      <td className="px-5 py-4 text-gray-600">
+                        {record.department_name || '--'}
+                      </td>
+
+                      <td className="px-5 py-4 text-gray-600">
+                        {record.designation_name || '--'}
+                      </td>
+
+                      <td className="px-5 py-4 text-gray-600">
+                        {formatTime(record.check_in)}
+                      </td>
+
+                      <td className="px-5 py-4 text-gray-600">
+                        {formatTime(record.check_out)}
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+                          {getStatus(record)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        )}
+
+        {historyList.length > 0 && (
+          <div className="mt-8 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+
+            <div className="border-b px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+                  <History size={20} />
+                </div>
+
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Attendance History
+                  </h2>
+
+                  <p className="text-sm text-gray-500">
+                    Previous attendance records
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-5 py-4 font-semibold text-gray-600">
+                      Date
+                    </th>
+
+                    <th className="px-5 py-4 font-semibold text-gray-600">
+                      Employee
+                    </th>
+
+                    <th className="px-5 py-4 font-semibold text-gray-600">
+                      Code
+                    </th>
+
+                    <th className="px-5 py-4 font-semibold text-gray-600">
+                      Department
+                    </th>
+
+                    <th className="px-5 py-4 font-semibold text-gray-600">
+                      Designation
+                    </th>
+
+                    <th className="px-5 py-4 font-semibold text-gray-600">
+                      Check In
+                    </th>
+
+                    <th className="px-5 py-4 font-semibold text-gray-600">
+                      Check Out
+                    </th>
+
+                    <th className="px-5 py-4 font-semibold text-gray-600">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {historyList.map((record) => (
+                    <tr
+                      key={record.id}
+                      className="border-t transition hover:bg-purple-50/40"
+                    >
+                      <td className="px-5 py-4 text-gray-600">
+                        {record.date}
+                      </td>
+
                       <td className="px-5 py-4 font-medium text-gray-900">
                         {record.employee_name}
                       </td>

@@ -1,3 +1,4 @@
+
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -121,6 +122,32 @@ class AttendanceViewSet(viewsets.ReadOnlyModelViewSet):
             })
 
         return Response(data)
+
+    @action(detail=False, methods=['get'])
+    def history(self, request):
+        employee = request.user.employee
+
+        if employee.has_permission('view_attendance'):
+            records = Attendance.objects.filter(
+                employee__company=employee.company,
+            ).select_related(
+                'employee__user',
+                'employee__department',
+                'employee__designation',
+            ).order_by('-date', '-check_in')
+
+        else:
+            records = Attendance.objects.filter(
+                employee=employee,
+            ).select_related(
+                'employee__user',
+                'employee__department',
+                'employee__designation',
+            ).order_by('-date', '-check_in')
+
+        return Response(
+            self.get_serializer(records, many=True).data
+        )
 
     @action(detail=False, methods=['post'])
     def check_in(self, request):
