@@ -15,6 +15,8 @@ import UiKitPage from './features/dev/UiKitPage'
 import TasksPage from './features/tasks/TasksPage'
 import DelegationsPage from './features/approvals/DelegationsPage'
 import AttendancePage from './features/attendance/AttendancePage'
+import SalaryStructuresPage from './features/payroll/SalaryStructuresPage'
+
 
 function App() {
   return (
@@ -84,6 +86,16 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <AttendancePage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll/salary-structures"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <SalaryStructuresPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }
