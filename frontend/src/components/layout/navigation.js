@@ -41,7 +41,8 @@ export const NAV = [
   {
     type: 'group', key: 'finance', label: 'Finance', icon: Wallet,
     items: [
-      { label: 'Payroll', path: '/payroll/salary-structures', permission: 'finance' },
+      { label: 'Salary Structures', path: '/payroll/salary-structures', permission: 'manage_finance' },
+      { label: 'Payroll', path: '/payroll', soon: true },
       { label: 'Expenses', path: '/payroll/expenses', soon: true },
     ],
   },

@@ -1,24 +1,8 @@
-from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from .views import SalaryStructureViewSet
 
-urlpatterns = [
-    path(
-        'salary-structures/',
-        SalaryStructureViewSet.as_view({
-            'get': 'list',
-            'post': 'create',
-        }),
-        name='salary-structure-list',
-    ),
-    path(
-        'salary-structures/<int:pk>/',
-        SalaryStructureViewSet.as_view({
-            'get': 'retrieve',
-            'put': 'update',
-            'patch': 'partial_update',
-            'delete': 'destroy',
-        }),
-        name='salary-structure-detail',
-    ),
-]
+router = DefaultRouter()
+router.register('salary-structures', SalaryStructureViewSet, basename='salary-structure')
+
+urlpatterns = router.urls

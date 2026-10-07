@@ -54,8 +54,8 @@ INSTALLED_APPS = [
     'rbac',
     'approvals',
     'tasks',
-    'attendance',
     'payroll',
+    'attendance',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

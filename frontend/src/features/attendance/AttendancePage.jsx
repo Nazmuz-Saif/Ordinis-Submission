@@ -1,582 +1,164 @@
-
 import { useEffect, useState } from 'react'
-import {
-  CalendarCheck,
-  LogIn,
-  LogOut,
-  Clock3,
-  Users,
-  History,
-} from 'lucide-react'
-import {
-  checkIn,
-  checkOut,
-  getAttendance,
-  getAttendanceHistory,
-} from '../../services/attendanceService'
-import { getMe } from '../../services/authService'
+import { CalendarCheck, LogIn, LogOut } from 'lucide-react'
+import { getToday, getRecords, checkIn, checkOut } from '../../services/attendanceService'
+import StatusPill from '../../components/common/StatusPill'
+import EmptyState from '../../components/common/EmptyState'
+
+function errorMessage(err, fallback) {
+  return err.response?.data?.error?.message || fallback
+}
+
+function formatDay(isoDate) {
+  // "2026-10-05" -> "Monday, 5 October 2026" (parsed as a plain calendar date, no time zone shift)
+  const [y, m, d] = isoDate.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  })
+}
+
+function statusOf(record) {
+  if (!record) return { pill: 'neutral', pillLabel: 'Not checked in', text: 'You have not checked in yet today.' }
+  if (record.check_out_time) {
+    return { pill: 'success', pillLabel: 'Checked out', text: `Checked out at ${record.check_out_time}.` }
+  }
+  return { pill: 'info', pillLabel: 'Checked in', text: `Checked in at ${record.check_in_time}.` }
+}
 
 function AttendancePage() {
-  const [attendanceList, setAttendanceList] = useState([])
-  const [historyList, setHistoryList] = useState([])
-  const [myAttendance, setMyAttendance] = useState(null)
+  const [today, setToday] = useState(null) // { date, record }
+  const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
-  const [actionLoading, setActionLoading] = useState(false)
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [message, setMessage] = useState('')
 
-  const loadAttendance = async () => {
+  async function reload() {
     try {
-      setLoading(true)
-      setError('')
-
-      const [
-        attendanceData,
-        userData,
-        historyData,
-      ] = await Promise.all([
-        getAttendance(),
-        getMe(),
-        getAttendanceHistory(),
-      ])
-
-      const records = Array.isArray(attendanceData)
-        ? attendanceData
-        : attendanceData?.results || []
-
-      const historyRecords = Array.isArray(historyData)
-        ? historyData
-        : historyData?.results || []
-
-      const myEmployeeId =
-        userData?.employee?.id ||
-        userData?.employee_id
-
-      const myRecord = records.find(
-        (record) => record.employee === myEmployeeId
-      )
-
-      setAttendanceList(records)
-      setHistoryList(historyRecords)
-      setMyAttendance(myRecord || null)
+      const [todayData, recordData] = await Promise.all([getToday(), getRecords()])
+      setToday(todayData)
+      setRecords(recordData)
     } catch (err) {
-      setError(
-        err.response?.data?.detail ||
-        err.response?.data?.message ||
-        err.response?.data?.error?.message ||
-        'Failed to load attendance.'
-      )
-    } finally {
-      setLoading(false)
+      setError(errorMessage(err, 'Failed to load attendance.'))
     }
   }
 
   useEffect(() => {
-    loadAttendance()
+    let active = true
+    Promise.all([getToday(), getRecords()])
+      .then(([todayData, recordData]) => {
+        if (!active) return
+        setToday(todayData)
+        setRecords(recordData)
+      })
+      .catch((err) => {
+        if (active) setError(errorMessage(err, 'Failed to load attendance.'))
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
   }, [])
 
-  const handleCheckIn = async () => {
+  async function run(action, successText, failText) {
+    setBusy(true)
+    setError('')
+    setMessage('')
     try {
-      setActionLoading(true)
-      setError('')
-      setSuccess('')
-
-      const data = await checkIn()
-
-      setMyAttendance(data)
-
-      setAttendanceList((current) => {
-        const exists = current.some(
-          (record) => record.employee === data.employee
-        )
-
-        if (exists) {
-          return current.map((record) =>
-            record.employee === data.employee
-              ? data
-              : record
-          )
-        }
-
-        return [...current, data]
-      })
-
-      setHistoryList((current) => {
-        const exists = current.some(
-          (record) => record.id === data.id
-        )
-
-        if (exists) {
-          return current.map((record) =>
-            record.id === data.id ? data : record
-          )
-        }
-
-        return [data, ...current]
-      })
-
-      setSuccess('Check-in successful.')
+      await action()
+      setMessage(successText)
     } catch (err) {
-      setError(
-        err.response?.data?.detail ||
-        err.response?.data?.message ||
-        err.response?.data?.error?.message ||
-        'Failed to check in.'
-      )
-    } finally {
-      setActionLoading(false)
+      setError(errorMessage(err, failText))
     }
+    await reload()
+    setBusy(false)
   }
 
-  const handleCheckOut = async () => {
-    try {
-      setActionLoading(true)
-      setError('')
-      setSuccess('')
-
-      const data = await checkOut()
-
-      setMyAttendance(data)
-
-      setAttendanceList((current) => {
-        const exists = current.some(
-          (record) => record.employee === data.employee
-        )
-
-        if (exists) {
-          return current.map((record) =>
-            record.employee === data.employee
-              ? data
-              : record
-          )
-        }
-
-        return [...current, data]
-      })
-
-      setHistoryList((current) => {
-        const exists = current.some(
-          (record) => record.id === data.id
-        )
-
-        if (exists) {
-          return current.map((record) =>
-            record.id === data.id ? data : record
-          )
-        }
-
-        return [data, ...current]
-      })
-
-      setSuccess('Check-out successful.')
-    } catch (err) {
-      setError(
-        err.response?.data?.detail ||
-        err.response?.data?.message ||
-        err.response?.data?.error?.message ||
-        'Failed to check out.'
-      )
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const formatTime = (value) => {
-    if (!value) {
-      return '--'
-    }
-
-    return new Date(value).toLocaleTimeString([], {
-      hour: 'numeric',
-      minute: '2-digit',
-    })
-  }
-
-  const getStatus = (record) => {
-    if (!record?.check_in) {
-      return 'Not Checked In'
-    }
-
-    if (!record?.check_out) {
-      return 'Checked In'
-    }
-
-    return 'Checked Out'
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="rounded-2xl border bg-white p-8 shadow-sm">
-            <p className="text-gray-500">
-              Loading attendance...
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const record = today?.record || null
+  const status = statusOf(record)
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="mx-auto max-w-6xl">
+    <div>
+      <h1 className="text-2xl font-bold text-[#14142B]">Attendance</h1>
+      <p className="text-sm text-[#71717A] mt-1 mb-5">One check-in and one check-out per day, in your company's local time.</p>
 
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-purple-600">
-              <CalendarCheck size={25} />
-            </div>
+      {loading ? (
+        <p className="text-sm text-[#71717A]">Loading...</p>
+      ) : (
+        <>
+          <div data-testid="attendance-today" className="bg-white rounded-xl shadow-sm border border-[#EEEEF2] p-5 mb-6">
+            <p className="text-xs text-[#71717A]">Today</p>
+            <p data-testid="attendance-date" className="text-lg font-semibold text-[#14142B]">
+              {today ? formatDay(today.date) : ''}
+            </p>
 
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Attendance
-              </h1>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Manage and monitor attendance
-              </p>
-            </div>
-          </div>
-
-          <div className="hidden items-center gap-2 rounded-full bg-white px-4 py-2 text-sm text-gray-600 shadow-sm sm:flex">
-            <Clock3 size={16} className="text-purple-600" />
-            Attendance
-          </div>
-        </div>
-
-        {error && (
-          <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-5 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-            {success}
-          </div>
-        )}
-
-        <div className="mb-8 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-
-          <div className="bg-gradient-to-r from-purple-600 to-purple-500 px-6 py-7 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-purple-100">
-                  My Attendance
-                </p>
-
-                <h2 className="mt-1 text-2xl font-bold">
-                  Today's Record
-                </h2>
-              </div>
-
-              <div className="rounded-xl bg-white/15 p-3">
-                <CalendarCheck size={28} />
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6">
-
-            <div className="mb-6 grid gap-4 sm:grid-cols-2">
-
-              <div className="rounded-xl border border-gray-100 bg-gray-50 p-5">
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
-                    <LogIn size={18} />
-                  </div>
-
-                  <span className="text-sm font-medium text-gray-500">
-                    Check In
-                  </span>
-                </div>
-
-                <p className="text-2xl font-bold text-gray-900">
-                  {formatTime(myAttendance?.check_in)}
-                </p>
-
-                <p className="mt-1 text-xs text-gray-400">
-                  Today's check-in time
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-gray-100 bg-gray-50 p-5">
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
-                    <LogOut size={18} />
-                  </div>
-
-                  <span className="text-sm font-medium text-gray-500">
-                    Check Out
-                  </span>
-                </div>
-
-                <p className="text-2xl font-bold text-gray-900">
-                  {formatTime(myAttendance?.check_out)}
-                </p>
-
-                <p className="mt-1 text-xs text-gray-400">
-                  Today's check-out time
-                </p>
-              </div>
-
-            </div>
-
-            <div className="mb-6 flex items-center justify-between rounded-xl border border-purple-100 bg-purple-50 px-5 py-4">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Current Status
-                </p>
-
-                <p className="mt-1 text-lg font-semibold text-gray-900">
-                  {getStatus(myAttendance)}
-                </p>
-              </div>
-
-              <span className="rounded-full bg-purple-100 px-3 py-1.5 text-xs font-semibold text-purple-700">
-                {myAttendance?.date || 'Today'}
+            <div className="flex flex-wrap items-center gap-3 mt-3">
+              <span data-testid="attendance-status">
+                <StatusPill status={status.pill} label={status.pillLabel} />
               </span>
+              <span data-testid="attendance-status-text" className="text-sm text-[#14142B]">{status.text}</span>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-wrap gap-3 mt-5">
               <button
-                type="button"
-                onClick={handleCheckIn}
-                disabled={actionLoading}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm transition hover:bg-purple-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => run(checkIn, 'Checked in.', 'Check-in failed.')}
+                disabled={busy}
+                data-testid="check-in-button"
+                className="flex items-center gap-2 bg-[#6C31D6] hover:bg-[#5A28B0] disabled:opacity-60 active:scale-[0.98] text-white rounded-lg px-6 py-3 text-sm font-medium transition-all duration-150"
               >
-                <LogIn size={19} />
-
-                {actionLoading
-                  ? 'Processing...'
-                  : 'Check In'}
+                <LogIn size={17} /> Check In
               </button>
-
               <button
-                type="button"
-                onClick={handleCheckOut}
-                disabled={actionLoading}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm transition hover:bg-purple-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => run(checkOut, 'Checked out.', 'Check-out failed.')}
+                disabled={busy}
+                data-testid="check-out-button"
+                className="flex items-center gap-2 border border-[#6C31D6] text-[#6C31D6] hover:bg-[#EDE9FE] disabled:opacity-60 active:scale-[0.98] rounded-lg px-6 py-3 text-sm font-medium transition-all duration-150"
               >
-                <LogOut size={19} />
-
-                {actionLoading
-                  ? 'Processing...'
-                  : 'Check Out'}
+                <LogOut size={17} /> Check Out
               </button>
             </div>
 
+            {error && <p data-testid="attendance-error" className="text-sm text-[#DC2626] mt-4">{error}</p>}
+            {message && <p data-testid="attendance-message" className="text-sm text-[#16A34A] mt-4">{message}</p>}
           </div>
-        </div>
 
-        {attendanceList.length > 1 && (
-          <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-
-            <div className="border-b px-6 py-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
-                  <Users size={20} />
-                </div>
-
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Today's Employee Attendance
-                  </h2>
-
-                  <p className="text-sm text-gray-500">
-                    Attendance overview for your company
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Employee
-                    </th>
-
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Code
-                    </th>
-
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Department
-                    </th>
-
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Designation
-                    </th>
-
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Check In
-                    </th>
-
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Check Out
-                    </th>
-
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Status
-                    </th>
+          <h2 className="text-lg font-semibold text-[#14142B] mb-3">My attendance</h2>
+          {records.length === 0 ? (
+            <EmptyState
+              icon={CalendarCheck}
+              title="No attendance yet"
+              description="Your check-ins will be listed here."
+            />
+          ) : (
+            <div className="bg-white rounded-xl shadow-sm border border-[#EEEEF2] overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-[#71717A] border-b border-[#EEEEF2]">
+                    <th className="px-4 py-3 font-medium">Date</th>
+                    <th className="px-4 py-3 font-medium">Check in</th>
+                    <th className="px-4 py-3 font-medium">Check out</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
                   </tr>
                 </thead>
-
-                <tbody>
-                  {attendanceList.map((record) => (
-                    <tr
-                      key={record.employee}
-                      className="border-t transition hover:bg-purple-50/40"
-                    >
-                      <td className="px-5 py-4 font-medium text-gray-900">
-                        {record.employee_name}
-                      </td>
-
-                      <td className="px-5 py-4 text-gray-600">
-                        {record.employee_code}
-                      </td>
-
-                      <td className="px-5 py-4 text-gray-600">
-                        {record.department_name || '--'}
-                      </td>
-
-                      <td className="px-5 py-4 text-gray-600">
-                        {record.designation_name || '--'}
-                      </td>
-
-                      <td className="px-5 py-4 text-gray-600">
-                        {formatTime(record.check_in)}
-                      </td>
-
-                      <td className="px-5 py-4 text-gray-600">
-                        {formatTime(record.check_out)}
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
-                          {getStatus(record)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                <tbody className="divide-y divide-[#EEEEF2]">
+                  {records.map((r) => {
+                    const s = statusOf(r)
+                    return (
+                      <tr key={r.id} data-testid="attendance-row" className="hover:bg-[#FAFAFA] transition-colors duration-150">
+                        <td className="px-4 py-3 text-[#14142B]">{r.date}</td>
+                        <td className="px-4 py-3 text-[#14142B]">{r.check_in_time}</td>
+                        <td className="px-4 py-3 text-[#14142B]">{r.check_out_time || '-'}</td>
+                        <td className="px-4 py-3"><StatusPill status={s.pill} label={s.pillLabel} /></td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
-
-          </div>
-        )}
-
-        {historyList.length > 0 && (
-          <div className="mt-8 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-
-            <div className="border-b px-6 py-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
-                  <History size={20} />
-                </div>
-
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Attendance History
-                  </h2>
-
-                  <p className="text-sm text-gray-500">
-                    Previous attendance records
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Date
-                    </th>
-
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Employee
-                    </th>
-
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Code
-                    </th>
-
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Department
-                    </th>
-
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Designation
-                    </th>
-
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Check In
-                    </th>
-
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Check Out
-                    </th>
-
-                    <th className="px-5 py-4 font-semibold text-gray-600">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {historyList.map((record) => (
-                    <tr
-                      key={record.id}
-                      className="border-t transition hover:bg-purple-50/40"
-                    >
-                      <td className="px-5 py-4 text-gray-600">
-                        {record.date}
-                      </td>
-
-                      <td className="px-5 py-4 font-medium text-gray-900">
-                        {record.employee_name}
-                      </td>
-
-                      <td className="px-5 py-4 text-gray-600">
-                        {record.employee_code}
-                      </td>
-
-                      <td className="px-5 py-4 text-gray-600">
-                        {record.department_name || '--'}
-                      </td>
-
-                      <td className="px-5 py-4 text-gray-600">
-                        {record.designation_name || '--'}
-                      </td>
-
-                      <td className="px-5 py-4 text-gray-600">
-                        {formatTime(record.check_in)}
-                      </td>
-
-                      <td className="px-5 py-4 text-gray-600">
-                        {formatTime(record.check_out)}
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
-                          {getStatus(record)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-          </div>
-        )}
-
-      </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

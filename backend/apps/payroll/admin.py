@@ -1,3 +1,5 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import SalaryStructure
+
+admin.site.register(SalaryStructure)
