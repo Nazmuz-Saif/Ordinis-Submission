@@ -14,6 +14,8 @@ import PendingApprovalsPage from './features/approvals/PendingApprovalsPage'
 import UiKitPage from './features/dev/UiKitPage'
 import TasksPage from './features/tasks/TasksPage'
 import DelegationsPage from './features/approvals/DelegationsPage'
+import SalaryStructuresPage from './features/payroll/SalaryStructuresPage'
+import AttendancePage from './features/attendance/AttendancePage'
 
 function App() {
   return (
@@ -93,6 +95,26 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <DelegationsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll/salary-structures"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <SalaryStructuresPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/attendance"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <AttendancePage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

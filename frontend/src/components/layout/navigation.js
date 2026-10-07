@@ -34,13 +34,14 @@ export const NAV = [
   {
     type: 'group', key: 'attendance', label: 'Attendance', icon: CalendarCheck,
     items: [
-      { label: 'Check In', path: '/attendance', soon: true },
+      { label: 'Check In', path: '/attendance' },
       { label: 'Leave', path: '/attendance/leave', soon: true },
     ],
   },
   {
     type: 'group', key: 'finance', label: 'Finance', icon: Wallet,
     items: [
+      { label: 'Salary Structures', path: '/payroll/salary-structures', permission: 'manage_finance' },
       { label: 'Payroll', path: '/payroll', soon: true },
       { label: 'Expenses', path: '/payroll/expenses', soon: true },
     ],
