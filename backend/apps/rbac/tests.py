@@ -4,7 +4,7 @@ from tenants.models import Company
 from accounts.models import User
 from rbac.models import Role, Permission
 from organization.models import Employee
-from core.test_utils import give_role
+from core.test_utils import give_role, rows
 
 
 class RoleAPITestCase(APITestCase):
@@ -100,7 +100,7 @@ class RoleAPITestCase(APITestCase):
         response = self.client.get(self.roles_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        role_names = [r["name"] for r in response.data]
+        role_names = [r["name"] for r in rows(response)]
         self.assertIn("Alpha Manager", role_names)
         self.assertNotIn("Beta Auditor", role_names)
 
@@ -110,7 +110,7 @@ class RoleAPITestCase(APITestCase):
         response = self.client.get(self.roles_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        role_names = [r["name"] for r in response.data]
+        role_names = [r["name"] for r in rows(response)]
         self.assertIn("Beta Auditor", role_names)
         self.assertNotIn("Alpha Manager", role_names)
 

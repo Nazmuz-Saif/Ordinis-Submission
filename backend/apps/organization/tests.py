@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from core.test_utils import add_employee, give_role, login_as, register_company
+from core.test_utils import add_employee, give_role, login_as, register_company, rows
 from organization.models import Department
 from rbac.models import EmployeeRole
 from rbac.models import Permission, Role
@@ -108,11 +108,11 @@ class SubordinatesEndpointTests(TestCase):
     def test_returns_all_levels(self):
         res = self.ceo.get(f'/api/v1/organization/employees/{self.ceo.employee_id}/subordinates/')
         self.assertEqual(res.status_code, 200)
-        self.assertEqual({e['employee_code'] for e in res.data}, {'ACME-002', 'ACME-003'})
+        self.assertEqual({e['employee_code'] for e in rows(res)}, {'ACME-002', 'ACME-003'})
 
     def test_leaf_has_none(self):
         res = self.ceo.get(f"/api/v1/organization/employees/{self.c['id']}/subordinates/")
-        self.assertEqual(res.data, [])
+        self.assertEqual(rows(res), [])
 
     def test_other_company_gets_404(self):
         res = self.other.get(f'/api/v1/organization/employees/{self.ceo.employee_id}/subordinates/')

@@ -1,6 +1,6 @@
 from rest_framework.test import APITestCase
 
-from core.test_utils import add_employee, give_role, login_as, register_company
+from core.test_utils import add_employee, give_role, login_as, register_company, rows
 
 TASKS = '/api/v1/tasks/tasks/'
 
@@ -30,7 +30,7 @@ class TaskTests(APITestCase):
         self.assertEqual(res.data['priority'], 'high')
         self.assertEqual(res.data['deadline'], '2026-12-31')
         self.assertEqual(res.data['assigned_by_email'], 'mgr@acme.com')  # set by the server
-        self.assertIn(res.data['id'], [t['id'] for t in self.mgr_c.get(TASKS).data])
+        self.assertIn(res.data['id'], [t['id'] for t in rows(self.mgr_c.get(TASKS))])
 
     def test_create_without_permission_is_403(self):
         self.assertEqual(make_task(self.alice_c, self.bob['id']).status_code, 403)
@@ -60,7 +60,7 @@ class TaskTests(APITestCase):
         beta = register_company('Beta', 'beta', 'ceo@beta.com')
         self.assertEqual(beta.get(f'{TASKS}{task}/').status_code, 404)
         self.assertEqual(beta.delete(f'{TASKS}{task}/').status_code, 404)
-        self.assertEqual(beta.get(TASKS).data, [])
+        self.assertEqual(rows(beta.get(TASKS)), [])
 
     # --- edit / delete ---------------------------------------------------
     def test_edit_and_delete_need_permission(self):
@@ -82,7 +82,7 @@ class TaskTests(APITestCase):
     # --- who sees what ---------------------------------------------------
     def test_visibility(self):
         t1 = make_task(self.mgr_c, self.alice['id']).data['id']
-        ids = lambda c: [t['id'] for t in c.get(TASKS).data]
+        ids = lambda c: [t['id'] for t in rows(c.get(TASKS))]
         self.assertIn(t1, ids(self.alice_c))      # the assignee
         self.assertIn(t1, ids(self.mgr_c))        # the creator / create_task holder
         self.assertIn(t1, ids(self.ceo))          # CEO holds create_task

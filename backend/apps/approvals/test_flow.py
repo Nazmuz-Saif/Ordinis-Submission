@@ -1,7 +1,7 @@
 from django.db import IntegrityError, transaction
 from rest_framework.test import APITestCase
 
-from core.test_utils import add_employee, give_role, login_as, register_company
+from core.test_utils import add_employee, give_role, login_as, register_company, rows
 from organization.models import Employee
 from rbac.models import EmployeeRole
 from .models import ApprovalAction
@@ -132,7 +132,7 @@ class ApprovalFlowTests(APITestCase):
 
     def test_visibility_and_mine_filter(self):
         inst = start(self)
-        ids = lambda c, q='': [i['id'] for i in c.get(INSTANCES + q).data]
+        ids = lambda c, q='': [i['id'] for i in rows(c.get(INSTANCES + q))]
         self.assertIn(str(inst.id), ids(self.req_c))          # requester sees own
         self.assertIn(str(inst.id), ids(self.head_c))         # current approver sees it
         self.assertNotIn(str(inst.id), ids(self.hr_c))        # step-2 holder: not yet
@@ -157,7 +157,7 @@ class ApprovalFlowTests(APITestCase):
         beta = register_company('Beta', 'beta', 'ceo@beta.com')
         self.assertEqual(beta.get(f'{INSTANCES}{inst.id}/').status_code, 404)
         self.assertEqual(beta.post(f'{INSTANCES}{inst.id}/approve/', {}, format='json').status_code, 404)
-        self.assertEqual(beta.get(INSTANCES).data, [])
+        self.assertEqual(rows(beta.get(INSTANCES)), [])
 
     def test_instances_cannot_be_created_through_the_api(self):
         res = self.ceo.post(INSTANCES, {}, format='json')

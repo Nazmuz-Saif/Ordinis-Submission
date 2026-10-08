@@ -1,8 +1,8 @@
 import apiClient from './apiClient'
+import { getAllPages } from './paging'
 
 export async function getSalaryStructures() {
-  const res = await apiClient.get('/payroll/salary-structures/')
-  return res.data
+  return getAllPages('/payroll/salary-structures/')
 }
 
 export async function createSalaryStructure(payload) {

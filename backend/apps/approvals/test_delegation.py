@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 from rest_framework.test import APITestCase
 
-from core.test_utils import add_employee, give_role, login_as, register_company
+from core.test_utils import add_employee, give_role, login_as, register_company, rows
 from .models import DelegationRule
 from .test_flow import CHAINS, INSTANCES, STEPS, setup_world, start
 
@@ -31,9 +31,9 @@ class DelegationRuleTests(APITestCase):
         self.assertEqual(res.data['delegator_email'], 'head@acme.com')  # set by the server
         self.assertEqual(res.data['delegate_email'], 'peer@acme.com')
         self.assertTrue(res.data['is_active'])
-        self.assertEqual([d['id'] for d in self.head_c.get(DELEGATIONS).data], [res.data['id']])
+        self.assertEqual([d['id'] for d in rows(self.head_c.get(DELEGATIONS))], [res.data['id']])
         # the delegate sees it too
-        self.assertEqual([d['id'] for d in self.peer_c.get(DELEGATIONS).data], [res.data['id']])
+        self.assertEqual([d['id'] for d in rows(self.peer_c.get(DELEGATIONS))], [res.data['id']])
 
     def test_end_before_start_rejected(self):
         res = delegate(self.head_c, self.peer['id'], start=5, end=2)
@@ -70,7 +70,7 @@ class DelegationRuleTests(APITestCase):
         rule = delegate(self.head_c, self.peer['id']).data['id']
         add_employee(self.ceo, 'other@acme.com', 'O-1')
         other_c = login_as('other@acme.com')
-        self.assertEqual(other_c.get(DELEGATIONS).data, [])
+        self.assertEqual(rows(other_c.get(DELEGATIONS)), [])
         self.assertEqual(other_c.delete(f'{DELEGATIONS}{rule}/').status_code, 404)
         beta = register_company('Beta', 'beta', 'ceo@beta.com')
         self.assertEqual(beta.get(f'{DELEGATIONS}{rule}/').status_code, 404)
@@ -95,7 +95,7 @@ class DelegationEffectTests(APITestCase):
     def test_delegate_can_decide_while_active(self):
         self.give()
         self.assertTrue(self.other_c.get(self.url).data['can_act'])
-        self.assertEqual([i['id'] for i in self.other_c.get(INSTANCES + '?mine=pending').data], [str(self.inst.id)])
+        self.assertEqual([i['id'] for i in rows(self.other_c.get(INSTANCES + '?mine=pending'))], [str(self.inst.id)])
         res = self.other_c.post(self.url + 'approve/', {'comment': 'covering'}, format='json')
         self.assertEqual(res.status_code, 200, res.content)
         self.assertEqual((res.data['status'], res.data['current_step']), ('pending', 2))

@@ -19,16 +19,25 @@ import sys
 sys.path.insert(0, str(BASE_DIR / 'apps'))
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
+# Settings come from environment variables (see backend/.env.example).
+# A local backend/.env file is loaded if python-dotenv is installed; the real
+# environment always wins over the file.
+import os
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / '.env')
+except ImportError:  # python-dotenv is optional for local development
+    pass
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#1+h+lgx=4rzjz6x=ye+1$0z74^ncw*$!u6gv&sgp=$@14t67_'
+# The fallback is for local development ONLY; production.py refuses to start without a real key.
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-local-development-only-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h.strip()]
 
 
 # Application definition
@@ -154,6 +163,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'core.pagination.OrdinisPagination',
 }
 
 # JWT: short-lived access token, rotating refresh token that is blacklisted once used
@@ -177,3 +187,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5177",
     "http://127.0.0.1:5177",
 ]
+# Extra frontend addresses (comma separated), for example the deployed site.
+CORS_ALLOWED_ORIGINS += [o.strip() for o in os.environ.get('CORS_EXTRA_ORIGINS', '').split(',') if o.strip()]
+
+# Tests only: a fast hasher so the suite runs in seconds instead of minutes.
+# Real runs (runserver, production) keep Django's default strong PBKDF2 hasher.
+if 'test' in sys.argv:
+    PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']

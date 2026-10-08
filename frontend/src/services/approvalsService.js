@@ -1,8 +1,8 @@
 import apiClient from './apiClient'
+import { getAllPages } from './paging'
 
 export async function getChains() {
-  const res = await apiClient.get('/approvals/chains/')
-  return res.data
+  return getAllPages('/approvals/chains/')
 }
 
 export async function createChain(payload) {
@@ -36,8 +36,7 @@ export async function deleteStep(id) {
 }
 
 export async function getInstances(mine) {
-  const res = await apiClient.get('/approvals/instances/', { params: mine ? { mine: 'pending' } : {} })
-  return res.data
+  return getAllPages('/approvals/instances/', mine ? { mine: 'pending' } : {})
 }
 
 export async function approveInstance(id, comment) {
@@ -51,8 +50,7 @@ export async function rejectInstance(id, comment) {
 }
 
 export async function getDelegations() {
-  const res = await apiClient.get('/approvals/delegations/')
-  return res.data
+  return getAllPages('/approvals/delegations/')
 }
 
 export async function createDelegation(payload) {

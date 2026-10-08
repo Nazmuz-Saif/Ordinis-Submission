@@ -1,13 +1,12 @@
 import apiClient from './apiClient'
+import { getAllPages } from './paging'
 
 export async function getPermissions() {
-  const res = await apiClient.get('/rbac/permissions/')
-  return res.data
+  return getAllPages('/rbac/permissions/')
 }
 
 export async function getRoles() {
-  const res = await apiClient.get('/rbac/roles/')
-  return res.data
+  return getAllPages('/rbac/roles/')
 }
 
 export async function createRole(payload) {
