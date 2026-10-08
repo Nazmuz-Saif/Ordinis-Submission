@@ -1,5 +1,5 @@
 import apiClient from './apiClient'
-import { getAllPages } from './paging'
+import { getAllPages, getPage } from './paging'
 
 export async function getDepartments() {
   return getAllPages('/organization/departments/')
@@ -17,6 +17,10 @@ export async function getDesignations() {
 export async function createDesignation(title) {
   const res = await apiClient.post('/organization/designations/', { title })
   return res.data
+}
+
+export async function getEmployeesPage(page = 1) {
+  return getPage('/organization/employees/', { page })
 }
 
 export async function getEmployees() {

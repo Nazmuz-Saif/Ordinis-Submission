@@ -1,5 +1,9 @@
 import apiClient from './apiClient'
-import { getAllPages } from './paging'
+import { getAllPages, getPage } from './paging'
+
+export async function getTasksPage(page = 1) {
+  return getPage('/tasks/tasks/', { page })
+}
 
 export async function getTasks() {
   return getAllPages('/tasks/tasks/')

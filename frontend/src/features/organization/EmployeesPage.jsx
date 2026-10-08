@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Users, Plus, Pencil, Check, X, Trash2 } from 'lucide-react'
 import {
   getEmployees,
+  getEmployeesPage,
   createEmployee,
   updateEmployee,
   deleteEmployee,
@@ -10,9 +11,13 @@ import {
   getDesignations,
 } from '../../services/organizationService'
 import { useAuth } from '../../store/AuthContext'
+import Pagination from '../../components/common/Pagination'
 
 function EmployeesPage() {
-  const [employees, setEmployees] = useState([])
+  const [employees, setEmployees] = useState([]) // everyone: for dropdowns and the Reports To column
+  const [rows, setRows] = useState([]) // the current page shown in the table
+  const [page, setPage] = useState(1)
+  const [pageInfo, setPageInfo] = useState({ count: 0, pageSize: 20, totalPages: 1 })
   const [departments, setDepartments] = useState([])
   const [designations, setDesignations] = useState([])
   const [loading, setLoading] = useState(true)
@@ -40,16 +45,23 @@ function EmployeesPage() {
 
 
     try {
-      const [emps, depts, desigs] = await Promise.all([
+      const [pageData, emps, depts, desigs] = await Promise.all([
+        getEmployeesPage(page),
         getEmployees(),
         getDepartments(),
         getDesignations(),
       ])
 
+      setRows(pageData.items)
+      setPageInfo(pageData)
       setEmployees(emps)
       setDepartments(depts)
       setDesignations(desigs)
     } catch (err) {
+      if (err.response?.status === 404 && page > 1) {
+        setPage(page - 1) // the last item of the last page was deleted
+        return
+      }
       setError('Failed to load employees.')
     } finally {
       setLoading(false)
@@ -59,7 +71,7 @@ function EmployeesPage() {
 
   useEffect(() => {
     loadAll()
-  }, [])
+  }, [page])
 
   function handleChange(e) {
     setForm({
@@ -247,7 +259,7 @@ function EmployeesPage() {
     )}
       {loading ? (
         <p className="text-sm text-[#71717A]">Loading...</p>
-      ) : employees.length === 0 ? (
+      ) : rows.length === 0 ? (
         <div className="bg-white rounded-xl border border-dashed border-[#EEEEF2] py-14 flex flex-col items-center text-center">
           <Users className="text-[#71717A]/40 mb-3" size={36} />
           <p className="text-sm text-[#71717A]">{canManageEmployees ? 'No employees yet. Add your first one above.' : 'No employees yet.'}</p>
@@ -265,7 +277,7 @@ function EmployeesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EEEEF2]">
-              {employees.map((emp) => (
+              {rows.map((emp) => (
                 editingId === emp.id ? (
                   <tr key={emp.id} className="bg-[#FAFAFA]">
                     <td className="px-4 py-3">
@@ -347,6 +359,14 @@ function EmployeesPage() {
           </table>
         </div>
       )}
+
+      <Pagination
+        page={page}
+        totalPages={pageInfo.totalPages}
+        count={pageInfo.count}
+        pageSize={pageInfo.pageSize}
+        onChange={setPage}
+      />
     </div>
   )
 }

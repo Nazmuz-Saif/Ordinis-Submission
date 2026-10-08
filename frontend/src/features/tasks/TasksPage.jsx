@@ -3,10 +3,11 @@ import { CalendarDays, CheckSquare, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useAuth } from '../../store/AuthContext'
 import { getEmployees } from '../../services/organizationService'
 import {
-  getTasks, createTask, updateTask, deleteTask, startTask, submitTask,
+  getTasksPage, createTask, updateTask, deleteTask, startTask, submitTask,
 } from '../../services/tasksService'
 import StatusPill from '../../components/common/StatusPill'
 import EmptyState from '../../components/common/EmptyState'
+import Pagination from '../../components/common/Pagination'
 
 const STATUS = {
   not_started: { status: 'neutral', label: 'Not Started' },
@@ -45,6 +46,8 @@ function TasksPage() {
   const canManage = hasPermission('create_task')
 
   const [tasks, setTasks] = useState([])
+  const [page, setPage] = useState(1)
+  const [pageInfo, setPageInfo] = useState({ count: 0, pageSize: 20, totalPages: 1 })
   const [employees, setEmployees] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -58,22 +61,30 @@ function TasksPage() {
 
   async function reload() {
     try {
-      setTasks(await getTasks())
+      const data = await getTasksPage(page)
+      setTasks(data.items)
+      setPageInfo(data)
     } catch (err) {
+      if (err.response?.status === 404 && page > 1) {
+        setPage(page - 1) // the last item of the last page is gone
+        return
+      }
       setError(errorMessage(err, 'Failed to load tasks.'))
     }
   }
 
   useEffect(() => {
     let active = true
-    Promise.all([getTasks(), canManage ? getEmployees() : Promise.resolve([])])
-      .then(([taskData, employeeData]) => {
+    getTasksPage(page)
+      .then((data) => {
         if (!active) return
-        setTasks(taskData)
-        setEmployees(employeeData)
+        setTasks(data.items)
+        setPageInfo(data)
       })
       .catch((err) => {
-        if (active) setError(errorMessage(err, 'Failed to load tasks.'))
+        if (!active) return
+        if (err.response?.status === 404 && page > 1) setPage(page - 1)
+        else setError(errorMessage(err, 'Failed to load tasks.'))
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -81,6 +92,13 @@ function TasksPage() {
     return () => {
       active = false
     }
+  }, [page])
+
+  useEffect(() => {
+    if (!canManage) return
+    getEmployees()
+      .then(setEmployees)
+      .catch((err) => setError(errorMessage(err, 'Failed to load employees.')))
   }, [canManage])
 
   async function run(action, successText, failText) {
@@ -280,6 +298,14 @@ function TasksPage() {
           </table>
         </div>
       )}
+
+      <Pagination
+        page={page}
+        totalPages={pageInfo.totalPages}
+        count={pageInfo.count}
+        pageSize={pageInfo.pageSize}
+        onChange={setPage}
+      />
 
       {form && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#14142B]/40 p-4">
