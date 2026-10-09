@@ -117,3 +117,45 @@ def log_access(grant, admin_user, method, endpoint, detail=''):
     return ImpersonationLog.objects.create(
         access_request=grant, actor=admin_user, method=method, endpoint=endpoint[:255], detail=detail[:255],
     )
+
+
+# ---------- Admin panel (ST-124) ----------
+from .models import PlatformActionLog, SupportTicket  # noqa: E402
+
+
+def _record(admin_user, company, action, note=''):
+    return PlatformActionLog.objects.create(
+        actor=admin_user, company=company, company_name=company.name, action=action, note=note[:255],
+    )
+
+
+@transaction.atomic
+def set_company_active(admin_user, company, active):
+    """Suspend or activate a company. Repeating the same call changes nothing and logs nothing."""
+    if company.is_active == active:
+        return company
+    company.is_active = active
+    company.save()
+    _record(admin_user, company, 'activate' if active else 'suspend')
+    return company
+
+
+def create_ticket(employee, subject, description=''):
+    subject = (subject or '').strip()
+    if not subject:
+        raise SupportAccessError('Give the ticket a subject.', code='TICKET_SUBJECT_REQUIRED')
+    return SupportTicket.objects.create(
+        company=employee.company, created_by=employee, subject=subject, description=(description or '').strip(),
+    )
+
+
+@transaction.atomic
+def set_ticket_resolved(admin_user, ticket, resolved):
+    wanted = SupportTicket.STATUS_RESOLVED if resolved else SupportTicket.STATUS_OPEN
+    if ticket.status == wanted:
+        return ticket
+    ticket.status = wanted
+    ticket.resolved_at = _now() if resolved else None
+    ticket.save()
+    _record(admin_user, ticket.company, 'resolve_ticket' if resolved else 'reopen_ticket', ticket.subject)
+    return ticket
