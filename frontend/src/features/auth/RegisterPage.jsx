@@ -50,7 +50,7 @@ function RegisterPage() {
         ceo_password: form.ceo_password,
       })
       await refreshMe()
-      navigate('/organization')
+      navigate('/dashboard')
     } catch (err) {
       const data = err.response?.data?.error
       setFieldErrors(data?.field_errors || {})

@@ -6,7 +6,7 @@ import {
 // - permission: item is hidden unless the user has this Permission codename
 // - soon:       the module is not built yet; shown muted, not clickable
 export const NAV = [
-  { type: 'link', label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, soon: true },
+  { type: 'link', label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   {
     type: 'group', key: 'organization', label: 'Organization', icon: Building2,
     items: [

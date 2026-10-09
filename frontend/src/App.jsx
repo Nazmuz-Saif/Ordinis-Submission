@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
@@ -16,6 +17,8 @@ import TasksPage from './features/tasks/TasksPage'
 import DelegationsPage from './features/approvals/DelegationsPage'
 import SalaryStructuresPage from './features/payroll/SalaryStructuresPage'
 import AttendancePage from './features/attendance/AttendancePage'
+// The dashboard pulls in the chart library, so it loads only when opened.
+const DashboardPage = lazy(() => import('./features/dashboard/DashboardPage'))
 
 function App() {
   return (
@@ -25,6 +28,18 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           {import.meta.env.DEV && <Route path="/dev/ui-kit" element={<UiKitPage />} />}
           <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Suspense fallback={null}>
+                    <DashboardPage />
+                  </Suspense>
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/organization"
             element={
@@ -139,7 +154,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/organization" replace />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
