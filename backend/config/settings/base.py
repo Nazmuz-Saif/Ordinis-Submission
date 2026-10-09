@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'tasks',
     'payroll',
     'attendance',
+    'dashboard',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
