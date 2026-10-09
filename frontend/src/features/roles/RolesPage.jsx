@@ -41,8 +41,6 @@ function RolesPage() {
   const [selectedRole, setSelectedRole] = useState('')
 
   async function loadData() {
-    setLoading(true)
-    setError('')
     try {
       const [rolesData, permsData, empsData, empRolesData] = await Promise.all([
         getRoles().catch(() => []),
@@ -68,7 +66,7 @@ function RolesPage() {
         }
       })
       setPermissions(merged)
-    } catch (err) {
+    } catch {
       setError('Failed to load roles and permissions.')
     } finally {
       setLoading(false)
@@ -76,7 +74,7 @@ function RolesPage() {
   }
 
   useEffect(() => {
-    loadData()
+    Promise.resolve().then(loadData)
   }, [])
 
   function togglePerm(idOrCodename) {

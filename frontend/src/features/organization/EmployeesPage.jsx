@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Users, Plus, Pencil, Check, X, Trash2 } from 'lucide-react'
 import {
@@ -40,10 +40,7 @@ function EmployeesPage() {
   const canManageEmployees = hasPermission('manage_employees')
 
 
-  async function loadAll() {
-    setLoading(true)
-
-
+  const loadAll = useCallback(async () => {
     try {
       const [pageData, emps, depts, desigs] = await Promise.all([
         getEmployeesPage(page),
@@ -66,12 +63,11 @@ function EmployeesPage() {
     } finally {
       setLoading(false)
     }
-
-  }
+  }, [page])
 
   useEffect(() => {
-    loadAll()
-  }, [page])
+    Promise.resolve().then(loadAll)
+  }, [loadAll])
 
   function handleChange(e) {
     setForm({

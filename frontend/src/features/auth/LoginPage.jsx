@@ -19,7 +19,7 @@ function LoginPage() {
       await login(email, password)
       await refreshMe()
       navigate('/organization')
-    } catch (err) {
+    } catch {
       setError('Invalid email or password.')
     } finally {
       setLoading(false)

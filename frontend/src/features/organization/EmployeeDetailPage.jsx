@@ -55,8 +55,7 @@ function EmployeeDetailPage() {
   }, [id])
 
   useEffect(() => {
-    setLoading(true)
-    load()
+    Promise.resolve().then(load)
   }, [load])
 
   async function handleAssign(e) {

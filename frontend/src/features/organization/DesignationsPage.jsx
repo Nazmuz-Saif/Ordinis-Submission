@@ -16,12 +16,10 @@ function DesignationsPage() {
   const canManageDesignations = hasPermission('manage_designations')
 
   async function loadDesignations() {
-    setLoading(true)
-
     try {
       const data = await getDesignations()
       setDesignations(data)
-    } catch (err) {
+    } catch {
       setError('Failed to load designations.')
     } finally {
       setLoading(false)
@@ -29,7 +27,7 @@ function DesignationsPage() {
   }
 
   useEffect(() => {
-    loadDesignations()
+    Promise.resolve().then(loadDesignations)
   }, [])
 
   async function handleCreate(e) {

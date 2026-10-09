@@ -3,6 +3,16 @@ import { getMe, isAuthenticated } from '../services/authService'
 
 const AuthContext = createContext(null)
 
+// Reads the logged-in user from the server. Returns null when logged out or on any error.
+async function fetchMe() {
+  if (!isAuthenticated()) return null
+  try {
+    return await getMe()
+  } catch {
+    return null
+  }
+}
+
 export function AuthProvider({ children }) {
   const [me, setMe] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -11,25 +21,18 @@ export function AuthProvider({ children }) {
   // Called on app start, and again right after login / registration so the
   // UI never shows a stale (empty) permission list.
   const refreshMe = useCallback(async () => {
-    if (!isAuthenticated()) {
-      setMe(null)
-      return null
-    }
-    try {
-      const data = await getMe()
-      setMe(data)
-      return data
-    } catch {
-      setMe(null)
-      return null
-    }
+    const data = await fetchMe()
+    setMe(data)
+    return data
   }, [])
 
   const clearMe = useCallback(() => setMe(null), [])
 
   useEffect(() => {
-    refreshMe().finally(() => setLoading(false))
-  }, [refreshMe])
+    fetchMe()
+      .then(setMe)
+      .finally(() => setLoading(false))
+  }, [])
 
   const hasPermission = (permission) => {
     return me?.permissions?.includes(permission) ?? false
@@ -42,6 +45,8 @@ export function AuthProvider({ children }) {
   )
 }
 
+// The hook lives next to its Provider on purpose (they share one context).
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   return useContext(AuthContext)
 }
