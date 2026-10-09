@@ -1,5 +1,5 @@
 import {
-  Building2, CalendarCheck, CheckSquare, GitBranch, LayoutDashboard, Wallet,
+  Building2, CalendarCheck, CheckSquare, GitBranch, LayoutDashboard, Settings, Wallet,
 } from 'lucide-react'
 
 // Single source of truth for the sidebar and the page title.
@@ -44,6 +44,12 @@ export const NAV = [
       { label: 'Salary Structures', path: '/payroll/salary-structures', permission: 'manage_finance' },
       { label: 'Payroll', path: '/payroll', soon: true },
       { label: 'Expenses', path: '/payroll/expenses', soon: true },
+    ],
+  },
+  {
+    type: 'group', key: 'settings', label: 'Settings', icon: Settings,
+    items: [
+      { label: 'Support Access', path: '/settings/support-access', permission: 'approve_support_access' },
     ],
   },
 ]

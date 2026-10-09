@@ -17,6 +17,7 @@ import TasksPage from './features/tasks/TasksPage'
 import DelegationsPage from './features/approvals/DelegationsPage'
 import SalaryStructuresPage from './features/payroll/SalaryStructuresPage'
 import AttendancePage from './features/attendance/AttendancePage'
+import SupportAccessPage from './features/platformAdmin/SupportAccessPage'
 // The dashboard pulls in the chart library, so it loads only when opened.
 const DashboardPage = lazy(() => import('./features/dashboard/DashboardPage'))
 
@@ -130,6 +131,16 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <AttendancePage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/support-access"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <SupportAccessPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }
