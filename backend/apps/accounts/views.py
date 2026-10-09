@@ -60,6 +60,7 @@ class MeView(APIView):
             "company_id": str(company.id) if company else None,
             "company_name": company.name if company else None,
             "permissions": [],
+            "is_platform_admin": user.is_platform_admin,
         }
 
         if employee:

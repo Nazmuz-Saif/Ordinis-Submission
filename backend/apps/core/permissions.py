@@ -20,6 +20,15 @@ class IsCompanyActive(BasePermission):
         return company.is_active
 
 
+class IsPlatformAdmin(BasePermission):
+    """Only Platform Admin accounts (company-less, set up with the create_platform_admin command)."""
+    message = 'Platform Admin access only.'
+
+    def has_permission(self, request, view):
+        user = request.user
+        return bool(user and user.is_authenticated and user.is_active and user.is_platform_admin)
+
+
 class HasPermission(BasePermission):
     """
     Real permission check. The view names the Permission codename it needs
