@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator
 from django.db import models
 
 from core.models import BaseModel
@@ -41,3 +42,24 @@ class Task(BaseModel):
 
     def __str__(self):
         return self.title
+
+
+class TaskProgressLog(BaseModel):
+    """
+    One daily progress note on a task, written by the assignee.
+    Text, a percent, an optional blocker and an optional link. No file or code is ever uploaded.
+    The date is set by the server (the company's own today), so it cannot be backdated.
+    """
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='progress_logs')
+    employee = models.ForeignKey('organization.Employee', on_delete=models.CASCADE, related_name='+')
+    date = models.DateField()
+    update_text = models.TextField(max_length=1000)
+    progress_percent = models.PositiveSmallIntegerField(validators=[MaxValueValidator(100)])
+    blocker_text = models.CharField(max_length=500, blank=True)
+    external_reference_url = models.URLField(max_length=500, blank=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+
+    def __str__(self):
+        return f'{self.task} {self.date} {self.progress_percent}%'

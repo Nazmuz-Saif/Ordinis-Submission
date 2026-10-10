@@ -29,6 +29,7 @@ export const NAV = [
     items: [
       { label: 'Projects', path: '/tasks/projects', soon: true },
       { label: 'My Tasks', path: '/tasks' },
+      { label: 'Board', path: '/tasks/board' },
     ],
   },
   {
@@ -71,10 +72,12 @@ export const ADMIN_NAV = [
   { type: 'link', label: 'Activity', path: '/admin/activity', icon: History },
 ]
 
+const EXACT_ONLY = new Set(['/organization', '/tasks'])
+
 export function isPathActive(pathname, path) {
   if (pathname === path) return true
-  // /organization is the Departments page; do not let it match every /organization/... route
-  return path !== '/organization' && pathname.startsWith(`${path}/`)
+  // /organization (Departments) and /tasks (My Tasks) have sub-pages with their own menu item: match exactly
+  return !EXACT_ONLY.has(path) && pathname.startsWith(`${path}/`)
 }
 
 export function pageTitle(pathname) {

@@ -14,6 +14,7 @@ import ApprovalChainsPage from './features/approvals/ApprovalChainsPage'
 import PendingApprovalsPage from './features/approvals/PendingApprovalsPage'
 import UiKitPage from './features/dev/UiKitPage'
 import TasksPage from './features/tasks/TasksPage'
+import KanbanPage from './features/tasks/KanbanPage'
 import DelegationsPage from './features/approvals/DelegationsPage'
 import SalaryStructuresPage from './features/payroll/SalaryStructuresPage'
 import AttendancePage from './features/attendance/AttendancePage'
@@ -102,6 +103,16 @@ function App() {
           <Route
             path="/roles/employee-roles"
             element={<Navigate to="/roles" replace />}
+          />
+          <Route
+            path="/tasks/board"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <KanbanPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/tasks"
