@@ -52,7 +52,7 @@ function Navbar({ onMenuClick }) {
           className="hidden sm:flex items-center gap-1.5 text-sm text-[#14142B] bg-white border border-[#EEEEF2] rounded-lg px-3 py-1.5"
         >
           <Building2 size={15} className="text-[#6C31D6]" aria-hidden="true" />
-          {me?.company_name}
+          {me?.is_platform_admin ? 'Ordinis Platform' : me?.company_name}
         </div>
 
         <div className="relative" ref={bellRef}>

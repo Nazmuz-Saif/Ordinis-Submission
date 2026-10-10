@@ -18,6 +18,12 @@ import DelegationsPage from './features/approvals/DelegationsPage'
 import SalaryStructuresPage from './features/payroll/SalaryStructuresPage'
 import AttendancePage from './features/attendance/AttendancePage'
 import SupportAccessPage from './features/platformAdmin/SupportAccessPage'
+import AdminRoute from './routes/AdminRoute'
+import HomeRedirect from './routes/HomeRedirect'
+import CompaniesPage from './features/admin/CompaniesPage'
+import TicketsPage from './features/admin/TicketsPage'
+import AccessRequestsPage from './features/admin/AccessRequestsPage'
+import ActivityPage from './features/admin/ActivityPage'
 // The dashboard pulls in the chart library, so it loads only when opened.
 const DashboardPage = lazy(() => import('./features/dashboard/DashboardPage'))
 
@@ -34,9 +40,11 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                  <Suspense fallback={null}>
-                    <DashboardPage />
-                  </Suspense>
+                  <HomeRedirect>
+                    <Suspense fallback={null}>
+                      <DashboardPage />
+                    </Suspense>
+                  </HomeRedirect>
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -135,6 +143,26 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {[
+            ['/admin/companies', CompaniesPage],
+            ['/admin/tickets', TicketsPage],
+            ['/admin/access-requests', AccessRequestsPage],
+            ['/admin/activity', ActivityPage],
+          ].map(([path, Page]) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <AdminRoute>
+                      <Page />
+                    </AdminRoute>
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+          ))}
           <Route
             path="/settings/support-access"
             element={

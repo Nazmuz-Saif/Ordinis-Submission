@@ -1,5 +1,5 @@
 import {
-  Building2, CalendarCheck, CheckSquare, GitBranch, LayoutDashboard, Settings, Wallet,
+  Building2, CalendarCheck, CheckSquare, GitBranch, History, LayoutDashboard, LifeBuoy, ShieldCheck, Settings, Wallet,
 } from 'lucide-react'
 
 // Single source of truth for the sidebar and the page title.
@@ -55,12 +55,21 @@ export const NAV = [
 ]
 
 // Items the user is allowed to see. Groups with nothing visible disappear.
-export function visibleNav(hasPermission) {
+export function visibleNav(hasPermission, isPlatformAdmin = false) {
+  if (isPlatformAdmin) return ADMIN_NAV // a Platform Admin has no company, so no company menu
   const allowed = (item) => !item.permission || hasPermission(item.permission)
   return NAV.map((entry) =>
     entry.type === 'group' ? { ...entry, items: entry.items.filter(allowed) } : entry,
   ).filter((entry) => entry.type !== 'group' || entry.items.length > 0)
 }
+
+// The menu of a Platform Admin. A normal user never gets these items, not even hidden.
+export const ADMIN_NAV = [
+  { type: 'link', label: 'Companies', path: '/admin/companies', icon: Building2 },
+  { type: 'link', label: 'Support Tickets', path: '/admin/tickets', icon: LifeBuoy },
+  { type: 'link', label: 'Access Requests', path: '/admin/access-requests', icon: ShieldCheck },
+  { type: 'link', label: 'Activity', path: '/admin/activity', icon: History },
+]
 
 export function isPathActive(pathname, path) {
   if (pathname === path) return true
@@ -69,7 +78,7 @@ export function isPathActive(pathname, path) {
 }
 
 export function pageTitle(pathname) {
-  const all = NAV.flatMap((e) => (e.type === 'group' ? e.items : [e]))
+  const all = [...NAV, ...ADMIN_NAV].flatMap((e) => (e.type === 'group' ? e.items : [e]))
   const match = all
     .filter((item) => isPathActive(pathname, item.path))
     .sort((a, b) => b.path.length - a.path.length)[0]
