@@ -1,5 +1,5 @@
 import {
-  Building2, CalendarCheck, CheckSquare, GitBranch, History, LayoutDashboard, LifeBuoy, ShieldCheck, Settings, Wallet,
+  Building2, CalendarCheck, CheckSquare, GitBranch, History, Inbox, LayoutDashboard, LifeBuoy, ShieldCheck, Settings, Wallet,
 } from 'lucide-react'
 
 // Single source of truth for the sidebar and the page title.
@@ -7,6 +7,7 @@ import {
 // - soon:       the module is not built yet; shown muted, not clickable
 export const NAV = [
   { type: 'link', label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { type: 'link', label: 'Action Inbox', path: '/inbox', icon: Inbox },
   {
     type: 'group', key: 'organization', label: 'Organization', icon: Building2,
     items: [

@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import ActionInboxPage from './features/inbox/ActionInboxPage'
 import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -200,6 +201,16 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <ApprovalChainsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inbox"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ActionInboxPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }
