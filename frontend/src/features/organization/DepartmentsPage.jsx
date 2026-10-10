@@ -15,11 +15,10 @@ function DepartmentsPage() {
   const [editValue, setEditValue] = useState('')
 
   async function loadDepartments() {
-    setLoading(true)
     try {
       const data = await getDepartments()
       setDepartments(data)
-    } catch (err) {
+    } catch {
       setError('Failed to load departments.')
     } finally {
       setLoading(false)
@@ -27,7 +26,7 @@ function DepartmentsPage() {
   }
 
   useEffect(() => {
-    loadDepartments()
+    Promise.resolve().then(loadDepartments)
   }, [])
 
   async function handleCreate(e) {

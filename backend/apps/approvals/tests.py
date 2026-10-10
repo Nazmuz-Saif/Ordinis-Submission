@@ -1,6 +1,6 @@
 from rest_framework.test import APITestCase
 
-from core.test_utils import add_employee, give_role, login_as, register_company
+from core.test_utils import add_employee, give_role, login_as, register_company, rows
 
 CHAINS = '/api/v1/approvals/chains/'
 STEPS = '/api/v1/approvals/steps/'
@@ -60,7 +60,7 @@ class ApprovalChainTests(APITestCase):
         other = register_company('Beta', 'beta', 'ceo@beta.com')
         self.assertEqual(other.get(f'{CHAINS}{chain}/').status_code, 404)
         self.assertEqual(other.delete(f'{CHAINS}{chain}/').status_code, 404)
-        self.assertEqual(len(other.get(CHAINS).data), 0)
+        self.assertEqual(len(rows(other.get(CHAINS))), 0)
 
     # --- steps ------------------------------------------------------
     def test_step_order_is_filled_automatically(self):
@@ -138,4 +138,4 @@ class ApprovalChainTests(APITestCase):
         chain = make_chain(self.ceo)
         make_step(self.ceo, chain, self.hr)
         self.assertEqual(self.ceo.delete(f'{CHAINS}{chain}/').status_code, 204)
-        self.assertEqual(len(self.ceo.get(STEPS).data), 0)
+        self.assertEqual(len(rows(self.ceo.get(STEPS))), 0)

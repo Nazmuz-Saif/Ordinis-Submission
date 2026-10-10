@@ -45,3 +45,11 @@ def give_role(company_id, employee_id, codenames, role_name='Custom'):
     role.permissions.set(Permission.objects.filter(codename__in=codenames))
     EmployeeRole.objects.create(employee=employee, role=role, company_id=company_id)
     return role
+
+
+def rows(response):
+    """The list of items from a list response (works for paginated and plain list responses)."""
+    data = response.data
+    if isinstance(data, dict) and 'pagination' in data:
+        return data['data']
+    return data

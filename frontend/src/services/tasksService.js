@@ -1,8 +1,12 @@
 import apiClient from './apiClient'
+import { getAllPages, getPage } from './paging'
+
+export async function getTasksPage(page = 1) {
+  return getPage('/tasks/tasks/', { page })
+}
 
 export async function getTasks() {
-  const res = await apiClient.get('/tasks/tasks/')
-  return res.data
+  return getAllPages('/tasks/tasks/')
 }
 
 export async function createTask(payload) {

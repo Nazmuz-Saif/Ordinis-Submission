@@ -1,0 +1,6 @@
+# Versions below are the ones the full test suite was run against.
+Django==6.1.2
+djangorestframework==3.18.3
+djangorestframework-simplejwt==5.5.1
+django-cors-headers==4.9.0
+python-dotenv==1.2.2

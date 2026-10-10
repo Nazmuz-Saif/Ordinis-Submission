@@ -1,4 +1,5 @@
 import apiClient from './apiClient'
+import { getAllPages } from './paging'
 
 export async function getToday() {
   const res = await apiClient.get('/attendance/attendance/today/')
@@ -6,8 +7,7 @@ export async function getToday() {
 }
 
 export async function getRecords() {
-  const res = await apiClient.get('/attendance/attendance/')
-  return res.data
+  return getAllPages('/attendance/attendance/')
 }
 
 export async function checkIn() {

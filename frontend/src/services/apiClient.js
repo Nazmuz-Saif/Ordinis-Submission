@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const BASE_URL = 'http://127.0.0.1:8000/api/v1'
+// Set VITE_API_URL in frontend/.env to point at another backend; defaults to local development.
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1'
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

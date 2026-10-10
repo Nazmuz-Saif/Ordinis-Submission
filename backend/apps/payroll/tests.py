@@ -1,6 +1,6 @@
 from rest_framework.test import APITestCase
 
-from core.test_utils import add_employee, give_role, login_as, register_company
+from core.test_utils import add_employee, give_role, login_as, register_company, rows
 
 SALARIES = '/api/v1/payroll/salary-structures/'
 
@@ -47,12 +47,12 @@ class SalaryStructureTests(APITestCase):
         sid = res.data['id']
         self.assertEqual(res.data['employee_email'], 'worker@acme.com')
         self.assertEqual(res.data['gross_amount'], '60000.00')
-        self.assertEqual([s['id'] for s in self.acc_c.get(SALARIES).data], [sid])
+        self.assertEqual([s['id'] for s in rows(self.acc_c.get(SALARIES))], [sid])
         res = self.acc_c.patch(f'{SALARIES}{sid}/', {'base_salary': '55000', 'allowances': {'House Rent': 9000}}, format='json')
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data['gross_amount'], '64000.00')
         self.assertEqual(self.acc_c.delete(f'{SALARIES}{sid}/').status_code, 204)
-        self.assertEqual(self.acc_c.get(SALARIES).data, [])
+        self.assertEqual(rows(self.acc_c.get(SALARIES)), [])
 
     def test_ceo_has_access(self):
         self.assertEqual(make(self.ceo, self.worker['id']).status_code, 201)
@@ -67,7 +67,7 @@ class SalaryStructureTests(APITestCase):
         sid = make(self.acc_c, self.worker['id']).data['id']
         beta = register_company('Beta', 'beta', 'ceo@beta.com')   # its CEO has the permission
         self.assertEqual(beta.get(f'{SALARIES}{sid}/').status_code, 404)
-        self.assertEqual(beta.get(SALARIES).data, [])
+        self.assertEqual(rows(beta.get(SALARIES)), [])
 
     # --- validation -------------------------------------------------------
     def test_one_structure_per_employee(self):

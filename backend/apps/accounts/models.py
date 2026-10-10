@@ -13,6 +13,8 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
     email = models.EmailField(unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    # Platform Admin: runs Ordinis itself. Has no company, no Employee, and no default access to any company's data.
+    is_platform_admin = models.BooleanField(default=False)
 
     objects = UserManager()
 

@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.db import IntegrityError, transaction
 from rest_framework.test import APITestCase
 
-from core.test_utils import add_employee, login_as, register_company
+from core.test_utils import add_employee, login_as, register_company, rows
 from tenants.models import CompanySettings
 from .models import Attendance
 
@@ -126,11 +126,11 @@ class AttendanceTests(APITestCase):
         with clock(at(2026, 10, 5, 3, 30)):
             self.emp_c.post(BASE + 'check_in/')
             login_as('other@acme.com').post(BASE + 'check_in/')
-        mine = self.emp_c.get(BASE).data
+        mine = rows(self.emp_c.get(BASE))
         self.assertEqual(len(mine), 1)
         self.assertEqual(Attendance.objects.count(), 2)
         # the CEO also sees only his own (none)
-        self.assertEqual(self.ceo.get(BASE).data, [])
+        self.assertEqual(rows(self.ceo.get(BASE)), [])
 
     def test_other_company_cannot_open_my_record(self):
         with clock(at(2026, 10, 5, 3, 30)):

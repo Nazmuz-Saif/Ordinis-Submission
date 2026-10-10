@@ -35,7 +35,11 @@ class RoleViewSet(PermissionRequiredMixin, AuditLoggingMixin, viewsets.ModelView
     }
 
     def get_queryset(self):
-        return Role.objects.filter(company=self.request.user.company).prefetch_related("permissions")
+        return (
+            Role.objects.filter(company=self.request.user.company)
+            .prefetch_related("permissions")
+            .order_by("name", "id")
+        )
 
     def perform_create(self, serializer):
         instance = serializer.save(company=self.request.user.company)
@@ -73,7 +77,7 @@ class EmployeeRoleViewSet(
         return EmployeeRole.objects.filter(company=company).select_related(
             "employee__user",
             "role",
-        )
+        ).order_by("employee__employee_code", "role__name", "id")
 
     def perform_create(self, serializer):
         company = self.request.user.company

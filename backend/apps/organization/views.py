@@ -32,7 +32,7 @@ class DepartmentViewSet(
 
     def get_queryset(self):
         company = self.request.user.company
-        return Department.objects.filter(company=company)
+        return Department.objects.filter(company=company).order_by('name', 'id')
 
     def perform_create(self, serializer):
         company = self.request.user.company
@@ -56,7 +56,7 @@ class DesignationViewSet(
 
     def get_queryset(self):
         company = self.request.user.company
-        return Designation.objects.filter(company=company)
+        return Designation.objects.filter(company=company).order_by('title', 'id')
 
     def perform_create(self, serializer):
         company = self.request.user.company
@@ -80,7 +80,7 @@ class EmployeeViewSet(
 
     def get_queryset(self):
         company = self.request.user.company
-        return Employee.objects.filter(company=company)
+        return Employee.objects.filter(company=company).order_by('employee_code', 'id')
 
     def perform_create(self, serializer):
         company = self.request.user.company
@@ -113,4 +113,7 @@ class EmployeeViewSet(
         """GET /employees/{id}/subordinates/ — everyone under this employee, at any depth."""
         employee = self.get_object()  # company-scoped: another company's id returns 404
         team = get_all_subordinates(employee)
+        page = self.paginate_queryset(team)
+        if page is not None:
+            return self.get_paginated_response(self.get_serializer(page, many=True).data)
         return Response(self.get_serializer(team, many=True).data)

@@ -150,6 +150,9 @@ class ApprovalInstanceViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, 
         if request.query_params.get('mine') == 'pending':
             employee, roles = self._employee(), effective_role_ids(self._employee())
             items = [i for i in items if can_act(employee, i, role_ids=roles)]
+        page = self.paginate_queryset(items)
+        if page is not None:
+            return self.get_paginated_response(self.get_serializer(page, many=True).data)
         return Response(self.get_serializer(items, many=True).data)
 
     def _decide(self, request, pk, decision):

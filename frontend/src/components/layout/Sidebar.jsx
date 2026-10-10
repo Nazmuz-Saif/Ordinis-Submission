@@ -81,7 +81,7 @@ function Sidebar({ open, onClose }) {
   const { pathname } = useLocation()
   // Only groups the user clicked are stored; every other group opens when it holds the active page.
   const [toggled, setToggled] = useState({})
-  const nav = visibleNav(hasPermission)
+  const nav = visibleNav(hasPermission, me?.is_platform_admin)
 
   const isGroupOpen = (group) =>
     group.key in toggled ? toggled[group.key] : group.items.some((i) => isPathActive(pathname, i.path))

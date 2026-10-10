@@ -1,8 +1,8 @@
 import apiClient from './apiClient'
+import { getAllPages, getPage } from './paging'
 
 export async function getDepartments() {
-  const res = await apiClient.get('/organization/departments/')
-  return res.data
+  return getAllPages('/organization/departments/')
 }
 
 export async function createDepartment(name) {
@@ -11,8 +11,7 @@ export async function createDepartment(name) {
 }
 
 export async function getDesignations() {
-  const res = await apiClient.get('/organization/designations/')
-  return res.data
+  return getAllPages('/organization/designations/')
 }
 
 export async function createDesignation(title) {
@@ -20,9 +19,12 @@ export async function createDesignation(title) {
   return res.data
 }
 
+export async function getEmployeesPage(page = 1) {
+  return getPage('/organization/employees/', { page })
+}
+
 export async function getEmployees() {
-  const res = await apiClient.get('/organization/employees/')
-  return res.data
+  return getAllPages('/organization/employees/')
 }
 
 export async function createEmployee(payload) {
@@ -46,8 +48,7 @@ export async function updateEmployee(id, payload) {
 }
 
 export async function getEmployeeRoles() {
-  const res = await apiClient.get('/rbac/employee-roles/')
-  return res.data
+  return getAllPages('/rbac/employee-roles/')
 }
 
 export async function assignEmployeeRole(employeeId, roleId) {
@@ -84,6 +85,5 @@ export async function getEmployee(id) {
 }
 
 export async function getSubordinates(id) {
-  const res = await apiClient.get(`/organization/employees/${id}/subordinates/`)
-  return res.data
+  return getAllPages(`/organization/employees/${id}/subordinates/`)
 }
