@@ -23,3 +23,5 @@ class Attendance(BaseModel):
 
     def __str__(self):
         return f"{self.employee_id} {self.date}"
+
+from .leave_models import LeaveRequest, LeaveType  # noqa: E402,F401  (leave lives in its own file)

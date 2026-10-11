@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import ActionInboxPage from './features/inbox/ActionInboxPage'
 import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -16,9 +15,15 @@ import PendingApprovalsPage from './features/approvals/PendingApprovalsPage'
 import UiKitPage from './features/dev/UiKitPage'
 import TasksPage from './features/tasks/TasksPage'
 import KanbanPage from './features/tasks/KanbanPage'
+import ActionInboxPage from './features/inbox/ActionInboxPage'
 import DelegationsPage from './features/approvals/DelegationsPage'
 import SalaryStructuresPage from './features/payroll/SalaryStructuresPage'
+import PayslipsPage from './features/payroll/PayslipsPage'
+import MyPayslipsPage from './features/payroll/MyPayslipsPage'
+import PayslipViewPage from './features/payroll/PayslipViewPage'
 import AttendancePage from './features/attendance/AttendancePage'
+import LeavePage from './features/leave/LeavePage'
+import LeaveTypesPage from './features/leave/LeaveTypesPage'
 import SupportAccessPage from './features/platformAdmin/SupportAccessPage'
 import AdminRoute from './routes/AdminRoute'
 import HomeRedirect from './routes/HomeRedirect'
@@ -106,6 +111,36 @@ function App() {
             element={<Navigate to="/roles" replace />}
           />
           <Route
+            path="/attendance/leave"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <LeavePage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/attendance/leave-types"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <LeaveTypesPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inbox"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ActionInboxPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/tasks/board"
             element={
               <ProtectedRoute>
@@ -131,6 +166,36 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <DelegationsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll/payslips"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <PayslipsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll/my-payslips"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <MyPayslipsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll/payslips/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <PayslipViewPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -201,16 +266,6 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <ApprovalChainsPage />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/inbox"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout>
-                  <ActionInboxPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }
