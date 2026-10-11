@@ -44,6 +44,8 @@ export const NAV = [
     type: 'group', key: 'finance', label: 'Finance', icon: Wallet,
     items: [
       { label: 'Salary Structures', path: '/payroll/salary-structures', permission: 'manage_finance' },
+      { label: 'Payslips', path: '/payroll/payslips', permission: 'manage_finance' },
+      { label: 'My Payslips', path: '/payroll/my-payslips' },
       { label: 'Payroll', path: '/payroll', soon: true },
       { label: 'Expenses', path: '/payroll/expenses', soon: true },
     ],
@@ -73,7 +75,7 @@ export const ADMIN_NAV = [
   { type: 'link', label: 'Activity', path: '/admin/activity', icon: History },
 ]
 
-const EXACT_ONLY = new Set(['/organization', '/tasks'])
+const EXACT_ONLY = new Set(['/organization', '/tasks', '/payroll'])
 
 export function isPathActive(pathname, path) {
   if (pathname === path) return true
