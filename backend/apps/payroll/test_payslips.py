@@ -48,6 +48,26 @@ class GenerateTests(Base):
         self.assertEqual((d['deduction_note'], d['generated_by_email']), ('Advance', 'acc@acme.com'))
         self.assertIn(str(self.today.year), d['month_label'])
 
+    def test_the_payslip_carries_the_companys_currency(self):
+        self.assertEqual(self.generate().data['currency'], 'BDT')
+        from tenants.models import CompanySettings
+        CompanySettings.objects.filter(company_id=self.cid).update(currency='USD')
+        pid = Payslip.objects.get().id
+        self.assertEqual(self.acc_c.get(f'{PAYSLIPS}{pid}/').data['currency'], 'USD')
+
+    def test_listing_payslips_does_not_query_more_for_more_payslips(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        def queries():
+            with CaptureQueriesContext(connection) as ctx:
+                self.acc_c.get(PAYSLIPS)
+            return len(ctx)
+        self.generate(month='2025-01')
+        few = queries()
+        for m in range(2, 10):
+            self.generate(month=f'2025-{m:02d}')
+        self.assertEqual(queries(), few)
+
     def test_deductions_default_to_zero(self):
         d = self.generate().data
         self.assertEqual((d['deductions'], d['net_amount']), ('0.00', '60000.00'))

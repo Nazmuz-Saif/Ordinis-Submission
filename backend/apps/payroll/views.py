@@ -55,7 +55,9 @@ class PayslipViewSet(
     def get_queryset(self):
         user = self.request.user
         employee = user.employee
-        queryset = Payslip.objects.filter(company=user.company).select_related('employee__user', 'generated_by__user')
+        queryset = Payslip.objects.filter(company=user.company).select_related(
+            'employee__user', 'generated_by__user', 'company__settings',
+        )
         params = self.request.query_params
         if params.get('mine') in ('1', 'true', 'True') or not employee.has_permission(FINANCE):
             return queryset.filter(employee=employee)

@@ -63,11 +63,12 @@ class PayslipSerializer(serializers.ModelSerializer):
     generated_by_email = serializers.SerializerMethodField()
     month = serializers.SerializerMethodField()
     month_label = serializers.SerializerMethodField()
+    currency = serializers.SerializerMethodField()
 
     class Meta:
         model = Payslip
         fields = [
-            'id', 'employee', 'employee_email', 'employee_code', 'month', 'month_label',
+            'id', 'employee', 'employee_email', 'employee_code', 'month', 'month_label', 'currency',
             'base_salary', 'allowances', 'gross_amount', 'deductions', 'deduction_note', 'net_amount',
             'generated_by_email', 'created_at',
         ]
@@ -78,6 +79,10 @@ class PayslipSerializer(serializers.ModelSerializer):
 
     def get_month_label(self, obj):
         return month_label(obj.year, obj.month)
+
+    def get_currency(self, obj):
+        settings = getattr(obj.company, 'settings', None)
+        return settings.currency if settings else 'BDT'
 
     def get_generated_by_email(self, obj):
         return obj.generated_by.user.email if obj.generated_by else None
