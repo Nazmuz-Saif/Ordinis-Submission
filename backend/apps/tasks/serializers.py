@@ -1,8 +1,9 @@
+from django.core.validators import URLValidator
 from rest_framework import serializers
 
 from core.serializer_utils import company_of, scope_queryset
 from organization.models import Employee
-from .models import Task
+from .models import Task, TaskProgressLog
 from .services import TaskError, check_transition
 
 
@@ -40,4 +41,32 @@ class TaskSerializer(serializers.ModelSerializer):
                 check_transition(self.instance.status, value)
             except TaskError as exc:
                 raise serializers.ValidationError(str(exc))
+        return value
+
+
+class TaskProgressSerializer(serializers.ModelSerializer):
+    """One progress note. There is deliberately no file field: nothing is ever uploaded."""
+    employee_email = serializers.CharField(source='employee.user.email', read_only=True)
+    external_reference_url = serializers.CharField(
+        required=False, allow_blank=True, max_length=500,
+        validators=[URLValidator(schemes=['http', 'https'])],
+    )
+
+    class Meta:
+        model = TaskProgressLog
+        fields = [
+            'id', 'date', 'employee_email', 'update_text', 'progress_percent',
+            'blocker_text', 'external_reference_url', 'created_at',
+        ]
+        read_only_fields = ['id', 'date', 'employee_email', 'created_at']
+
+    def validate_update_text(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError('Write what you did today.')
+        return value
+
+    def validate_progress_percent(self, value):
+        if not 0 <= value <= 100:
+            raise serializers.ValidationError('Progress must be between 0 and 100.')
         return value

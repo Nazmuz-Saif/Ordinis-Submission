@@ -13,8 +13,7 @@ from decimal import Decimal
 
 from django.db.models import Avg, Count, Sum
 
-from approvals.models import ApprovalInstance, ApprovalStep
-from approvals.services import can_act, effective_role_ids
+from approvals.services import pending_instances_for
 from attendance.models import Attendance
 from attendance.services import local_today
 from organization.models import Department, Employee
@@ -46,14 +45,7 @@ def me_section(employee, today):
     mine = Task.objects.filter(company=employee.company, assigned_to=employee)
     record = Attendance.objects.filter(company=employee.company, employee=employee, date=today).first()
 
-    role_ids = effective_role_ids(employee)
-    pending = ApprovalInstance.objects.filter(company=employee.company, status=ApprovalInstance.STATUS_PENDING)
-    # Load every step once, so the loop below makes no query per request.
-    steps = {(s.approval_chain_id, s.step_order): s for s in ApprovalStep.objects.filter(approval_chain__company=employee.company)}
-    waiting = sum(
-        1 for instance in pending
-        if can_act(employee, instance, step=steps.get((instance.approval_chain_id, instance.current_step)), role_ids=role_ids)
-    )
+    waiting = len(pending_instances_for(employee))
 
     by_status = _by_status(mine)
     return {

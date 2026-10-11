@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Bell, Building2, ChevronDown, LogOut, Menu, Search } from 'lucide-react'
+import { Building2, ChevronDown, LogOut, Menu, Search } from 'lucide-react'
 import { useAuth } from '../../store/AuthContext'
 import { logout } from '../../services/authService'
 import useClickOutside from '../../hooks/useClickOutside'
-import EmptyState from '../common/EmptyState'
+import NotificationBell from './NotificationBell'
 import { pageTitle } from './navigation'
 
 function Navbar({ onMenuClick }) {
@@ -12,11 +12,8 @@ function Navbar({ onMenuClick }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
 
-  const [bellOpen, setBellOpen] = useState(false)
   const [userOpen, setUserOpen] = useState(false)
-  const bellRef = useRef(null)
   const userRef = useRef(null)
-  useClickOutside(bellRef, () => setBellOpen(false), bellOpen)
   useClickOutside(userRef, () => setUserOpen(false), userOpen)
 
   function handleLogout() {
@@ -55,26 +52,7 @@ function Navbar({ onMenuClick }) {
           {me?.is_platform_admin ? 'Ordinis Platform' : me?.company_name}
         </div>
 
-        <div className="relative" ref={bellRef}>
-          <button
-            onClick={() => setBellOpen((v) => !v)}
-            aria-label="Notifications"
-            aria-expanded={bellOpen}
-            data-testid="notification-bell"
-            className="p-2 rounded-lg text-[#14142B] hover:bg-white transition-colors duration-150"
-          >
-            <Bell size={19} />
-          </button>
-          {bellOpen && (
-            <div
-              data-testid="notification-dropdown"
-              className="absolute right-0 mt-2 w-80 bg-white rounded-xl border border-[#EEEEF2] shadow-lg p-3"
-            >
-              <p className="text-sm font-semibold text-[#14142B] px-1 pb-2">Notifications</p>
-              <EmptyState title="You're all caught up" description="New notifications will show up here." />
-            </div>
-          )}
-        </div>
+        {!me?.is_platform_admin && <NotificationBell />}
 
         <div className="relative" ref={userRef}>
           <button

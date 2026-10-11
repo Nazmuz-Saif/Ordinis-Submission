@@ -1,5 +1,5 @@
 import {
-  Building2, CalendarCheck, CheckSquare, GitBranch, History, LayoutDashboard, LifeBuoy, ShieldCheck, Settings, Wallet,
+  Building2, CalendarCheck, CheckSquare, GitBranch, History, Inbox, LayoutDashboard, LifeBuoy, ShieldCheck, Settings, Wallet,
 } from 'lucide-react'
 
 // Single source of truth for the sidebar and the page title.
@@ -7,6 +7,7 @@ import {
 // - soon:       the module is not built yet; shown muted, not clickable
 export const NAV = [
   { type: 'link', label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { type: 'link', label: 'Action Inbox', path: '/inbox', icon: Inbox },
   {
     type: 'group', key: 'organization', label: 'Organization', icon: Building2,
     items: [
@@ -29,6 +30,7 @@ export const NAV = [
     items: [
       { label: 'Projects', path: '/tasks/projects', soon: true },
       { label: 'My Tasks', path: '/tasks' },
+      { label: 'Board', path: '/tasks/board' },
     ],
   },
   {
@@ -71,10 +73,12 @@ export const ADMIN_NAV = [
   { type: 'link', label: 'Activity', path: '/admin/activity', icon: History },
 ]
 
+const EXACT_ONLY = new Set(['/organization', '/tasks'])
+
 export function isPathActive(pathname, path) {
   if (pathname === path) return true
-  // /organization is the Departments page; do not let it match every /organization/... route
-  return path !== '/organization' && pathname.startsWith(`${path}/`)
+  // /organization (Departments) and /tasks (My Tasks) have sub-pages with their own menu item: match exactly
+  return !EXACT_ONLY.has(path) && pathname.startsWith(`${path}/`)
 }
 
 export function pageTitle(pathname) {

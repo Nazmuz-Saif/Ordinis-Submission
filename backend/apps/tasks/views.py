@@ -6,8 +6,10 @@ from rest_framework.response import Response
 
 from core.mixins import AuditLoggingMixin, PermissionRequiredMixin
 from .models import Task
-from .serializers import TaskSerializer
-from .services import NotTheAssignee, TaskError, start_task, submit_task
+from .serializers import TaskProgressSerializer, TaskSerializer
+from .services import (
+    NotAReviewer, NotTheAssignee, TaskClosed, TaskError, add_progress, build_board, move_task, start_task, submit_task,
+)
 
 MANAGE = 'create_task'
 
@@ -18,6 +20,9 @@ class TaskViewSet(PermissionRequiredMixin, AuditLoggingMixin, viewsets.ModelView
       create / edit / delete        need create_task
       POST {id}/start/              assignee only: Not Started or Rejected -> In Progress
       POST {id}/submit/             assignee only: In Progress -> Submitted
+      GET  board/                   the Kanban board: 4 columns, counts, cards, allowed moves
+      POST {id}/move/               {"column": "todo|in_progress|review|done"}, only along the allowed path
+      GET/POST {id}/progress/       the daily progress timeline; only the assignee can add
     Who sees what: users with create_task see every task of the company; everyone else
     sees only tasks assigned to them or created by them.
     """
@@ -62,3 +67,39 @@ class TaskViewSet(PermissionRequiredMixin, AuditLoggingMixin, viewsets.ModelView
     @action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
         return self._assignee_action(request, submit_task)
+
+    @action(detail=False, methods=['get'])
+    def board(self, request):
+        employee = request.user.employee
+        return Response(build_board(self.get_queryset(), employee, employee.has_permission(MANAGE)))
+
+    @action(detail=True, methods=['post'])
+    def move(self, request, pk=None):
+        task = self.get_object()
+        employee = request.user.employee
+        try:
+            move_task(task, employee, request.data.get('column'), employee.has_permission(MANAGE))
+        except (NotTheAssignee, NotAReviewer) as exc:
+            raise PermissionDenied(str(exc))
+        except TaskError as exc:
+            raise ValidationError(str(exc))
+        self._log('UPDATE', task)
+        return Response(self.get_serializer(task).data)
+
+    @action(detail=True, methods=['get', 'post'])
+    def progress(self, request, pk=None):
+        task = self.get_object()
+        if request.method == 'GET':
+            logs = task.progress_logs.select_related('employee__user').order_by('-date', '-created_at', 'id')
+            page = self.paginate_queryset(logs)
+            return self.get_paginated_response(TaskProgressSerializer(page, many=True).data)
+        form = TaskProgressSerializer(data=request.data)
+        form.is_valid(raise_exception=True)
+        try:
+            entry = add_progress(task, request.user.employee, form.validated_data)
+        except NotTheAssignee as exc:
+            raise PermissionDenied(str(exc))
+        except TaskClosed as exc:
+            raise ValidationError(str(exc))
+        self._log('CREATE', entry)
+        return Response(TaskProgressSerializer(entry).data, status=201)

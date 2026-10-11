@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import ActionInboxPage from './features/inbox/ActionInboxPage'
 import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -14,6 +15,7 @@ import ApprovalChainsPage from './features/approvals/ApprovalChainsPage'
 import PendingApprovalsPage from './features/approvals/PendingApprovalsPage'
 import UiKitPage from './features/dev/UiKitPage'
 import TasksPage from './features/tasks/TasksPage'
+import KanbanPage from './features/tasks/KanbanPage'
 import DelegationsPage from './features/approvals/DelegationsPage'
 import SalaryStructuresPage from './features/payroll/SalaryStructuresPage'
 import AttendancePage from './features/attendance/AttendancePage'
@@ -104,6 +106,16 @@ function App() {
             element={<Navigate to="/roles" replace />}
           />
           <Route
+            path="/tasks/board"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <KanbanPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/tasks"
             element={
               <ProtectedRoute>
@@ -189,6 +201,16 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <ApprovalChainsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inbox"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ActionInboxPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

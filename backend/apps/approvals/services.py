@@ -66,7 +66,7 @@ def start_approval(target, chain, requested_by):
         raise ApprovalError('The chain belongs to a different company.')
     if not chain.steps.exists():
         raise ApprovalError('This approval chain has no steps yet.')
-    return ApprovalInstance.objects.create(
+    instance = ApprovalInstance.objects.create(
         company_id=chain.company_id,
         approval_chain=chain,
         content_type=ContentType.objects.get_for_model(target),
@@ -74,6 +74,9 @@ def start_approval(target, chain, requested_by):
         requested_by=requested_by,
         current_step=1,
     )
+    from notifications.services import notify_approval_reached  # imported here: notifications imports this module
+    notify_approval_reached(instance)
+    return instance
 
 
 def current_step_of(instance):
@@ -116,6 +119,24 @@ def can_act(employee, instance, step=None, role_ids=None):
     # Own roles plus roles delegated to the employee (see DelegationRule).
     roles = role_ids if role_ids is not None else effective_role_ids(employee)
     return step.approver_role_id in roles
+
+
+def pending_instances_for(employee):
+    """Pending requests this employee may decide right now (own roles plus delegated ones), oldest first.
+    Steps are loaded once, so the number of queries does not grow with the number of requests."""
+    role_ids = effective_role_ids(employee)
+    pending = (
+        ApprovalInstance.objects.filter(company=employee.company, status=ApprovalInstance.STATUS_PENDING)
+        .select_related('approval_chain', 'requested_by__user').order_by('created_at', 'id')
+    )
+    steps = {
+        (s.approval_chain_id, s.step_order): s
+        for s in ApprovalStep.objects.filter(approval_chain__company=employee.company)
+    }
+    return [
+        i for i in pending
+        if can_act(employee, i, step=steps.get((i.approval_chain_id, i.current_step)), role_ids=role_ids)
+    ]
 
 
 @transaction.atomic
@@ -161,4 +182,10 @@ def decide(instance_id, actor, decision, comment=''):
                 .order_by('step_order').values_list('step_order', flat=True).first()
             )
     instance.save()
+
+    from notifications.services import notify_approval_finished, notify_approval_reached
+    if instance.status == ApprovalInstance.STATUS_PENDING:
+        notify_approval_reached(instance)        # it moved on: tell the next approvers
+    else:
+        notify_approval_finished(instance)       # it is over: tell the person who asked
     return instance

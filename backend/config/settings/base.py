@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'attendance',
     'dashboard',
     'platform_admin',
+    'notifications',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
