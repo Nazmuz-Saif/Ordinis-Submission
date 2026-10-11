@@ -22,6 +22,8 @@ import PayslipsPage from './features/payroll/PayslipsPage'
 import MyPayslipsPage from './features/payroll/MyPayslipsPage'
 import PayslipViewPage from './features/payroll/PayslipViewPage'
 import AttendancePage from './features/attendance/AttendancePage'
+import LeavePage from './features/leave/LeavePage'
+import LeaveTypesPage from './features/leave/LeaveTypesPage'
 import SupportAccessPage from './features/platformAdmin/SupportAccessPage'
 import AdminRoute from './routes/AdminRoute'
 import HomeRedirect from './routes/HomeRedirect'
@@ -107,6 +109,26 @@ function App() {
           <Route
             path="/roles/employee-roles"
             element={<Navigate to="/roles" replace />}
+          />
+          <Route
+            path="/attendance/leave"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <LeavePage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/attendance/leave-types"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <LeaveTypesPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/inbox"
