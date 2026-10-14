@@ -6,6 +6,7 @@ const STATUS_STYLE = {
   pending: 'bg-[#F59E0B]/10 text-[#B45309]',
   approved: 'bg-[#16A34A]/10 text-[#15803D]',
   rejected: 'bg-[#DC2626]/10 text-[#B91C1C]',
+  cancelled: 'bg-[#71717A]/10 text-[#52525B]',
 }
 
 const TABS = [
@@ -19,6 +20,19 @@ function errorMessage(err, fallback) {
 
 function formatDate(value) {
   return new Date(value).toLocaleString()
+}
+
+// What is being approved, when the request describes itself (a leave request does).
+function LeaveDetails({ summary }) {
+  if (!summary) return null
+  return (
+    <dl data-testid="approval-leave-details" className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 text-xs">
+      <div><dt className="text-[#71717A]">Leave type</dt><dd className="text-[#14142B] font-medium">{summary.leave_type}</dd></div>
+      <div><dt className="text-[#71717A]">Dates</dt><dd className="text-[#14142B] font-medium">{summary.start_date} to {summary.end_date}</dd></div>
+      <div><dt className="text-[#71717A]">Days</dt><dd className="text-[#14142B] font-medium">{summary.days}</dd></div>
+      <div className="col-span-2 sm:col-span-4"><dt className="text-[#71717A]">Reason</dt><dd className="text-[#14142B]">{summary.reason}</dd></div>
+    </dl>
+  )
 }
 
 function PendingApprovalsPage() {
@@ -135,7 +149,7 @@ function PendingApprovalsPage() {
       ) : (
         <div className="space-y-4">
           {items.map((item) => (
-            <div key={item.id} className="bg-white rounded-xl shadow-sm border border-[#EEEEF2] p-4">
+            <div key={item.id} data-testid="approval-item" className="bg-white rounded-xl shadow-sm border border-[#EEEEF2] p-4">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-sm font-semibold text-[#14142B]">{item.chain_name}</span>
                 <span className={`text-xs rounded-full px-2.5 py-0.5 capitalize ${STATUS_STYLE[item.status]}`}>
@@ -165,6 +179,7 @@ function PendingApprovalsPage() {
               </div>
 
               <p className="text-sm text-[#14142B] mt-2">{item.target_repr}</p>
+              <LeaveDetails summary={item.target_summary} />
               <p className="text-xs text-[#71717A] mt-0.5">
                 Requested by {item.requested_by_email} · {formatDate(item.created_at)}
               </p>
@@ -199,6 +214,7 @@ function PendingApprovalsPage() {
             <p className="text-sm text-[#71717A] mt-1">
               {dialog.instance.chain_name} · {dialog.instance.target_repr}
             </p>
+            <LeaveDetails summary={dialog.instance.target_summary} />
             <label className="block text-sm font-medium text-[#14142B] mt-4 mb-1">
               Comment {dialog.decision === 'approve' ? '(optional)' : '(required)'}
             </label>
