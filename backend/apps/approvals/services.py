@@ -53,6 +53,29 @@ class NotAnApprover(PermissionError):
     """The actor does not hold the Role of the current step."""
 
 
+# A module that owns the thing being approved (e.g. leave) registers a function here.
+# decide() calls it, inside the same transaction, when the request is approved or rejected.
+_finish_handlers = {}
+
+
+def register_finish_handler(model, handler):
+    _finish_handlers[model._meta.label_lower] = handler
+
+
+def _run_finish_handler(instance):
+    handler = _finish_handlers.get(f'{instance.content_type.app_label}.{instance.content_type.model}')
+    if handler:
+        handler(instance)
+
+
+def cancel_approval(target):
+    """The request was withdrawn: stop its pending approval so nobody can decide it any more."""
+    return ApprovalInstance.objects.filter(
+        content_type=ContentType.objects.get_for_model(target), object_id=target.pk,
+        status=ApprovalInstance.STATUS_PENDING,
+    ).update(status=ApprovalInstance.STATUS_CANCELLED)
+
+
 def chain_has_pending(chain):
     return chain.instances.filter(status=ApprovalInstance.STATUS_PENDING).exists()
 
@@ -182,6 +205,8 @@ def decide(instance_id, actor, decision, comment=''):
                 .order_by('step_order').values_list('step_order', flat=True).first()
             )
     instance.save()
+    if instance.status != ApprovalInstance.STATUS_PENDING:
+        _run_finish_handler(instance)
 
     from notifications.services import notify_approval_finished, notify_approval_reached
     if instance.status == ApprovalInstance.STATUS_PENDING:

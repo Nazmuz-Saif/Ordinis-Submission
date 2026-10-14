@@ -9,10 +9,17 @@ from datetime import date, timedelta
 
 from django.db import transaction
 
+from approvals.models import ApprovalChain, ApprovalInstance, ApprovalStep
+from approvals.services import ApprovalError, cancel_approval, start_approval
 from core.exceptions import OrdinisException
 from organization.models import Employee
+from rbac.models import EmployeeRole, Role
+from rbac.services import CEO_ROLE_NAME
 from .leave_models import LeaveRequest, LeaveType
 from .services import local_today
+
+LEAVE_MODULE = 'leave'
+DEFAULT_CHAIN_NAME = 'Leave Approval (default)'
 
 
 class LeaveError(OrdinisException):
@@ -59,6 +66,70 @@ def balance_for(employee, year=None):
     return result
 
 
+# ---------------------------------------------------------------------------
+# Which Approval Chain decides a leave request
+# ---------------------------------------------------------------------------
+
+def _step_without_approver(chain, applicant):
+    """The first step nobody except the applicant can decide (no active holder of its role), or None."""
+    for step in chain.steps.select_related('approver_role').order_by('step_order'):
+        holders = EmployeeRole.objects.filter(
+            role_id=step.approver_role_id, employee__user__is_active=True,
+        ).exclude(employee_id=applicant.id)
+        if not holders.exists():
+            return step
+    return None
+
+
+def _default_chain(company):
+    """
+    The CEO fallback: one step, decided by the company's CEO role. It is created the first time it
+    is needed and stays a normal chain, so the company can see and change it on the Approval Chains page.
+    """
+    role = (
+        Role.objects.filter(company=company, is_system_default=True, name=CEO_ROLE_NAME).first()
+        or Role.objects.filter(company=company, is_system_default=True).order_by('created_at').first()
+    )
+    if role is None:
+        return None
+    chain, _ = ApprovalChain.objects.get_or_create(
+        company=company, name=DEFAULT_CHAIN_NAME, defaults={'applies_to_module': LEAVE_MODULE},
+    )
+    if not chain.steps.exists():
+        ApprovalStep.objects.create(approval_chain=chain, step_order=1, approver_role=role)
+    return chain
+
+
+def leave_chain_for(employee):
+    """
+    The company's own leave chain (first by name) when every step has someone other than the applicant
+    who can decide it. Otherwise the CEO fallback. Raises LeaveError when not even the CEO can decide.
+    """
+    own = (
+        ApprovalChain.objects.filter(company_id=employee.company_id, applies_to_module=LEAVE_MODULE, steps__isnull=False)
+        .exclude(name=DEFAULT_CHAIN_NAME).distinct().order_by('name', 'id').first()
+    )
+    if own and _step_without_approver(own, employee) is None:
+        return own
+    fallback = _default_chain(employee.company)
+    if fallback and _step_without_approver(fallback, employee) is None:
+        return fallback
+    raise LeaveError(
+        'No one can approve your leave right now. Ask an administrator to set up a leave approval chain.',
+        code='LEAVE_NO_APPROVER',
+    )
+
+
+def on_approval_finished(instance):
+    """Called by the approval engine when a request is approved or rejected: the leave follows the decision."""
+    leave = LeaveRequest.objects.select_for_update().filter(pk=instance.object_id).first()
+    if leave is None or leave.status != LeaveRequest.STATUS_PENDING:
+        return
+    approved = instance.status == ApprovalInstance.STATUS_APPROVED
+    leave.status = LeaveRequest.STATUS_APPROVED if approved else LeaveRequest.STATUS_REJECTED
+    leave.save(update_fields=['status', 'updated_at'])  # a rejected leave stops counting: the days are back
+
+
 @transaction.atomic
 def apply_leave(employee, leave_type, start_date, end_date, reason):
     """
@@ -94,10 +165,16 @@ def apply_leave(employee, leave_type, start_date, end_date, reason):
                 code='LEAVE_INSUFFICIENT_BALANCE',
             )
 
-    return LeaveRequest.objects.create(
+    chain = leave_chain_for(employee)   # raises LEAVE_NO_APPROVER before anything is saved
+    leave = LeaveRequest.objects.create(
         company_id=employee.company_id, employee=employee, leave_type=leave_type,
         start_date=start_date, end_date=end_date, days=days_between(start_date, end_date), reason=reason,
     )
+    try:
+        start_approval(leave, chain, employee)
+    except ApprovalError as exc:
+        raise LeaveError(str(exc), code='LEAVE_NO_APPROVER')
+    return leave
 
 
 @transaction.atomic
@@ -108,4 +185,5 @@ def cancel_leave(leave_request):
         raise LeaveError('Only a pending request can be cancelled.', code='LEAVE_NOT_PENDING')
     leave_request.status = LeaveRequest.STATUS_CANCELLED
     leave_request.save(update_fields=['status', 'updated_at'])
+    cancel_approval(leave_request)   # approvers no longer see it
     return leave_request
