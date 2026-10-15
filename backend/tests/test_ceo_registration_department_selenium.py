@@ -31,7 +31,10 @@ from tenants.models import CompanySettings
 
 User = get_user_model()
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from selenium_helpers import FRONTEND_URL, land_on_organization  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 COMPANY_NAME = "Onnorokom Pathshala"
 SUBDOMAIN = "onnorokom"
 INDUSTRY = "Education"
@@ -115,7 +118,7 @@ class CeoRegistrationDepartmentSeleniumTest(unittest.TestCase):
 
         # [Step 3] Wait for registration to complete and redirect
         print("[Step 3] Waiting for registration to complete...")
-        self.wait.until(EC.url_contains("/organization"))
+        land_on_organization(self.driver, self.wait)
         print(f"  -> Company '{COMPANY_NAME}' and CEO '{CEO_EMAIL}' successfully registered!")
         time.sleep(2)
 
@@ -143,7 +146,7 @@ class CeoRegistrationDepartmentSeleniumTest(unittest.TestCase):
 
         # Wait until redirected to /organization
         print("[Step 5] Waiting for authentication and navigation to /organization...")
-        self.wait.until(EC.url_contains("/organization"))
+        land_on_organization(self.driver, self.wait)
         self.wait.until(
             EC.visibility_of_element_located((By.XPATH, "//h1[normalize-space()='Departments']"))
         )

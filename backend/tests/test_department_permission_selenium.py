@@ -27,7 +27,10 @@ from rbac.models import EmployeeRole
 
 User = get_user_model()
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from selenium_helpers import FRONTEND_URL, land_on_organization  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 EMPLOYEE_EMAIL = "mahinabc@gmail.com"
 PASSWORD = "TestPass123!"
 DEPARTMENT_NAME = "HR"
@@ -115,7 +118,7 @@ class DepartmentPermissionSeleniumTest(unittest.TestCase):
 
         # 2. Wait until React redirects to /organization after authentication
         print("[Step 3] Waiting for authentication and navigation to /organization...")
-        self.wait.until(EC.url_contains("/organization"))
+        land_on_organization(self.driver, self.wait)
 
         # 3. Wait for Departments heading to be visible
         self.wait.until(

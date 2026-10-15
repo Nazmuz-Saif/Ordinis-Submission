@@ -58,6 +58,9 @@ class LeaveRequestViewSet(
         queryset = (
             LeaveRequest.objects.filter(company=user.company, employee=user.employee)
             .select_related('leave_type')
+            .prefetch_related(
+                'approvals__approval_chain__steps__approver_role', 'approvals__actions__actor__user',
+            )
         )
         wanted = self.request.query_params.get('status')
         if wanted in dict(LeaveRequest.STATUS_CHOICES):

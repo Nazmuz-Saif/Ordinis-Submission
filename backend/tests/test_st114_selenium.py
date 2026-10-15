@@ -6,7 +6,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from selenium_helpers import FRONTEND_URL  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 UI_KIT_URL = f"{FRONTEND_URL}/dev/ui-kit"
 
 

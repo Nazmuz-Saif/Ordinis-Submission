@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.validators import MaxValueValidator
 from django.db import models
 from django.db.models import F, Q
@@ -46,6 +47,8 @@ class LeaveRequest(BaseModel):
     days = models.PositiveSmallIntegerField()
     reason = models.CharField(max_length=500)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    # The approval(s) of this request in the Approval Chain engine (no database column).
+    approvals = GenericRelation('approvals.ApprovalInstance')
 
     class Meta:
         ordering = ['-start_date', '-created_at']
@@ -54,4 +57,11 @@ class LeaveRequest(BaseModel):
         ]
 
     def __str__(self):
-        return f'{self.employee_id} {self.start_date}..{self.end_date} ({self.status})'
+        return f'{self.leave_type.name}: {self.start_date} to {self.end_date} ({self.days} days)'
+
+    def approval_summary(self):
+        """Shown to the approver on the Pending Approvals page."""
+        return {
+            'leave_type': self.leave_type.name, 'start_date': self.start_date, 'end_date': self.end_date,
+            'days': self.days, 'reason': self.reason, 'status': self.status,
+        }

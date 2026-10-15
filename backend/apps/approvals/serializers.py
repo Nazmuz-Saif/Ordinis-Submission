@@ -81,6 +81,7 @@ class ApprovalInstanceSerializer(serializers.ModelSerializer):
     chain_name = serializers.CharField(source='approval_chain.name', read_only=True)
     target_type = serializers.CharField(source='content_type.model', read_only=True)
     target_repr = serializers.SerializerMethodField()
+    target_summary = serializers.SerializerMethodField()
     requested_by_email = serializers.CharField(source='requested_by.user.email', read_only=True)
     current_step_role_name = serializers.SerializerMethodField()
     total_steps = serializers.SerializerMethodField()
@@ -90,7 +91,7 @@ class ApprovalInstanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApprovalInstance
         fields = [
-            'id', 'approval_chain', 'chain_name', 'target_type', 'target_repr',
+            'id', 'approval_chain', 'chain_name', 'target_type', 'target_repr', 'target_summary',
             'requested_by', 'requested_by_email', 'current_step', 'current_step_role_name',
             'total_steps', 'status', 'can_act', 'actions', 'created_at',
         ]
@@ -102,6 +103,11 @@ class ApprovalInstanceSerializer(serializers.ModelSerializer):
 
     def get_target_repr(self, obj):
         return str(obj.target) if obj.target is not None else '(deleted)'
+
+    def get_target_summary(self, obj):
+        """Details of what is being approved, if that model describes itself (e.g. a leave request)."""
+        describe = getattr(obj.target, 'approval_summary', None)
+        return describe() if describe else None
 
     def get_current_step_role_name(self, obj):
         if obj.status != ApprovalInstance.STATUS_PENDING:

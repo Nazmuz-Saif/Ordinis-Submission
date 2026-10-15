@@ -58,10 +58,12 @@ class ApprovalInstance(BaseModel):
     STATUS_PENDING = 'pending'
     STATUS_APPROVED = 'approved'
     STATUS_REJECTED = 'rejected'
+    STATUS_CANCELLED = 'cancelled'  # the person withdrew the request before it was decided
     STATUS_CHOICES = [
         (STATUS_PENDING, 'Pending'),
         (STATUS_APPROVED, 'Approved'),
         (STATUS_REJECTED, 'Rejected'),
+        (STATUS_CANCELLED, 'Cancelled'),
     ]
 
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='approval_instances')

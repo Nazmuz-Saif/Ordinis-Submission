@@ -166,6 +166,12 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    # Closed by default: a new endpoint needs a login and an active company unless it says otherwise
+    # (login, register and the token views do say so). A view that forgets permission_classes is safe, not open.
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+        'core.permissions.IsCompanyActive',
+    ),
     'DEFAULT_PAGINATION_CLASS': 'core.pagination.OrdinisPagination',
 }
 

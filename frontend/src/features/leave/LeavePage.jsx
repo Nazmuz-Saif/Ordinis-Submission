@@ -4,6 +4,7 @@ import {
   applyLeave, cancelLeave, getLeaveBalance, getLeaveRequestsPage, getLeaveTypes,
 } from '../../services/leaveService'
 import StatusPill from '../../components/common/StatusPill'
+import ApprovalProgress from './ApprovalProgress'
 import { ConfirmDialog, DataTable, Notice, PageHeader } from '../admin/shared'
 import { usePagedList } from '../admin/usePagedList'
 import { STATUS, daysBetween, errorText, plural } from './leaveFormat'
@@ -86,7 +87,8 @@ function LeavePage() {
     setError('')
     try {
       const sent = await applyLeave(form)
-      setMessage(`Leave request sent for ${plural(sent.days)}. It is Pending.`)
+      const waiting = sent.approval?.current_step_role_name
+      setMessage(`Leave request sent for ${plural(sent.days)}. It is Pending${waiting ? `, waiting for ${waiting}` : ''}.`)
       setForm((f) => ({ ...EMPTY, leave_type: f.leave_type }))
       changed()
     } catch (err) {
@@ -120,6 +122,7 @@ function LeavePage() {
       key: 'status', label: 'Status',
       render: (r) => <span data-testid="leave-status"><StatusPill status={STATUS[r.status].variant} label={STATUS[r.status].label} /></span>,
     },
+    { key: 'approval', label: 'Approval', render: (r) => <ApprovalProgress approval={r.approval} /> },
     {
       key: 'action', label: 'Action', align: 'right',
       render: (r) => r.status === 'pending' && (

@@ -8,7 +8,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from selenium_helpers import FRONTEND_URL, login  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 
 LOGIN_URL = f"{FRONTEND_URL}/login"
 CHAINS_URL = f"{FRONTEND_URL}/approvals/chains"
@@ -32,31 +35,7 @@ class ST112ApprovalChainSeleniumTest(unittest.TestCase):
         self.driver.quit()
 
     def login(self, email, password):
-        self.driver.get(LOGIN_URL)
-
-        self.wait.until(
-            EC.visibility_of_element_located(
-                (By.XPATH, "//input[@type='email']")
-            )
-        )
-
-        self.driver.find_element(
-            By.XPATH, "//input[@type='email']"
-        ).send_keys(email)
-
-        self.driver.find_element(
-            By.XPATH, "//input[@type='password']"
-        ).send_keys(password)
-
-        self.wait.until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "//button[normalize-space()='Login']")
-            )
-        ).click()
-
-        self.wait.until(
-            lambda driver: "/login" not in driver.current_url
-        )
+        login(self.driver, self.wait, email, password)
 
     def open_chains_page(self):
         self.driver.get(CHAINS_URL)
