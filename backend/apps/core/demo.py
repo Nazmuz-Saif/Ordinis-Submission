@@ -39,6 +39,9 @@ PEOPLE = [
 ]
 DEPARTMENTS = ['Management', 'Engineering', 'Sales', 'Human Resources', 'Finance']
 
+# The Platform Admin (company-less). It is not part of the demo company, so --reset and --delete keep it.
+PLATFORM_LOGIN = ('Platform Admin', 'platform')
+
 # One login per dashboard, shown at the end of the command.
 LOGINS = [('CEO', 'ceo'), ('Manager', 'manager'), ('HR', 'hr'), ('Accountant', 'accountant'), ('Employee', 'employee')]
 

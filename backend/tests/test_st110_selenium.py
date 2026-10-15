@@ -32,8 +32,10 @@ from tenants.models import Company
 
 User = get_user_model()
 
-FRONTEND_URL = "http://localhost:5174"
-BACKEND_API_URL = "http://127.0.0.1:8000/api/v1"
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from selenium_helpers import FRONTEND_URL, land_on_organization, login, open_organization, BACKEND_API_URL  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 
 NO_PERMISSION_EMAIL = "selenium-nopermission@acme.com"
 WITH_PERMISSION_EMAIL = "selenium-permission@acme.com"
@@ -165,40 +167,8 @@ class ST110SeleniumTest(unittest.TestCase):
         )
 
     def login(self, email):
-        self.driver.get(
-            f"{FRONTEND_URL}/login"
-        )
-
-        email_input = self.wait.until(
-            EC.visibility_of_element_located(
-                (
-                    By.CSS_SELECTOR,
-                    "input[type='email']",
-                )
-            )
-        )
-
-        password_input = self.driver.find_element(
-            By.CSS_SELECTOR,
-            "input[type='password']",
-        )
-
-        email_input.send_keys(email)
-
-        password_input.send_keys(
-            PASSWORD
-        )
-
-        self.driver.find_element(
-            By.XPATH,
-            "//button[normalize-space()='Login']",
-        ).click()
-
-        self.wait.until(
-            EC.url_contains(
-                "/organization"
-            )
-        )
+        login(self.driver, self.wait, email, PASSWORD)
+        open_organization(self.driver, self.wait)
 
         self.driver.refresh()
 

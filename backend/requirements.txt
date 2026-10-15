@@ -3,4 +3,5 @@ Django==6.1.2
 djangorestframework==3.18.3
 djangorestframework-simplejwt==5.5.1
 django-cors-headers==4.9.0
+selenium==4.51.0   # only for the browser tests in backend/tests (needs Google Chrome)
 python-dotenv==1.2.2

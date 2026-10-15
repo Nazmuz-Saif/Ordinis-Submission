@@ -47,8 +47,10 @@ from tenants.models import Company
 
 User = get_user_model()
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
-BACKEND_API_URL = os.environ.get("BACKEND_API_URL", "http://127.0.0.1:8000/api/v1")
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from selenium_helpers import FRONTEND_URL, login, BACKEND_API_URL  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 COMPANY_SUBDOMAIN = os.environ.get("COMPANY_SUBDOMAIN", "acme")
 PASSWORD = "TestPass123"
 
@@ -177,15 +179,7 @@ class ST125SeleniumTest(unittest.TestCase):
 
     # --- browser helpers ----------------------------------------------------
     def login(self, email):
-        self.driver.get(f"{FRONTEND_URL}/login")
-        email_input = self.wait.until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "input[type='email']"))
-        )
-        email_input.send_keys(email)
-        self.driver.find_element(By.CSS_SELECTOR, "input[type='password']").send_keys(PASSWORD)
-        self.driver.find_element(By.XPATH, "//button[normalize-space()='Login']").click()
-        # after login the app opens the dashboard (older versions: Organization); just leave the login page
-        self.wait.until(lambda d: "/login" not in d.current_url)
+        login(self.driver, self.wait, email, PASSWORD)
 
     def open_board(self):
         self.driver.get(f"{FRONTEND_URL}/tasks/board")

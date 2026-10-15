@@ -8,7 +8,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5177")
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from selenium_helpers import FRONTEND_URL  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 
 LOGIN_URL = f"{FRONTEND_URL}/login"
 APPROVALS_URL = f"{FRONTEND_URL}/approvals/pending"

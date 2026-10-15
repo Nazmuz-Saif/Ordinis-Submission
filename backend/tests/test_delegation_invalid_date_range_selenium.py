@@ -32,7 +32,10 @@ from tenants.models import CompanySettings
 
 User = get_user_model()
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from selenium_helpers import FRONTEND_URL, land_on_organization  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 SUBDOMAIN = "onnorokom"
 CEO_EMAIL = "ceo.onnorokom@gmail.com"
 PASSWORD = "TestPass123!"
@@ -151,7 +154,7 @@ class DelegationInvalidDateRangeSeleniumTest(unittest.TestCase):
         print(f"[Step 2] Logging in as CEO ({CEO_EMAIL})...")
         login_btn.click()
 
-        self.wait.until(EC.url_contains("/organization"))
+        land_on_organization(self.driver, self.wait)
         time.sleep(1.5)
 
         # [Step 3] Navigate to Delegations page

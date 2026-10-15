@@ -30,7 +30,10 @@ from tenants.models import CompanySettings
 
 User = get_user_model()
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from selenium_helpers import FRONTEND_URL, land_on_organization  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 COMPANY_NAME = "Onnorokom Pathshala"
 SUBDOMAIN = "onnorokom"
 INDUSTRY = "Education"
@@ -116,7 +119,7 @@ class RegisterCompanyDashboardSeleniumTest(unittest.TestCase):
 
         # [Step 3] Expect redirect to dashboard (/organization)
         print("[Step 3] Waiting for automatic redirect to dashboard...")
-        self.wait.until(EC.url_contains("/organization"))
+        land_on_organization(self.driver, self.wait)
         print("  -> Redirected to dashboard (/organization) successfully!")
 
         # Wait for dashboard content to load

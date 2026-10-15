@@ -22,10 +22,10 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 
 
-FRONTEND_URL = os.environ.get(
-    "FRONTEND_URL",
-    "http://localhost:5175"
-)
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from selenium_helpers import FRONTEND_URL, login  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 
 EMAIL = "ceo@acme.com"
 PASSWORD = "TestPass123"
@@ -61,31 +61,7 @@ class TestST127Payslip(unittest.TestCase):
             cls.driver.quit()
 
     def login(self):
-        driver = self.driver
-        driver.get(FRONTEND_URL + "/login")
-
-        email = self.wait.until(
-            EC.visibility_of_element_located(
-                (By.CSS_SELECTOR, "input[type='email']")
-            )
-        )
-        email.clear()
-        email.send_keys(EMAIL)
-
-        password = driver.find_element(
-            By.CSS_SELECTOR, "input[type='password']"
-        )
-        password.clear()
-        password.send_keys(PASSWORD)
-
-        driver.find_element(
-            By.XPATH,
-            "//button[normalize-space()='Login']"
-        ).click()
-
-        self.wait.until(
-            lambda d: "/login" not in d.current_url
-        )
+        login(self.driver, self.wait, EMAIL, PASSWORD)
 
     def select_employee(self):
         element = self.wait.until(

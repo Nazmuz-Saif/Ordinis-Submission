@@ -23,7 +23,10 @@ from organization.models import Company, Employee
 from attendance.leave_models import LeaveRequest, LeaveType
 
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5177")
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from selenium_helpers import FRONTEND_URL, login  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 PASSWORD = "TestPass128"
 
 
@@ -125,36 +128,7 @@ class ST128LeaveSeleniumTest(unittest.TestCase):
             self.driver.quit()
 
     def login_and_open_leave(self):
-        self.driver.get(f"{FRONTEND_URL}/login")
-
-        email_input = self.wait.until(
-            EC.visibility_of_element_located(
-                (By.CSS_SELECTOR, "input[type='email']")
-            )
-        )
-        email_input.send_keys(self.emails[0])
-
-        password_input = self.wait.until(
-            EC.visibility_of_element_located(
-                (By.CSS_SELECTOR, "input[type='password']")
-            )
-        )
-        password_input.send_keys(PASSWORD)
-
-        login_button = self.wait.until(
-            EC.element_to_be_clickable(
-                (
-                    By.XPATH,
-                    "//button[normalize-space()='Login' "
-                    "or normalize-space()='Log in']",
-                )
-            )
-        )
-        login_button.click()
-
-        self.wait.until(
-            lambda driver: "/login" not in driver.current_url
-        )
+        login(self.driver, self.wait, self.emails[0], PASSWORD)
 
         form_selector = "[data-testid='leave-form']"
 

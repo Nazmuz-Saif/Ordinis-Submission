@@ -37,7 +37,10 @@ from tenants.models import Company
 
 User = get_user_model()
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from selenium_helpers import FRONTEND_URL  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 COMPANY_SUBDOMAIN = "acme"
 CEO_EMAIL = "siam@gmail.com"
 PASSWORD = "1234"

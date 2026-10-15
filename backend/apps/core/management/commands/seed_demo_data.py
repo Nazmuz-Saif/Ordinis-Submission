@@ -70,5 +70,5 @@ class Command(BaseCommand):
         for label, count in sorted(ctx.created.items()):
             self.stdout.write(f'    {label}: +{count}')
         self.stdout.write(f'\nLog in with password {demo.PASSWORD}:')
-        for role, local in demo.LOGINS:
-            self.stdout.write(f'    {role:<11} {demo.email(local)}')
+        for role, local in demo.LOGINS + [demo.PLATFORM_LOGIN]:
+            self.stdout.write(f'    {role:<14} {demo.email(local)}')

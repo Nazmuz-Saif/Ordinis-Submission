@@ -41,8 +41,10 @@ from tenants.models import Company
 
 User = get_user_model()
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
-BACKEND_API_URL = os.environ.get("BACKEND_API_URL", "http://127.0.0.1:8000/api/v1")
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from selenium_helpers import FRONTEND_URL, BACKEND_API_URL  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 COMPANY_SUBDOMAIN = "acme"
 
 ADMIN_EMAIL = "platform_admin@ordinis.com"

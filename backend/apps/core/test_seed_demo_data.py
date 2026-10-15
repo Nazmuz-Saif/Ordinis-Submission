@@ -44,6 +44,10 @@ def login(local):
     return client
 
 
+def login_status(email):
+    return APIClient().post('/api/v1/auth/login/', {'email': email, 'password': demo.PASSWORD}, format='json').status_code
+
+
 class SeedContentTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -102,6 +106,14 @@ class SeedContentTests(TestCase):
         self.assertEqual(Payslip.objects.count(), len(demo.PEOPLE) * 3)
         self.assertTrue(Payslip.objects.filter(deductions__gt=0).exists())
 
+    def test_the_platform_admin_and_break_glass_demo_exist(self):
+        from platform_admin.models import SupportAccessRequest, SupportTicket
+        admin = User.objects.get(email=demo.email('platform'))
+        self.assertTrue(admin.is_platform_admin and admin.company_id is None)
+        self.assertEqual(set(SupportAccessRequest.objects.values_list('status', flat=True)), {'pending', 'denied', 'revoked'})
+        self.assertEqual(set(SupportTicket.objects.values_list('status', flat=True)), {'open', 'resolved'})
+        self.assertEqual(login_status(demo.email('platform')), 200)
+
     def test_notifications_exist_some_read_some_unread(self):
         self.assertTrue(Notification.objects.filter(is_read=True).exists())
         self.assertTrue(Notification.objects.filter(is_read=False).exists())
@@ -131,7 +143,9 @@ class SeedSafetyTests(TestCase):
         seed()
         seed('--delete')
         self.assertFalse(Company.objects.filter(subdomain=demo.SUBDOMAIN).exists())
-        self.assertFalse(User.objects.filter(email__endswith='@' + demo.DOMAIN).exists())
+        self.assertFalse(User.objects.filter(email__endswith='@' + demo.DOMAIN, company__isnull=False).exists())
+        self.assertTrue(User.objects.filter(email=demo.email('platform'), is_platform_admin=True).exists(),
+                        'the Platform Admin belongs to no company, so it stays')
         self.assertTrue(Company.objects.filter(subdomain='other-co').exists())
         self.assertIn('no demo company', seed('--delete'))
 
@@ -157,6 +171,6 @@ class SeedSafetyTests(TestCase):
 
     def test_a_new_app_only_has_to_add_a_demo_data_file(self):
         names = [name for _order, name, _fn in demo.discover_seeders()]
-        self.assertEqual(names, ['organization', 'rbac', 'approvals', 'tasks', 'attendance', 'payroll', 'notifications'])
+        self.assertEqual(names, ['organization', 'rbac', 'approvals', 'tasks', 'attendance', 'payroll', 'platform_admin', 'notifications'])
         orders = [order for order, _n, _f in demo.discover_seeders()]
         self.assertEqual(orders, sorted(orders))
