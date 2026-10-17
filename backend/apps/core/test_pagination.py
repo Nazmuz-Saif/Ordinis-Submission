@@ -49,6 +49,9 @@ class PaginationTests(TestCase):
         self.assertEqual(rows(res), [])
 
     def test_employee_list_and_subordinates_are_paginated(self):
+        from billing.services import change_plan
+        from tenants.models import Company
+        change_plan(Company.objects.get(subdomain='acme'), 'Enterprise')   # the Basic plan allows only 10 employees
         for i in range(21):
             add_employee(self.ceo, f'e{i}@acme.com', f'ACME-{i + 10:03d}', reports_to=self.ceo.employee_id)
         res = self.ceo.get(EMPLOYEES)

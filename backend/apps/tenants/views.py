@@ -10,7 +10,7 @@ class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsCompanyActive]
 
     def get_queryset(self):
-        return Company.objects.filter(id=self.request.user.company_id)
+        return Company.objects.filter(id=self.request.user.company_id).order_by('name', 'id')
 
 
 class CompanySettingsViewSet(

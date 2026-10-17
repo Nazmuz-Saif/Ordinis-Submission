@@ -50,6 +50,13 @@ class MeView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @staticmethod
+    def _plan_name(company):
+        if company is None:
+            return None
+        from billing.services import get_subscription
+        return get_subscription(company).plan.name
+
     def get(self, request):
         user = request.user
         company = user.company
@@ -59,6 +66,7 @@ class MeView(APIView):
             "email": user.email,
             "company_id": str(company.id) if company else None,
             "company_name": company.name if company else None,
+            "plan_name": self._plan_name(company),
             "permissions": [],
             "is_platform_admin": user.is_platform_admin,
         }

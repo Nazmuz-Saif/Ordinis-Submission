@@ -20,50 +20,14 @@ class StandardResponseMixin:
 
 class AuditLoggingMixin:
     """
-    Mixin for DRF ViewSets: automatically logs create/update/destroy
-    actions to AuditLog, tagged with the acting employee, the model
-    name, and the affected object's id.
+    Formerly logged create/update/destroy from the ViewSet. Now a no-op: see audit_log.signals.
     """
 
-    def perform_create(self, serializer):
-        instance = serializer.save()
-        self._log("CREATE", instance)
-
-    def perform_update(self, serializer):
-        instance = serializer.save()
-        self._log("UPDATE", instance)
-
-    def perform_destroy(self, instance):
-        self._log("DELETE", instance)
-        instance.delete()
-
+    # Kept so the ViewSets that mix it in (and call self._log) keep working. Logging is now done in one place for
+    # every model, by audit_log.signals (it also covers custom actions, services and Break-Glass reads), so this
+    # does nothing and cannot log a second row for the same action.
     def _log(self, action, instance):
-        employee = getattr(self.request.user, 'employee', None)
-        if not employee:
-            return
-
-        try:
-            from audit_log.models import AuditLog
-        except ModuleNotFoundError:
-            # audit_log app not present in this build scope yet — skip logging
-            return
-
-        AuditLog.objects.create(
-            actor=employee,
-            action=action,
-            model_name=instance.__class__.__name__,
-            object_id=getattr(instance, 'id', None),
-            ip_address=self._get_client_ip(),
-        )
-        return
-
-    def _get_client_ip(self):
-        forwarded = self.request.META.get("HTTP_X_FORWARDED_FOR")
-
-        if forwarded:
-            return forwarded.split(",")[0].strip()
-
-        return self.request.META.get("REMOTE_ADDR")
+        return None
 
 
 # PermissionRequiredMixin lives in rbac/decorators.py (per the SDS); re-exported here
