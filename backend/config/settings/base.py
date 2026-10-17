@@ -68,6 +68,8 @@ INSTALLED_APPS = [
     'dashboard',
     'platform_admin',
     'notifications',
+    'audit_log',
+    'billing',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -82,6 +84,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'tenants.middleware.TenantIsolationMiddleware',
+    'audit_log.middleware.AuditContextMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

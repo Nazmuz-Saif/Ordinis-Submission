@@ -138,6 +138,77 @@ A kind of leave a company offers, for example Annual or Sick, and how many days 
 
 Rule: `one_leave_type_name_per_company` (unique)
 
+## App `audit_log`
+
+### AuditLog
+
+One row for one sensitive action: who did what, to which record, in which company, and when.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `company` | FK to tenants.Company |  | can be empty (null); on delete: SET_NULL |
+| `company_name` | Char(255) |  |  |
+| `actor` | FK to accounts.User |  | can be empty (null); on delete: SET_NULL |
+| `actor_email` | Char(254) |  |  |
+| `action` | Char(20) |  | one of: create, update, delete, read, export, denied |
+| `status` | Char(10) | 'success' | one of: success, warning, failed |
+| `module` | Char(50) |  |  |
+| `model_name` | Char(100) |  |  |
+| `object_id` | Char(64) |  |  |
+| `object_repr` | Char(255) |  |  |
+| `changed_fields` | JSON | list() |  |
+| `ip_address` | GenericIPAddress |  | can be empty (null) |
+
+## App `billing`
+
+### Invoice
+
+A monthly bill. It keeps the amount of that day: a later plan change never alters an old invoice.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `company` | FK to tenants.Company |  | on delete: CASCADE |
+| `subscription` | FK to billing.Subscription |  | on delete: CASCADE |
+| `number` | Char(40) |  | unique |
+| `plan_name` | Char(50) |  |  |
+| `period_start` | Date |  |  |
+| `period_end` | Date |  |  |
+| `amount` | Decimal(10,2) |  |  |
+| `currency` | Char(10) | 'BDT' |  |
+| `status` | Char(10) | 'open' | one of: open, paid, void |
+| `issued_on` | Date |  |  |
+| `due_on` | Date |  |  |
+| `paid_on` | Date |  | can be empty (null) |
+
+Rule: `one_invoice_per_period` (unique)
+
+Rule: `invoice_amount_not_negative` (check)
+
+### Subscription
+
+The plan a company is on now. One per company.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `company` | FK to tenants.Company |  | unique; on delete: CASCADE |
+| `plan` | FK to billing.SubscriptionPlan |  | on delete: PROTECT |
+| `status` | Char(20) | 'active' | one of: active, cancelled |
+| `started_on` | Date |  |  |
+
+### SubscriptionPlan
+
+A plan a company can be on. `max_employees` empty means unlimited.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `name` | Char(50) |  | unique |
+| `max_employees` | PositiveInteger |  | can be empty (null) |
+| `price_monthly` | Decimal(10,2) |  |  |
+| `currency` | Char(10) | 'BDT' |  |
+| `is_active` | Boolean | True |  |
+
+Rule: `plan_price_not_negative` (check)
+
 ## App `notifications`
 
 ### Notification
@@ -365,4 +436,4 @@ One daily progress note on a task, written by the assignee.
 | `fiscal_year_start` | Char(10) | '01-01' |  |
 | `default_language` | Char(10) | 'en' |  |
 
-*26 models.*
+*30 models.*

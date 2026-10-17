@@ -171,6 +171,6 @@ class SeedSafetyTests(TestCase):
 
     def test_a_new_app_only_has_to_add_a_demo_data_file(self):
         names = [name for _order, name, _fn in demo.discover_seeders()]
-        self.assertEqual(names, ['organization', 'rbac', 'approvals', 'tasks', 'attendance', 'payroll', 'platform_admin', 'notifications'])
+        self.assertEqual(names, ['organization', 'rbac', 'approvals', 'tasks', 'attendance', 'payroll', 'platform_admin', 'billing', 'notifications'])
         orders = [order for order, _n, _f in demo.discover_seeders()]
         self.assertEqual(orders, sorted(orders))

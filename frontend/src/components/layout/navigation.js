@@ -1,5 +1,5 @@
 import {
-  Building2, CalendarCheck, CheckSquare, GitBranch, History, Inbox, LayoutDashboard, LifeBuoy, ShieldCheck, Settings, Wallet,
+  Building2, CalendarCheck, CheckSquare, GitBranch, History, Inbox, LayoutDashboard, LifeBuoy, ScrollText, ShieldCheck, Settings, Wallet,
 } from 'lucide-react'
 
 // Single source of truth for the sidebar and the page title.
@@ -51,10 +51,12 @@ export const NAV = [
       { label: 'Expenses', path: '/payroll/expenses', soon: true },
     ],
   },
+  { type: 'link', label: 'Audit Logs', path: '/audit-logs', icon: ScrollText, permission: 'view_audit_log' },
   {
     type: 'group', key: 'settings', label: 'Settings', icon: Settings,
     items: [
       { label: 'Support Access', path: '/settings/support-access', permission: 'approve_support_access' },
+      { label: 'Billing', path: '/settings/billing', permission: 'view_billing' },
     ],
   },
 ]
@@ -65,7 +67,7 @@ export function visibleNav(hasPermission, isPlatformAdmin = false) {
   const allowed = (item) => !item.permission || hasPermission(item.permission)
   return NAV.map((entry) =>
     entry.type === 'group' ? { ...entry, items: entry.items.filter(allowed) } : entry,
-  ).filter((entry) => entry.type !== 'group' || entry.items.length > 0)
+  ).filter((entry) => (entry.type === 'group' ? entry.items.length > 0 : allowed(entry)))   // links obey permission too
 }
 
 // The menu of a Platform Admin. A normal user never gets these items, not even hidden.

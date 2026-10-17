@@ -45,11 +45,21 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/attendance/leave-types/{id}/` | LeaveTypeViewSet / update | Permission `manage_leave_types` |
 | PATCH | `/api/v1/attendance/leave-types/{id}/` | LeaveTypeViewSet / partial_update | Permission `manage_leave_types` |
 | DELETE | `/api/v1/attendance/leave-types/{id}/` | LeaveTypeViewSet / destroy | Permission `manage_leave_types` |
+| GET | `/api/v1/audit-log/` | APIRootView | Any logged-in employee |
+| GET | `/api/v1/audit-log/logs/` | AuditLogViewSet / list | Permission `view_audit_log` |
+| GET | `/api/v1/audit-log/logs/export/` | AuditLogViewSet / export | Permission `view_audit_log` |
+| GET | `/api/v1/audit-log/logs/modules/` | AuditLogViewSet / modules | Permission `view_audit_log` |
+| GET | `/api/v1/audit-log/logs/{id}/` | AuditLogViewSet / retrieve | Permission `view_audit_log` |
 | POST | `/api/v1/auth/login/` | CustomTokenObtainPairView | Public |
 | POST | `/api/v1/auth/logout/` | TokenBlacklistView | Public |
 | GET | `/api/v1/auth/me/` | MeView | Any logged-in employee |
 | POST | `/api/v1/auth/refresh/` | TokenRefreshView | Public |
 | POST | `/api/v1/auth/register/` | CompanyRegisterView | Public |
+| GET | `/api/v1/billing/` | APIRootView | Any logged-in employee |
+| GET | `/api/v1/billing/invoices/` | InvoiceViewSet / list | Permission `view_billing` |
+| GET | `/api/v1/billing/invoices/{id}/` | InvoiceViewSet / retrieve | Permission `view_billing` |
+| GET | `/api/v1/billing/plans/` | PlanViewSet / list | Permission `view_billing` |
+| GET | `/api/v1/billing/subscription/` | SubscriptionViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/dashboard/summary/` | DashboardSummaryView | Any logged-in employee |
 | GET | `/api/v1/notifications/` | NotificationViewSet / list | Any logged-in employee |
 | GET | `/api/v1/notifications/` | APIRootView | Any logged-in employee |
@@ -148,4 +158,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*141 endpoint methods on 91 routes.*
+*151 endpoint methods on 101 routes.*

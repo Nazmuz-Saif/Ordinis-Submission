@@ -174,42 +174,88 @@ def er_diagram(standalone=True):
     return ''.join(out)
 
 
-def structure_tree():
-    backend = os.path.dirname(APPS_DIR)
-    repo = os.path.dirname(backend)
-    skip = {'__pycache__', 'node_modules', 'dist', '.git', 'venv', 'migrations'}
+SKIP_DIRS = {'.git', 'venv', '.venv', 'env', 'node_modules', 'dist', '__pycache__', '.idea', '.vscode'}
+KEEP_DOTFILES = {'.gitignore', '.env.example'}
+
+
+def walk_files(root):
+    """Files under `root` (relative, with / separators), without caches, virtual environments or local dotfiles."""
+    found = []
+    for folder, dirs, files in os.walk(root):
+        dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS)
+        for name in files:
+            if (name.startswith('.') and name not in KEEP_DOTFILES) or name.endswith(('.pyc', '.sqlite3', '.log')):
+                continue
+            found.append(os.path.relpath(os.path.join(folder, name), root).replace(os.sep, '/'))
+    return sorted(found)
+
+
+def repo_files(repo):
+    """
+    The files that belong to the project: what git would commit (tracked files, plus new files that are not ignored).
+    A machine-only file such as a local .env is therefore never listed, and the document is the same on every machine.
+    Without git, a plain walk that skips the usual local files.
+    """
+    import subprocess
+    try:
+        result = subprocess.run(
+            ['git', '-C', repo, 'ls-files', '-z', '--cached', '--others', '--exclude-standard'],
+            capture_output=True, check=True, timeout=30,
+        )
+        names = [n for n in result.stdout.decode('utf-8', 'replace').split('\0') if n]
+        names = [n for n in names if os.path.exists(os.path.join(repo, n))]
+        if names:
+            return sorted(set(names))
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return walk_files(repo)
+
+
+def tree_from(files):
+    """The structure block, built from a list of project files (relative paths)."""
+    backend = [f[len('backend/'):] for f in files if f.startswith('backend/')]
     lines = ['```', 'backend/']
-    top = sorted(f for f in os.listdir(backend) if os.path.isfile(os.path.join(backend, f)) and not f.endswith('.pyc') and f != 'db.sqlite3')
-    lines.append('  ' + ', '.join(top))
-    lines.append('  config/   settings/ (' + ', '.join(sorted(f[:-3] for f in os.listdir(os.path.join(backend, 'config', 'settings')) if f.endswith('.py') and f != '__init__.py')) + '), urls.py, wsgi.py, asgi.py')
+    lines.append('  ' + ', '.join(sorted(f for f in backend if '/' not in f and f.endswith(('.py', '.txt', '.example', '.md')))))
+    settings = sorted(f.split('/')[-1][:-3] for f in backend
+                      if f.startswith('config/settings/') and f.endswith('.py') and f.count('/') == 2 and not f.endswith('__init__.py'))
+    lines.append('  config/   settings/ (' + ', '.join(settings) + '), urls.py, wsgi.py, asgi.py')
     lines.append('  apps/')
-    for app in sorted(d for d in os.listdir(APPS_DIR) if os.path.isfile(os.path.join(APPS_DIR, d, '__init__.py'))):
-        base = os.path.join(APPS_DIR, app)
-        files = sorted(f for f in os.listdir(base) if f.endswith('.py') and f != '__init__.py' and not f.startswith('test'))
-        tests = sorted(f for f in os.listdir(base) if f.startswith('test') and f.endswith('.py'))
+    app_files = {}
+    for f in backend:
+        parts = f.split('/')
+        if parts[0] == 'apps' and len(parts) >= 3:
+            app_files.setdefault(parts[1], []).append('/'.join(parts[2:]))
+    for app in sorted(a for a, fs in app_files.items() if '__init__.py' in fs):
+        fs = app_files[app]
+        top = sorted(f for f in fs if '/' not in f and f.endswith('.py') and f != '__init__.py' and not f.startswith('test'))
+        has_tests = any('/' not in f and f.startswith('test') and f.endswith('.py') for f in fs)
         extra = []
-        mig = os.path.join(base, 'migrations')
-        if os.path.isdir(mig):
-            extra.append(f'migrations/ ({len([f for f in os.listdir(mig) if f[:4].isdigit()])})')
-        if os.path.isdir(os.path.join(base, 'management')):
-            cmds = os.path.join(base, 'management', 'commands')
-            extra.append('commands: ' + ', '.join(sorted(f[:-3] for f in os.listdir(cmds) if f.endswith('.py') and f != '__init__.py')))
-        lines.append(f'    {app}/  ' + ', '.join(files + extra) + ('  (+ tests)' if tests else ''))
-    tests_dir = os.path.join(backend, 'tests')
-    if os.path.isdir(tests_dir):
+        migrations = [f for f in fs if f.startswith('migrations/') and f.split('/')[-1][:4].isdigit()]
+        if migrations:
+            extra.append(f'migrations/ ({len(migrations)})')
+        commands = sorted(f.split('/')[-1][:-3] for f in fs if f.startswith('management/commands/') and f.endswith('.py') and not f.endswith('__init__.py'))
+        if commands:
+            extra.append('commands: ' + ', '.join(commands))
+        lines.append(f'    {app}/  ' + ', '.join(top + extra) + ('  (+ tests)' if has_tests else ''))
+    if any(f.startswith('tests/') for f in backend):
         lines.append('  tests/   browser (Selenium) test files, selenium_helpers.py, selenium_runner.py')
     lines.append('')
     lines.append('frontend/src/')
-    src_dir = os.path.join(repo, 'frontend', 'src')
-    if os.path.isdir(src_dir):
-        for root, dirs, files in sorted(os.walk(src_dir)):
-            dirs[:] = sorted(d for d in dirs if d not in skip)
-            rel = os.path.relpath(root, src_dir)
-            names = sorted(f for f in files if f.endswith(('.jsx', '.js')))
-            if names:
-                lines.append(f'  {"" if rel == "." else rel.replace(os.sep, "/") + "/"}  ' + ', '.join(names))
+    by_dir = {}
+    for f in files:
+        if f.startswith('frontend/src/') and f.endswith(('.jsx', '.js')):
+            rel = f[len('frontend/src/'):]
+            folder, _, name = rel.rpartition('/')
+            by_dir.setdefault(folder, []).append(name)
+    for folder in sorted(by_dir):
+        lines.append(f'  {folder + "/" if folder else ""}  ' + ', '.join(sorted(by_dir[folder])))
     lines.append('```')
     return '\n'.join(lines) + '\n'
+
+
+def structure_tree():
+    backend = os.path.dirname(APPS_DIR)
+    return tree_from(repo_files(os.path.dirname(backend)))
 
 
 def traceability_table():

@@ -15,6 +15,21 @@ def _write(path, text):
         handle.write(text)
 
 
+def _what_differs(docs, stale):
+    """The first lines that differ in the first stale generated file, so a failure says what to look at."""
+    import difflib
+    built = docgen.standalone_files()
+    for name in stale:
+        if name.startswith('generated/') and name[len('generated/'):] in built:
+            path = os.path.join(docs, name)
+            current = _read(path).replace('\r\n', '\n').splitlines() if os.path.exists(path) else []
+            diff = [d for d in difflib.unified_diff(current, built[name[len('generated/'):]].splitlines(), 'in the file', 'from the code', lineterm='', n=0)
+                    if not d.startswith(('---', '+++', '@@'))]
+            if diff:
+                return '\nFirst differences in ' + name + ':\n' + '\n'.join(diff[:10])
+    return ''
+
+
 class Command(BaseCommand):
     help = (
         'Writes the parts of the documents that are read from the code: docs/generated/*.md and the blocks between '
@@ -66,7 +81,7 @@ class Command(BaseCommand):
             raise CommandError('\n'.join(problems))
         if opts['check']:
             if stale:
-                raise CommandError('Out of date: ' + ', '.join(stale) + '. Run: python manage.py generate_docs')
+                raise CommandError('Out of date: ' + ', '.join(stale) + '. Run: python manage.py generate_docs' + _what_differs(docs, stale))
             self.stdout.write('Generated documentation is up to date.')
         else:
             self.stdout.write(('Updated: ' + ', '.join(stale)) if stale else 'Already up to date.')

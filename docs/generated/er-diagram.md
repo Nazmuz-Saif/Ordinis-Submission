@@ -10,6 +10,7 @@ erDiagram
   APPROVALCHAIN ||--o{ APPROVALSTEP : approval_chain
   APPROVALINSTANCE ||--o{ APPROVALACTION : instance
   APPROVALSTEP |o--o{ APPROVALACTION : step
+  COMPANY |o--o{ AUDITLOG : company
   COMPANY |o--o{ PLATFORMACTIONLOG : company
   COMPANY |o--o{ USER : company
   COMPANY ||--o{ APPROVALCHAIN : company
@@ -20,6 +21,7 @@ erDiagram
   COMPANY ||--o{ DESIGNATION : company
   COMPANY ||--o{ EMPLOYEE : company
   COMPANY ||--o{ EMPLOYEEROLE : company
+  COMPANY ||--o{ INVOICE : company
   COMPANY ||--o{ LEAVEREQUEST : company
   COMPANY ||--o{ LEAVETYPE : company
   COMPANY ||--o{ NOTIFICATION : company
@@ -30,6 +32,7 @@ erDiagram
   COMPANY ||--o{ SUPPORTTICKET : company
   COMPANY ||--o{ TASK : company
   COMPANY ||--o| COMPANYSETTINGS : company
+  COMPANY ||--o| SUBSCRIPTION : company
   DEPARTMENT |o--o{ EMPLOYEE : department
   DESIGNATION |o--o{ EMPLOYEE : designation
   EMPLOYEE |o--o{ EMPLOYEE : reports_to
@@ -53,8 +56,11 @@ erDiagram
   ROLE ||--o{ APPROVALSTEP : approver_role
   ROLE ||--o{ EMPLOYEEROLE : role
   ROLE }o--o{ PERMISSION : permissions
+  SUBSCRIPTION ||--o{ INVOICE : subscription
+  SUBSCRIPTIONPLAN ||--o{ SUBSCRIPTION : plan
   SUPPORTACCESSREQUEST ||--o{ IMPERSONATIONLOG : access_request
   TASK ||--o{ TASKPROGRESSLOG : task
+  USER |o--o{ AUDITLOG : actor
   USER ||--o{ IMPERSONATIONLOG : actor
   USER ||--o{ PLATFORMACTIONLOG : actor
   USER ||--o{ SUPPORTACCESSREQUEST : requested_by
@@ -125,6 +131,47 @@ erDiagram
     fk company
     Char60 name
     PositiveSmallInteger days_allowed_per_year
+  }
+  AUDITLOG {
+    fk company
+    Char255 company_name
+    fk actor
+    Char254 actor_email
+    Char20 action
+    Char10 status
+    Char50 module
+    Char100 model_name
+    Char64 object_id
+    Char255 object_repr
+    JSON changed_fields
+    GenericIPAddress ip_address
+  }
+  INVOICE {
+    fk company
+    fk subscription
+    Char40 number
+    Char50 plan_name
+    Date period_start
+    Date period_end
+    Decimal10_2 amount
+    Char10 currency
+    Char10 status
+    Date issued_on
+    Date due_on
+    Date paid_on
+  }
+  SUBSCRIPTION {
+    fk company
+    fk plan
+    Char20 status
+    Date started_on
+  }
+  SUBSCRIPTIONPLAN {
+    Char50 name
+    PositiveInteger max_employees
+    Decimal10_2 price_monthly
+    Char10 currency
+    Boolean is_active
   }
   NOTIFICATION {
     fk company

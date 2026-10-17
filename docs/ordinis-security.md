@@ -34,7 +34,8 @@ This checklist is the full target. The table says what the delivered system actu
 | Webhook signature verification | Not built | No payment gateway |
 | API versioning `/api/v1/` | Done | Every route |
 | File upload security | Not applicable | No file upload exists; a task progress entry takes text and a link only |
-| Append-only Audit Log | Not built | ST-135. Until then `ImpersonationLog`, `PlatformActionLog`, `ApprovalAction` have no edit or delete endpoint |
+| Append-only Audit Log | Done | `audit_log`: the model refuses update and delete, no write endpoint, field names only, a company reads only its own rows. Hash chain: not built |
+| Comprehensive logging (who, when, IP; refused attempts; exports; Break-Glass reads) | Done | Create, update, delete, Failed (refused write), Warning (delete, export, Break-Glass read) |
 | Real-time alerting | Not built | Future work |
 | Secrets in environment variables, none committed | Done | `backend/.env.example` |
 | Dev / staging / production separation | Partly | `development.py` and a `production.py` template; production never run |

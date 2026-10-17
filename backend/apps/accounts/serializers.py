@@ -55,6 +55,8 @@ class CompanyRegisterSerializer(serializers.Serializer):
             industry=validated_data.get('industry', ''),
         )
         CompanySettings.objects.create(company=company)
+        from billing.services import start_subscription
+        start_subscription(company)   # every new company starts on the Basic plan
 
         ceo_designation = Designation.objects.create(company=company, title="CEO")
 

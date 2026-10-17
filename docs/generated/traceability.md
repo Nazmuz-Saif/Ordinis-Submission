@@ -34,9 +34,9 @@
 | FR-28 | Salary and payslip data limited to the finance Permission | High | **Done** | ST-118, ST-120, ST-127 |  |
 | FR-29 | In-app Notification for task assignment and approvals | Medium | **Done** | ST-126 |  |
 | FR-30 | Action Inbox combining tasks, approvals and notifications | Medium | **Done** | ST-126 |  |
-| FR-31 | Append-only Audit Log of every create, update and delete | High | **Not built** | ST-135 | Not in the code yet: model AuditLog |
+| FR-31 | Append-only Audit Log of every create, update and delete | High | **Done** | ST-135 |  |
 | FR-32 | Company health analytics (attendance rate, task completion) | Low | **Not built** | ST-134 | Not in the code yet: endpoint /api/v1/analytics/ or /api/v1/dashboard/analytics/ |
-| FR-33 | Employee limit enforced by the subscription plan | Medium | **Not built** | ST-136 | Not in the code yet: model SubscriptionPlan, model Subscription, code can_add_employee |
+| FR-33 | Employee limit enforced by the subscription plan | Medium | **Done** | ST-136 |  |
 | FR-34 | Platform Admin must send a Support Access Request with a reason | Medium | **Done** | ST-123 |  |
 | FR-35 | The company approves; access is time-limited and expires by itself | Medium | **Done** | ST-123 |  |
 | FR-36 | Every Break-Glass access recorded where the company can read it | Medium | **Done** | ST-123, ST-124 |  |
@@ -54,6 +54,6 @@
 | NFR-12 | Business logic in service modules, not in views | Medium | **Done** | ST-111 | services.py in organization, tasks, attendance, payroll, approvals, notifications, platform_admin, dashboard. |
 | NFR-13 | Hierarchy, roles and approval chains are data, not code | High | **Done** | ST-106, ST-108, ST-112 |  |
 | NFR-14 | Versioned REST API under /api/v1/ | Low | **Done** | ST-102 |  |
-| NFR-15 | Every sensitive action attributable to an actor and a time | High | **Partly** | ST-123, ST-135 | Not in the code yet: model AuditLog |
+| NFR-15 | Every sensitive action attributable to an actor and a time | High | **Done** | ST-123, ST-135 |  |
 
-*51 requirements: 39 Done, 7 Partly, 5 Not built. Status is read from the code by `python manage.py generate_docs`.*
+*51 requirements: 42 Done, 6 Partly, 3 Not built. Status is read from the code by `python manage.py generate_docs`.*

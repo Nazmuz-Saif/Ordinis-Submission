@@ -109,7 +109,7 @@ Within the backend, every request flows through four layers:
 1. **Presentation/API layer** (`views.py`, DRF ViewSets) — parses the HTTP request, applies permission classes, delegates to the service layer, serializes the response
 2. **Service layer** (`services.py`) — contains all business rules (leave-balance checking, payslip duplicate-prevention, task status-transition validation, hierarchy recursion, Break-Glass approval logic)
 3. **Data access layer** (`models.py`, Django ORM) — defines the schema and simple model-level helpers (e.g., `Employee.has_permission()`)
-4. **Cross-cutting concerns** — a closed-by-default permission policy (`DEFAULT_PERMISSION_CLASSES`: logged in and active company) and tenant filtering are applied to every ViewSet; audit logging is future work: `AuditLoggingMixin` is already on the write ViewSets but does nothing until the `audit_log` app exists (ST-135)
+4. **Cross-cutting concerns** — a closed-by-default permission policy (`DEFAULT_PERMISSION_CLASSES`: logged in and active company) and tenant filtering are applied to every ViewSet; audit logging is done once for every model by `audit_log` (signals plus a small middleware), so a new app is logged without any code
 
 ## 3.2 Architectural Diagram
 
@@ -323,6 +323,77 @@ A kind of leave a company offers, for example Annual or Sick, and how many days 
 | `days_allowed_per_year` | PositiveSmallInteger | 0 |  |
 
 Rule: `one_leave_type_name_per_company` (unique)
+
+### App `audit_log`
+
+#### AuditLog
+
+One row for one sensitive action: who did what, to which record, in which company, and when.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `company` | FK to tenants.Company |  | can be empty (null); on delete: SET_NULL |
+| `company_name` | Char(255) |  |  |
+| `actor` | FK to accounts.User |  | can be empty (null); on delete: SET_NULL |
+| `actor_email` | Char(254) |  |  |
+| `action` | Char(20) |  | one of: create, update, delete, read, export, denied |
+| `status` | Char(10) | 'success' | one of: success, warning, failed |
+| `module` | Char(50) |  |  |
+| `model_name` | Char(100) |  |  |
+| `object_id` | Char(64) |  |  |
+| `object_repr` | Char(255) |  |  |
+| `changed_fields` | JSON | list() |  |
+| `ip_address` | GenericIPAddress |  | can be empty (null) |
+
+### App `billing`
+
+#### Invoice
+
+A monthly bill. It keeps the amount of that day: a later plan change never alters an old invoice.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `company` | FK to tenants.Company |  | on delete: CASCADE |
+| `subscription` | FK to billing.Subscription |  | on delete: CASCADE |
+| `number` | Char(40) |  | unique |
+| `plan_name` | Char(50) |  |  |
+| `period_start` | Date |  |  |
+| `period_end` | Date |  |  |
+| `amount` | Decimal(10,2) |  |  |
+| `currency` | Char(10) | 'BDT' |  |
+| `status` | Char(10) | 'open' | one of: open, paid, void |
+| `issued_on` | Date |  |  |
+| `due_on` | Date |  |  |
+| `paid_on` | Date |  | can be empty (null) |
+
+Rule: `one_invoice_per_period` (unique)
+
+Rule: `invoice_amount_not_negative` (check)
+
+#### Subscription
+
+The plan a company is on now. One per company.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `company` | FK to tenants.Company |  | unique; on delete: CASCADE |
+| `plan` | FK to billing.SubscriptionPlan |  | on delete: PROTECT |
+| `status` | Char(20) | 'active' | one of: active, cancelled |
+| `started_on` | Date |  |  |
+
+#### SubscriptionPlan
+
+A plan a company can be on. `max_employees` empty means unlimited.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `name` | Char(50) |  | unique |
+| `max_employees` | PositiveInteger |  | can be empty (null) |
+| `price_monthly` | Decimal(10,2) |  |  |
+| `currency` | Char(10) | 'BDT' |  |
+| `is_active` | Boolean | True |  |
+
+Rule: `plan_price_not_negative` (check)
 
 ### App `notifications`
 
@@ -551,7 +622,7 @@ One daily progress note on a task, written by the assignee.
 | `fiscal_year_start` | Char(10) | '01-01' |  |
 | `default_language` | Char(10) | 'en' |  |
 
-*26 models.*
+*30 models.*
 <!-- END GENERATED:data-dictionary -->
 
 ## 4.4 Data Storage & Retention
@@ -559,7 +630,7 @@ One daily progress note on a task, written by the assignee.
 - **Development:** SQLite file (`db.sqlite3`), rebuilt from migrations as needed.
 - **Production target:** PostgreSQL (planned; not deployed). The schema has not been tested on PostgreSQL.
 - **Soft delete:** `BaseModel` provides a soft-delete flag. Approval actions, progress entries, and platform logs have no edit or delete endpoint.
-- **Audit log:** an append-only `AuditLog` is future work (ST-135). Until then, Break-Glass access is recorded in `ImpersonationLog` and platform admin actions in `PlatformActionLog`.
+- **Audit log:** `AuditLog` is append-only (the model refuses update and delete; the API has no write endpoint). It keeps only the names of changed fields, never their values, and its rows outlive a deleted company, user or employee (`SET_NULL` with name snapshots). Break-Glass reads are also in `ImpersonationLog` and platform admin actions in `PlatformActionLog`.
 - **Retention policy:** not defined; no automatic purge exists. All data persists until removed manually.
 
 # 5. Component Design
@@ -581,7 +652,7 @@ One daily progress note on a task, written by the assignee.
 | dashboard | Role dashboards | One summary endpoint; sections depend on the user's Permissions |
 | platform_admin | Platform operation | Company list, suspend/activate, support tickets, Break-Glass access requests, access log |
 
-**Not built (future work):** `audit_log` (ST-135), `analytics` (ST-134), `billing` (ST-136).
+**Not built (future work):** `analytics` (ST-134).
 
 ## 5.2 Detailed Component Design
 
@@ -653,7 +724,7 @@ Platform Admin     SupportAccessRequest API        Company CEO
 
 **Shell:** a grouped, collapsible sidebar (an item is hidden when the user lacks its Permission), a top bar with page title, search, company name, notification bell and user menu, and a plan badge that shows only what the server sends.
 
-**Not built (future work):** the Analytics page (ST-134), the Audit Log page (ST-135), the Billing page (ST-136), the monthly attendance calendar (ST-137), a company switcher with more than one company.
+**Not built (future work):** the Analytics page (ST-134), the monthly attendance calendar (ST-137), a company switcher with more than one company.
 
 - **Accessibility:** status is shown by colour and text together (`StatusPill`), never colour alone; sufficient contrast between navy/violet text and the off-white background; controls sized for mouse and touch.
 - **Figma:** not produced; the accepted screenshot set served as the reference.
@@ -710,11 +781,21 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/attendance/leave-types/{id}/` | LeaveTypeViewSet / update | Permission `manage_leave_types` |
 | PATCH | `/api/v1/attendance/leave-types/{id}/` | LeaveTypeViewSet / partial_update | Permission `manage_leave_types` |
 | DELETE | `/api/v1/attendance/leave-types/{id}/` | LeaveTypeViewSet / destroy | Permission `manage_leave_types` |
+| GET | `/api/v1/audit-log/` | APIRootView | Any logged-in employee |
+| GET | `/api/v1/audit-log/logs/` | AuditLogViewSet / list | Permission `view_audit_log` |
+| GET | `/api/v1/audit-log/logs/export/` | AuditLogViewSet / export | Permission `view_audit_log` |
+| GET | `/api/v1/audit-log/logs/modules/` | AuditLogViewSet / modules | Permission `view_audit_log` |
+| GET | `/api/v1/audit-log/logs/{id}/` | AuditLogViewSet / retrieve | Permission `view_audit_log` |
 | POST | `/api/v1/auth/login/` | CustomTokenObtainPairView | Public |
 | POST | `/api/v1/auth/logout/` | TokenBlacklistView | Public |
 | GET | `/api/v1/auth/me/` | MeView | Any logged-in employee |
 | POST | `/api/v1/auth/refresh/` | TokenRefreshView | Public |
 | POST | `/api/v1/auth/register/` | CompanyRegisterView | Public |
+| GET | `/api/v1/billing/` | APIRootView | Any logged-in employee |
+| GET | `/api/v1/billing/invoices/` | InvoiceViewSet / list | Permission `view_billing` |
+| GET | `/api/v1/billing/invoices/{id}/` | InvoiceViewSet / retrieve | Permission `view_billing` |
+| GET | `/api/v1/billing/plans/` | PlanViewSet / list | Permission `view_billing` |
+| GET | `/api/v1/billing/subscription/` | SubscriptionViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/dashboard/summary/` | DashboardSummaryView | Any logged-in employee |
 | GET | `/api/v1/notifications/` | NotificationViewSet / list | Any logged-in employee |
 | GET | `/api/v1/notifications/` | APIRootView | Any logged-in employee |
@@ -813,7 +894,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*141 endpoint methods on 91 routes.*
+*151 endpoint methods on 101 routes.*
 <!-- END GENERATED:api-table -->
 
 ## 6.4 Hardware Interfaces
@@ -855,7 +936,7 @@ Not applicable. Ordinis requires no dedicated or proprietary hardware; it runs o
 | A suspended company still working | Login refused; `IsCompanyActive` blocks tokens issued earlier |
 | A request approved by its own requester | The approval engine refuses it, even if the requester holds the step's Role |
 | Platform operator misusing client data | No default access; Break-Glass needs a reason, company approval, a time limit, is read-only, excludes salary data, and every read is logged in `ImpersonationLog` |
-| Tampering with the audit trail | `AuditLog` is future work (ST-135). Today the logs that exist (`ImpersonationLog`, `PlatformActionLog`, `ApprovalAction`, `TaskProgressLog`) have no edit or delete endpoint |
+| Tampering with the audit trail | `AuditLog` refuses update and delete in the model and the queryset, has no write endpoint, stores no field values, and a company can read only its own rows (404 for another company's). The other logs (`ImpersonationLog`, `PlatformActionLog`, `ApprovalAction`, `TaskProgressLog`) also have no edit or delete endpoint. A hash chain and database triggers are future work |
 | Duplicate or replayed sensitive operations | `generate_payslip` is idempotent (service check plus database unique constraint) |
 
 # 8. Performance Design
@@ -871,7 +952,7 @@ Per SRS NFR-5 and NFR-6: every list endpoint is paginated (page size 20). Tests 
 
 ## 8.3 Capacity Planning
 
-Not modelled. The plan employee limit (`SubscriptionPlan.max_employees`, ST-136) is future work. The demo company has 10 employees so that it fits the Basic plan when billing arrives.
+Not modelled. The plan employee limit (`SubscriptionPlan.max_employees`) is enforced when an Employee is created. The demo company has exactly 10 employees, so on the Basic plan it is full and shows the limit.
 
 # 9. Error Handling & Logging
 
@@ -883,7 +964,7 @@ Not modelled. The plan employee limit (`SubscriptionPlan.max_employees`, ST-136)
 
 ## 9.2 Logging Strategy
 
-- **Audit logging:** future work (ST-135): `AuditLoggingMixin` is already on the write ViewSets and writes nothing until the `audit_log` app is installed. Until then: `ApprovalAction` (who decided what, with a comment), `TaskProgressLog`, `ImpersonationLog` and `PlatformActionLog`.
+- **Audit logging:** `audit_log` writes one row for every create, update and delete made through the API (also leave decisions, payslips, approvals and Break-Glass reads), a Failed row for a refused write, and a Warning row for a delete or an export. The row names the actor, company, module, record, changed field names and IP address. Actions outside a request (a script, a test) are not logged; the demo-data loader logs as "System (demo data)". A logging error is written to the server log and never blocks the action. `AuditLoggingMixin` on the ViewSets is now a no-op kept for compatibility.
 - **Server logs:** Django's default console logging; no log aggregation or error monitoring tool is configured.
 
 # 10. Deployment Design
@@ -931,7 +1012,9 @@ Each requirement's **status (Done, Partly, Not built) and the story that deliver
 | FR-20 to FR-23 (attendance, leave) | `attendance` | Leave goes through the Approval Chain (ST-129); Holiday Calendar is future work |
 | FR-24 to FR-28 (payroll) | `payroll` | Expense and Reimbursement are future work |
 | FR-29, FR-30 (notifications, inbox) | `notifications` | Task assignment and approval notices; Action Inbox |
-| FR-31, FR-32, FR-33 (audit log, analytics, billing) | not built | ST-135, ST-134, ST-136 |
+| FR-31 (audit log) | `audit_log` | Signals plus middleware; CSV export; view_audit_log Permission |
+| FR-32 (analytics) | not built | ST-134 |
+| FR-33 (plan employee limit) | `billing` | Limit checked in the Employee serializer; Billing page; invoices |
 | FR-34 to FR-36 (Break-Glass) | `platform_admin` | Request, approve/deny/revoke, expiry, access log |
 | NFR-1 to NFR-4 (security) | `core`, `accounts`, `rbac` | Section 7 |
 | NFR-5, NFR-6 (performance) | `core.pagination.OrdinisPagination` | Applied to every list |
@@ -939,7 +1022,7 @@ Each requirement's **status (Done, Partly, Not built) and the story that deliver
 | NFR-10, NFR-11 (reliability) | `payroll.services`, `tasks.services`, `attendance.leave_services` | Section 5.2 |
 | NFR-12, NFR-13 (maintainability) | Layered architecture, data model | Section 3.1 |
 | NFR-14 (versioned API) | `config/urls.py` | Everything under `/api/v1/` |
-| NFR-15 (attributable audit trail) | `platform_admin` logs; `AuditLog` is future work | Partly |
+| NFR-15 (attributable audit trail) | `audit_log`, `platform_admin` logs | Section 7.3 |
 
 # 14. Appendices
 

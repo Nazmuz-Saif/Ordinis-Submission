@@ -34,7 +34,7 @@ PUBLIC = {
     '/api/v1/auth/login/', '/api/v1/auth/refresh/', '/api/v1/auth/logout/', '/api/v1/auth/register/',
 }
 # The same for every company by design (a fixed list of what can be granted), so it is not "tenant data".
-SHARED_CATALOGS = {'api/v1/rbac/permissions/'}
+SHARED_CATALOGS = {'api/v1/rbac/permissions/', 'api/v1/billing/plans/'}
 
 
 def _is_platform_admin_route(route):
@@ -101,6 +101,9 @@ class PermissionTests(MatrixBase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.perm_ceo = register_company('Perm Co', 'perm-co', 'boss@perm.com')
+        from billing.services import change_plan
+        from tenants.models import Company
+        change_plan(Company.objects.get(subdomain='perm-co'), 'Enterprise')   # one employee per Permission: more than Basic allows
         cls.plain = add_employee(cls.perm_ceo, 'plain@perm.com', 'P-1')
         cls.plain_client = login_as('plain@perm.com')
         cls.holders = {}
@@ -216,6 +219,8 @@ class OtherCompanyTests(MatrixBase):
             other_res = self.other_ceo.get(route.url())
             if demo_res.status_code != 200 or other_res.status_code != 200:
                 continue
+            if 'json' not in demo_res.get('Content-Type', ''):
+                continue   # a file download such as the Audit Log CSV export
             seen = {str(i['id']) for i in self._items(demo_res.json()) if isinstance(i, dict) and 'id' in i}
             leaked = seen & {str(i['id']) for i in self._items(other_res.json()) if isinstance(i, dict) and 'id' in i}
             if leaked:

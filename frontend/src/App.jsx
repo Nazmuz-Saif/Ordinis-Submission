@@ -19,6 +19,8 @@ import ActionInboxPage from './features/inbox/ActionInboxPage'
 import DelegationsPage from './features/approvals/DelegationsPage'
 import SalaryStructuresPage from './features/payroll/SalaryStructuresPage'
 import PayslipsPage from './features/payroll/PayslipsPage'
+import AuditLogsPage from './features/audit/AuditLogsPage'
+import BillingPage from './features/billing/BillingPage'
 import MyPayslipsPage from './features/payroll/MyPayslipsPage'
 import PayslipViewPage from './features/payroll/PayslipViewPage'
 import AttendancePage from './features/attendance/AttendancePage'
@@ -166,6 +168,26 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <DelegationsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/billing"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <BillingPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/audit-logs"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <AuditLogsPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

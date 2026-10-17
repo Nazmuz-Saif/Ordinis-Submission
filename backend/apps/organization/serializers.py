@@ -72,6 +72,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         company = validated_data.pop('company')
         with transaction.atomic():
+            from billing.services import ensure_can_add_employee
+            ensure_can_add_employee(company)   # refuses with an "upgrade your plan" message when the plan is full
             user = User.objects.create_user(email=email, password=password, company=company)
             employee = Employee.objects.create(user=user, company=company, **validated_data)
         return employee

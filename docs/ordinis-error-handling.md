@@ -30,7 +30,9 @@ What the delivered system does for each scenario below. "Done" is backed by a te
 | Negative or excessive deduction | Done | Between 0 and the gross amount |
 | Background job crash, retries, idempotent jobs | Not applicable | No background jobs (no Celery) |
 | Email failure fallback | Not applicable | No email channel |
-| Payment failure, grace period, read-only mode, plan limit, webhooks | Not built | Billing is ST-136 |
+| Employee added beyond the plan's limit | Done | Refused with an "upgrade your plan" message (code `PLAN_LIMIT_REACHED`); nothing is created; tested at exactly full and over |
+| A plan too small for the current team | Done | A downgrade is refused while there are more employees than the plan allows |
+| Payment failure, grace period, read-only mode, webhooks | Not built | There is no payment gateway |
 | File too large or wrong type, storage down | Not applicable | No file upload |
 | Another company's id in the URL | Done | 404, tested for every object route |
 | Expired JWT | Done | 401, refresh flow |

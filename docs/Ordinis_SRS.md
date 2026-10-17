@@ -92,12 +92,12 @@ Ordinis is a web-based, multi-tenant SaaS platform that lets any client company 
 - Attendance and Leave management
 - Payroll (Salary Structure and Payslip are built; Expense and Reimbursement are future work) — an optional module per company
 - Notifications and a personalized "Action Inbox"
-- System-wide, append-only Audit Logging (future work, ST-135)
+- System-wide, append-only Audit Logging
 - Basic company-health Analytics (future work, ST-134)
-- Subscription/Billing enforcement (employee-count plan limits) (future work, ST-136)
+- Subscription/Billing: plans, the employee-count limit, invoices
 - Platform-level Super Admin operations under a privacy-respecting "Break-Glass" access pattern
 
-**What is delivered (read this with Section 7.2).** Section 7.2 lists every requirement as Done, Partly or Not built, read from the code. These parts of the list above are *not built* and are future work: Projects (Tasks stand alone), Task comments and attachment links, the Holiday Calendar, Expense and Reimbursement, the append-only Audit Log, the Analytics page and Company Health Snapshot, and the plan employee-limit enforcement (Billing). The last four are Sprint 5 stories (ST-134, ST-135, ST-136) and move to Done in Section 7.2 by themselves when their code is merged.
+**What is delivered (read this with Section 7.2).** Section 7.2 lists every requirement as Done, Partly or Not built, read from the code. These parts of the list above are *not built* and are future work: Projects (Tasks stand alone), Task comments and attachment links, the Holiday Calendar, Expense and Reimbursement, and the Analytics page with the Company Health Snapshot. The Analytics page is a Sprint 5 story (ST-134) and moves to Done in Section 7.2 by itself when its code is merged. The append-only Audit Log (ST-135) and the Billing plans, employee limit and invoices (ST-136) are built. Paying an invoice online is not built: there is no payment gateway, so a plan is changed by the platform team (`python manage.py set_company_plan`).
 
 Out of scope for this SRS (documented separately as future roadmap, not built or required in the current course-project scope): Layer-3 extension modules such as Meetings, Internal Ticketing, Asset Management, Document Management, Knowledge Base, Performance Reviews, Surveys, Visitor Management, Dynamic Form Builder, mobile app, multi-language switcher, third-party/ERP data import-export, and public API/webhooks. These recurred as stakeholder wishes during elicitation (see Appendix B analysis) but are consciously deferred so the current release stays focused and buildable within the course timeline.
 
@@ -350,7 +350,7 @@ The following models, maintained as separate project artifacts, define Ordinis's
 
 - **Entity-Relationship Diagram** — the delivered system's ER diagram is generated from the code and is in `ordinis-ER-diagram.md`; it covers Company, Organization (Department, Designation, Employee with self-referencing `reports_to`), RBAC (Permission, Role, EmployeeRole), the Approval engine (ApprovalChain, ApprovalStep, ApprovalInstance, ApprovalAction, DelegationRule), Tasks (Task, TaskProgressLog), Attendance and Leave (Attendance, LeaveType, LeaveRequest), Payroll (SalaryStructure, Payslip), Notification, and Platform Admin (SupportTicket, SupportAccessRequest, ImpersonationLog, PlatformActionLog). The commercial vision, with entities that are not built (Project, TaskComment, TaskAttachment, HolidayCalendar, Expense, Reimbursement, AuditLog, CompanyHealthSnapshot, SubscriptionPlan, Subscription, Invoice and the Layer 3 modules), is `ordinis-full-ER-diagram.md` and is future work.
 - **Use Case Model** — implicit in Section 3.1, organized by module; each Functional Requirement corresponds to one or more user-triggered use cases (e.g., "Employee applies for Leave", "Department Head approves a Task submission").
-- **Data Flow** — Requests flow: Browser (React SPA) → REST API (`/api/v1/...`, JWT-authenticated) → DRF View → Service layer → Django ORM → Database, where relevant also producing a Notification. (A write also producing an Audit Log entry is future work, ST-135.)
+- **Data Flow** — Requests flow: Browser (React SPA) → REST API (`/api/v1/...`, JWT-authenticated) → DRF View → Service layer → Django ORM → Database, where relevant also producing a Notification. A write through the API also produces an Audit Log row (field names only, never values).
 - **State Model (Task)** — Task status follows a constrained state machine (Not Started → In Progress → Submitted → Completed, or Rejected back to Not Started), enforced in `tasks/services.py`, matching FR-18.
 - **State Model (Approval Instance)** — An Approval Instance advances step-by-step through its Approval Chain as each Approval Action is recorded, matching FR-14/FR-15.
 
@@ -443,9 +443,9 @@ Each requirement is Done, Partly or Not built. **The status is read from the cod
 | FR-28 | Salary and payslip data limited to the finance Permission | High | **Done** | ST-118, ST-120, ST-127 |  |
 | FR-29 | In-app Notification for task assignment and approvals | Medium | **Done** | ST-126 |  |
 | FR-30 | Action Inbox combining tasks, approvals and notifications | Medium | **Done** | ST-126 |  |
-| FR-31 | Append-only Audit Log of every create, update and delete | High | **Not built** | ST-135 | Not in the code yet: model AuditLog |
+| FR-31 | Append-only Audit Log of every create, update and delete | High | **Done** | ST-135 |  |
 | FR-32 | Company health analytics (attendance rate, task completion) | Low | **Not built** | ST-134 | Not in the code yet: endpoint /api/v1/analytics/ or /api/v1/dashboard/analytics/ |
-| FR-33 | Employee limit enforced by the subscription plan | Medium | **Not built** | ST-136 | Not in the code yet: model SubscriptionPlan, model Subscription, code can_add_employee |
+| FR-33 | Employee limit enforced by the subscription plan | Medium | **Done** | ST-136 |  |
 | FR-34 | Platform Admin must send a Support Access Request with a reason | Medium | **Done** | ST-123 |  |
 | FR-35 | The company approves; access is time-limited and expires by itself | Medium | **Done** | ST-123 |  |
 | FR-36 | Every Break-Glass access recorded where the company can read it | Medium | **Done** | ST-123, ST-124 |  |
@@ -463,9 +463,9 @@ Each requirement is Done, Partly or Not built. **The status is read from the cod
 | NFR-12 | Business logic in service modules, not in views | Medium | **Done** | ST-111 | services.py in organization, tasks, attendance, payroll, approvals, notifications, platform_admin, dashboard. |
 | NFR-13 | Hierarchy, roles and approval chains are data, not code | High | **Done** | ST-106, ST-108, ST-112 |  |
 | NFR-14 | Versioned REST API under /api/v1/ | Low | **Done** | ST-102 |  |
-| NFR-15 | Every sensitive action attributable to an actor and a time | High | **Partly** | ST-123, ST-135 | Not in the code yet: model AuditLog |
+| NFR-15 | Every sensitive action attributable to an actor and a time | High | **Done** | ST-123, ST-135 |  |
 
-*51 requirements: 39 Done, 7 Partly, 5 Not built. Status is read from the code by `python manage.py generate_docs`.*
+*51 requirements: 42 Done, 6 Partly, 3 Not built. Status is read from the code by `python manage.py generate_docs`.*
 <!-- END GENERATED:traceability -->
 
 ---

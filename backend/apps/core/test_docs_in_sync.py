@@ -82,22 +82,22 @@ class DocumentCheckerTests(SimpleTestCase):
         self.assertEqual(doccheck.check_text(text), [])
 
     def test_an_endpoint_that_does_not_exist_is_reported(self):
-        problems = doccheck.check_text('Call /api/v1/billing/invoices/ to pay.')
+        problems = doccheck.check_text('Call /api/v1/no-such-app/things/ to pay.')
         self.assertEqual(len(problems), 1)
-        self.assertIn('/api/v1/billing/invoices/', problems[0])
+        self.assertIn('/api/v1/no-such-app/things/', problems[0])
 
     def test_a_class_or_field_that_does_not_exist_is_reported(self):
-        self.assertEqual(len(doccheck.check_text('The `AuditLog` keeps every change.')), 1)
+        self.assertEqual(len(doccheck.check_text('The `NoSuchThingAtAll` keeps every change.')), 1)
         self.assertEqual(len(doccheck.check_text('`Employee.salary` holds the pay.')), 1)
 
     def test_a_line_that_says_it_is_future_work_may_name_missing_things(self):
-        self.assertEqual(doccheck.check_text('Future work: `AuditLog` and /api/v1/billing/invoices/.'), [])
-        self.assertEqual(doccheck.check_text('`SubscriptionPlan` is not built yet.'), [])
+        self.assertEqual(doccheck.check_text('Future work: `NoSuchThingAtAll` and /api/v1/no-such-app/things/.'), [])
+        self.assertEqual(doccheck.check_text('`NoSuchThingAtAll` is not built yet.'), [])
 
     def test_a_differences_report_may_name_what_was_wrong(self):
         with tempfile.TemporaryDirectory() as tmp:
             with open(os.path.join(tmp, 'ST-1_differences.md'), 'w', encoding='utf-8') as handle:
-                handle.write('The old text said `KanbanCard` and /api/v1/billing/plans/.\n')
+                handle.write('The old text said `KanbanCard` and /api/v1/no-such-app/plans/.\n')
             with open(os.path.join(tmp, 'other.md'), 'w', encoding='utf-8') as handle:
                 handle.write('Fine.\n')
             self.assertEqual(doccheck.check_dir(tmp), [])
@@ -134,3 +134,53 @@ class TraceabilityTests(SimpleTestCase):
         last = traceability.table().strip().splitlines()[-1]
         done = sum(1 for r in rows if r[3] == 'Done')
         self.assertIn(f'{len(rows)} requirements: {done} Done', last)
+
+
+class StructureIsTheSameOnEveryMachineTests(SimpleTestCase):
+    def test_walk_skips_caches_environments_and_local_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for rel in ('a.py', 'sub/b.py', '.env', '.gitignore', 'venv/lib.py', 'node_modules/x.js', '__pycache__/c.pyc', 'db.sqlite3', 'run.log'):
+                path = os.path.join(tmp, rel)
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                open(path, 'w').close()
+            self.assertEqual(docgen.walk_files(tmp), ['.gitignore', 'a.py', 'sub/b.py'])
+
+    def test_a_machine_only_file_never_reaches_the_tree(self):
+        files = ['backend/manage.py', 'backend/.env', 'backend/local.log', 'backend/scratch.sqlite3', 'backend/notes.docx',
+                 'backend/apps/core/__init__.py', 'backend/apps/core/models.py']
+        tree = docgen.tree_from(files)
+        self.assertIn('manage.py', tree)
+        for hidden in ('.env', 'local.log', 'scratch', 'notes.docx'):
+            self.assertNotIn(hidden, tree)
+
+    def test_with_git_the_list_is_what_git_would_commit(self):
+        import shutil
+        import subprocess
+        if shutil.which('git') is None:
+            self.skipTest('git is not installed')
+        with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(['git', 'init', '-q', tmp], check=True)
+            for rel, text in (('.gitignore', 'secret.txt\nbuild/\n'), ('keep.py', ''), ('secret.txt', 'x'), ('build/out.py', ''), ('new/file.py', '')):
+                path = os.path.join(tmp, rel)
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, 'w') as handle:
+                    handle.write(text)
+            self.assertEqual(docgen.repo_files(tmp), ['.gitignore', 'keep.py', 'new/file.py'])
+
+    def test_the_tree_is_the_same_when_built_twice(self):
+        self.assertEqual(docgen.structure_tree(), docgen.structure_tree())
+
+    def test_a_failed_check_names_the_first_difference(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for _block, (_s, _i, doc) in docgen.BLOCKS.items():
+                path = os.path.join(tmp, doc)
+                if not os.path.exists(path):
+                    with open(path, 'w', encoding='utf-8') as handle:
+                        handle.write(''.join(f'{docgen.marker(b, "BEGIN")}\n{docgen.marker(b, "END")}\n' for b, p in docgen.BLOCKS.items() if p[2] == doc))
+            call_command('generate_docs', '--docs-dir', tmp)
+            with open(os.path.join(tmp, 'generated', 'structure.md'), 'a', encoding='utf-8') as handle:
+                handle.write('a line only on this machine\n')
+            with self.assertRaises(CommandError) as caught:
+                call_command('generate_docs', '--check', '--docs-dir', tmp)
+            self.assertIn('First differences in generated/structure.md', str(caught.exception))
+            self.assertIn('a line only on this machine', str(caught.exception))

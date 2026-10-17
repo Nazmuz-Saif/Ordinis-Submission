@@ -30,8 +30,8 @@ The approved mockups are implemented for the screens marked Built. The shared pa
 | Attendance: monthly calendar and the four summary cards | Not built | ST-137 |
 | Leave, Approvals, Delegations, Inbox, Payslips, Salary Structures | Built | |
 | Analytics page (metric cards, line and bar charts) | Not built | ST-134 |
-| Audit Logs page | Not built | ST-135 |
-| Billing page | Not built | ST-136 |
+| Audit Logs page | Built | `AuditLogsPage`: table, module filter, export |
+| Billing page (plan card, employee usage bar, invoice table) | Built | `BillingPage` |
 | Company switcher (more than one company) | Not built | The bar shows the user's own company name |
 | Glass look on login, top bar and menus; solid data tables | Built | |
 

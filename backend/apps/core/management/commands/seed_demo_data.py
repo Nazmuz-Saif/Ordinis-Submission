@@ -1,3 +1,5 @@
+from contextlib import nullcontext
+
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -56,7 +58,12 @@ class Command(BaseCommand):
             if opts['delete']:
                 return
 
-        with transaction.atomic():
+        try:
+            from audit_log.context import audit_context
+            acting = audit_context('System (demo data)')   # the load shows in the Audit Log as the system, not as a person
+        except ImportError:
+            acting = nullcontext()
+        with transaction.atomic(), acting:
             ctx = demo.DemoContext(_ensure_company())
             for order, app_name, seed in demo.discover_seeders():
                 seed(ctx)
