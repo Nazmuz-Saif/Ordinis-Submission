@@ -41,7 +41,6 @@ class Invoice(BaseModel):
     STATUS_VOID = 'void'
     STATUS_CHOICES = [(STATUS_OPEN, 'Open'), (STATUS_PAID, 'Paid'), (STATUS_VOID, 'Void')]
 
-
     company = models.ForeignKey('tenants.Company', on_delete=models.CASCADE, related_name='invoices')
     subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, related_name='invoices')
     number = models.CharField(max_length=40, unique=True)
