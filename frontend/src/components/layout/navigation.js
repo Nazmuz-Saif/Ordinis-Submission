@@ -1,5 +1,5 @@
 import {
-  Building2, CalendarCheck, CheckSquare, GitBranch, History, Inbox, LayoutDashboard, LifeBuoy, ScrollText, ShieldCheck, Settings, Wallet,
+  BarChart3, Building2, CalendarCheck, CheckSquare, GitBranch, History, Inbox, LayoutDashboard, LifeBuoy, ScrollText, ShieldCheck, Settings, Wallet,
 } from 'lucide-react'
 
 // Single source of truth for the sidebar and the page title.
@@ -51,6 +51,7 @@ export const NAV = [
       { label: 'Expenses', path: '/payroll/expenses', soon: true },
     ],
   },
+  { type: 'link', label: 'Analytics', path: '/analytics', icon: BarChart3, permission: 'view_analytics' },
   { type: 'link', label: 'Audit Logs', path: '/audit-logs', icon: ScrollText, permission: 'view_audit_log' },
   {
     type: 'group', key: 'settings', label: 'Settings', icon: Settings,
