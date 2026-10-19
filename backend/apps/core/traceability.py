@@ -44,7 +44,7 @@ FR = [
     ('FR-29', 'In-app Notification for task assignment and approvals', 'Medium', 'ST-126', {'models': ['Notification'], 'routes': ['/api/v1/notifications/']}),
     ('FR-30', 'Action Inbox combining tasks, approvals and notifications', 'Medium', 'ST-126', {'routes': ['/api/v1/notifications/inbox/']}),
     ('FR-31', 'Append-only Audit Log of every create, update and delete', 'High', 'ST-135', {'models': ['AuditLog']}),
-    ('FR-32', 'Company health analytics (attendance rate, task completion)', 'Low', 'ST-134', {'any_routes': [['/api/v1/analytics/', '/api/v1/dashboard/analytics/']]}),
+    ('FR-32', 'Company health analytics (attendance rate, task completion)', 'Low', 'ST-134', {'models': ['CompanyHealthSnapshot'], 'routes': ['/api/v1/analytics/overview/']}),
     ('FR-33', 'Employee limit enforced by the subscription plan', 'Medium', 'ST-136', {'models': ['SubscriptionPlan', 'Subscription'], 'symbols': ['can_add_employee']}),
     ('FR-34', 'Platform Admin must send a Support Access Request with a reason', 'Medium', 'ST-123', {'models': ['SupportAccessRequest'], 'routes': ['/api/v1/platform-admin/requests/']}),
     ('FR-35', 'The company approves; access is time-limited and expires by itself', 'Medium', 'ST-123', {'routes': ['/api/v1/platform-admin/company/access-requests/{id}/approve/', '/api/v1/platform-admin/company/access-requests/{id}/revoke/']}),

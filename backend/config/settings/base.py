@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'notifications',
     'audit_log',
     'billing',
+    'analytics',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

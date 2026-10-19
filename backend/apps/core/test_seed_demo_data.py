@@ -171,6 +171,8 @@ class SeedSafetyTests(TestCase):
 
     def test_a_new_app_only_has_to_add_a_demo_data_file(self):
         names = [name for _order, name, _fn in demo.discover_seeders()]
-        self.assertEqual(names, ['organization', 'rbac', 'approvals', 'tasks', 'attendance', 'payroll', 'platform_admin', 'billing', 'notifications'])
+        core = ['organization', 'rbac', 'approvals', 'tasks', 'attendance', 'payroll', 'platform_admin', 'billing', 'notifications']
+        self.assertEqual([n for n in names if n in core], core)   # an app added later may sit anywhere in between
+        self.assertIn('analytics', names)
         orders = [order for order, _n, _f in demo.discover_seeders()]
         self.assertEqual(orders, sorted(orders))
