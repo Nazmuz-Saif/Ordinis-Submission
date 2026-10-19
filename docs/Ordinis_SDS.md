@@ -207,6 +207,27 @@ Read from the Django models. Every model also has `id` (UUID, primary key), `cre
 | `groups` | Many-to-many to Group | | |
 | `user_permissions` | Many-to-many to Permission | | |
 
+### App `analytics`
+
+#### CompanyHealthSnapshot
+
+One row per company and day: how healthy the company was on that day.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `company` | FK to tenants.Company |  | on delete: CASCADE |
+| `date` | Date |  |  |
+| `headcount` | PositiveInteger | 0 |  |
+| `attendance_rate` | Decimal(4,1) | 0 |  |
+| `task_completion_rate` | Decimal(4,1) | 0 |  |
+| `open_tasks` | PositiveInteger | 0 |  |
+| `overdue_tasks` | PositiveInteger | 0 |  |
+| `health_score` | Decimal(4,1) | 0 |  |
+
+Rule: `one_health_snapshot_per_company_per_day` (unique)
+
+Rule: `snapshot_rates_0_to_100` (check)
+
 ### App `approvals`
 
 #### ApprovalAction
@@ -622,7 +643,7 @@ One daily progress note on a task, written by the assignee.
 | `fiscal_year_start` | Char(10) | '01-01' |  |
 | `default_language` | Char(10) | 'en' |  |
 
-*30 models.*
+*31 models.*
 <!-- END GENERATED:data-dictionary -->
 
 ## 4.4 Data Storage & Retention
@@ -650,9 +671,8 @@ One daily progress note on a task, written by the assignee.
 | payroll | Payroll | Salary Structure, Payslip generation (no duplicates) |
 | notifications | Alerts and inbox | Notifications for task assignment and approvals; the Action Inbox |
 | dashboard | Role dashboards | One summary endpoint; sections depend on the user's Permissions |
+| analytics | Company health | Read-only overview (attendance rate, task completion, overdue tasks, workload, tasks by department); daily Company Health Snapshot |
 | platform_admin | Platform operation | Company list, suspend/activate, support tickets, Break-Glass access requests, access log |
-
-**Not built (future work):** `analytics` (ST-134).
 
 ## 5.2 Detailed Component Design
 
@@ -697,6 +717,11 @@ The chain is the company's first leave chain whose every step has an approver ot
 - **Purpose:** compute payslips reliably and prevent double payment.
 - **Internal logic:** `generate_payslip()` reads the Employee's `SalaryStructure`, computes gross, deductions and net, refuses a future month and a duplicate (`PayslipError`), and is backed by a database unique constraint. A payslip is a snapshot: later salary changes do not touch it. An employee sees only their own payslips unless they hold the finance Permission.
 
+### `analytics` (Company Health)
+
+- **Purpose:** show the CEO how healthy the company is, from the company's own attendance and task rows only.
+- **Internal logic:** `services.overview()` returns the four metric numbers and the data of two charts (attendance rate for the last 6 months, completed and pending tasks per department). A *working day* is a day on which at least one employee checked in, so the company's own week and holidays are followed without a setting. Attendance rate = present employee-days / (employees x working days - employee-days on Approved leave without a check-in), never above 100; a month with no working day is 0. The head count used is the one today. `take_snapshot()` stores one `CompanyHealthSnapshot` per company and day (`python manage.py take_health_snapshots`, safe to run twice); a page load never writes. Both endpoints need the Permission `view_analytics`, which the CEO role receives automatically.
+
 ### `platform_admin` (Break-Glass Access)
 
 - **Purpose:** let the platform operator help a client without ever having default access to that client's data.
@@ -720,11 +745,11 @@ Platform Admin     SupportAccessRequest API        Company CEO
 
 **Design system in force:** "Modern Minimalist SaaS" (`ordinis-frontend-design-system.md`): navy `#14142B` and violet `#6C31D6` on an off-white background, subtle 150-300 ms animation, Tailwind CSS. The approved mockup set has been implemented for the screens below.
 
-**Screens built:** Login and Register; role Dashboards (CEO, Manager, HR, Accountant, Employee sections chosen by Permission); Departments, Designations, Employees and Employee detail (with subordinates and roles); Roles and Employee roles; Approval Chains, Pending Approvals, Delegations; Tasks list and Kanban board with progress entries; Attendance (check-in/out) and Leave (apply, balance, cancel, approval progress) and Leave Types; Action Inbox; Payslips, My Payslips, Payslip view, Salary Structures; Support Access (company side of Break-Glass); platform Admin screens (Companies, Tickets, Access Requests, Activity); a UI-kit showcase at `/dev/ui-kit` in development.
+**Screens built:** Login and Register; role Dashboards (CEO, Manager, HR, Accountant, Employee sections chosen by Permission); Departments, Designations, Employees and Employee detail (with subordinates and roles); Roles and Employee roles; Approval Chains, Pending Approvals, Delegations; Tasks list and Kanban board with progress entries; Attendance (check-in/out) and Leave (apply, balance, cancel, approval progress) and Leave Types; Action Inbox; Analytics (metric cards, attendance line chart, tasks-by-department bar chart); Payslips, My Payslips, Payslip view, Salary Structures; Support Access (company side of Break-Glass); platform Admin screens (Companies, Tickets, Access Requests, Activity); a UI-kit showcase at `/dev/ui-kit` in development.
 
 **Shell:** a grouped, collapsible sidebar (an item is hidden when the user lacks its Permission), a top bar with page title, search, company name, notification bell and user menu, and a plan badge that shows only what the server sends.
 
-**Not built (future work):** the Analytics page (ST-134), the monthly attendance calendar (ST-137), a company switcher with more than one company.
+**Not built (future work):** the monthly attendance calendar (ST-137), a company switcher with more than one company.
 
 - **Accessibility:** status is shown by colour and text together (`StatusPill`), never colour alone; sufficient contrast between navy/violet text and the off-white background; controls sized for mouse and touch.
 - **Figma:** not produced; the accepted screenshot set served as the reference.
@@ -742,6 +767,9 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 
 | Method | Endpoint | View / action | Who |
 |---|---|---|---|
+| GET | `/api/v1/analytics/` | APIRootView | Any logged-in employee |
+| GET | `/api/v1/analytics/overview/` | OverviewViewSet / list | Permission `view_analytics` |
+| GET | `/api/v1/analytics/snapshots/` | SnapshotViewSet / list | Permission `view_analytics` |
 | GET | `/api/v1/approvals/` | APIRootView | Any logged-in employee |
 | GET | `/api/v1/approvals/chains/` | ApprovalChainViewSet / list | Any logged-in employee |
 | POST | `/api/v1/approvals/chains/` | ApprovalChainViewSet / create | Permission `manage_approval_chains` |
@@ -894,7 +922,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*151 endpoint methods on 101 routes.*
+*154 endpoint methods on 104 routes.*
 <!-- END GENERATED:api-table -->
 
 ## 6.4 Hardware Interfaces
@@ -1013,7 +1041,7 @@ Each requirement's **status (Done, Partly, Not built) and the story that deliver
 | FR-24 to FR-28 (payroll) | `payroll` | Expense and Reimbursement are future work |
 | FR-29, FR-30 (notifications, inbox) | `notifications` | Task assignment and approval notices; Action Inbox |
 | FR-31 (audit log) | `audit_log` | Signals plus middleware; CSV export; view_audit_log Permission |
-| FR-32 (analytics) | not built | ST-134 |
+| FR-32 (analytics) | `analytics` | Overview and daily Company Health Snapshot; Permission `view_analytics` |
 | FR-33 (plan employee limit) | `billing` | Limit checked in the Employee serializer; Billing page; invoices |
 | FR-34 to FR-36 (Break-Glass) | `platform_admin` | Request, approve/deny/revoke, expiry, access log |
 | NFR-1 to NFR-4 (security) | `core`, `accounts`, `rbac` | Section 7 |

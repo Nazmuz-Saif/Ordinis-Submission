@@ -6,6 +6,9 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 
 | Method | Endpoint | View / action | Who |
 |---|---|---|---|
+| GET | `/api/v1/analytics/` | APIRootView | Any logged-in employee |
+| GET | `/api/v1/analytics/overview/` | OverviewViewSet / list | Permission `view_analytics` |
+| GET | `/api/v1/analytics/snapshots/` | SnapshotViewSet / list | Permission `view_analytics` |
 | GET | `/api/v1/approvals/` | APIRootView | Any logged-in employee |
 | GET | `/api/v1/approvals/chains/` | ApprovalChainViewSet / list | Any logged-in employee |
 | POST | `/api/v1/approvals/chains/` | ApprovalChainViewSet / create | Permission `manage_approval_chains` |
@@ -158,4 +161,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*151 endpoint methods on 101 routes.*
+*154 endpoint methods on 104 routes.*
