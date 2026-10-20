@@ -35,7 +35,7 @@
 | FR-29 | In-app Notification for task assignment and approvals | Medium | **Done** | ST-126 |  |
 | FR-30 | Action Inbox combining tasks, approvals and notifications | Medium | **Done** | ST-126 |  |
 | FR-31 | Append-only Audit Log of every create, update and delete | High | **Done** | ST-135 |  |
-| FR-32 | Company health analytics (attendance rate, task completion) | Low | **Not built** | ST-134 | Not in the code yet: endpoint /api/v1/analytics/ or /api/v1/dashboard/analytics/ |
+| FR-32 | Company health analytics (attendance rate, task completion) | Low | **Done** | ST-134 |  |
 | FR-33 | Employee limit enforced by the subscription plan | Medium | **Done** | ST-136 |  |
 | FR-34 | Platform Admin must send a Support Access Request with a reason | Medium | **Done** | ST-123 |  |
 | FR-35 | The company approves; access is time-limited and expires by itself | Medium | **Done** | ST-123 |  |
@@ -56,4 +56,4 @@
 | NFR-14 | Versioned REST API under /api/v1/ | Low | **Done** | ST-102 |  |
 | NFR-15 | Every sensitive action attributable to an actor and a time | High | **Done** | ST-123, ST-135 |  |
 
-*51 requirements: 42 Done, 6 Partly, 3 Not built. Status is read from the code by `python manage.py generate_docs`.*
+*51 requirements: 43 Done, 6 Partly, 2 Not built. Status is read from the code by `python manage.py generate_docs`.*

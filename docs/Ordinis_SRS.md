@@ -93,11 +93,11 @@ Ordinis is a web-based, multi-tenant SaaS platform that lets any client company 
 - Payroll (Salary Structure and Payslip are built; Expense and Reimbursement are future work) — an optional module per company
 - Notifications and a personalized "Action Inbox"
 - System-wide, append-only Audit Logging
-- Basic company-health Analytics (future work, ST-134)
+- Basic company-health Analytics (attendance rate, task completion, overdue tasks, workload, a daily Company Health Snapshot)
 - Subscription/Billing: plans, the employee-count limit, invoices
 - Platform-level Super Admin operations under a privacy-respecting "Break-Glass" access pattern
 
-**What is delivered (read this with Section 7.2).** Section 7.2 lists every requirement as Done, Partly or Not built, read from the code. These parts of the list above are *not built* and are future work: Projects (Tasks stand alone), Task comments and attachment links, the Holiday Calendar, Expense and Reimbursement, and the Analytics page with the Company Health Snapshot. The Analytics page is a Sprint 5 story (ST-134) and moves to Done in Section 7.2 by itself when its code is merged. The append-only Audit Log (ST-135) and the Billing plans, employee limit and invoices (ST-136) are built. Paying an invoice online is not built: there is no payment gateway, so a plan is changed by the platform team (`python manage.py set_company_plan`).
+**What is delivered (read this with Section 7.2).** Section 7.2 lists every requirement as Done, Partly or Not built, read from the code. These parts of the list above are *not built* and are future work: Projects (Tasks stand alone), Task comments and attachment links, the Holiday Calendar, and Expense and Reimbursement. The company-health Analytics page and the Company Health Snapshot (ST-134), the append-only Audit Log (ST-135) and the Billing plans, employee limit and invoices (ST-136) are built. Paying an invoice online is not built: there is no payment gateway, so a plan is changed by the platform team (`python manage.py set_company_plan`).
 
 Out of scope for this SRS (documented separately as future roadmap, not built or required in the current course-project scope): Layer-3 extension modules such as Meetings, Internal Ticketing, Asset Management, Document Management, Knowledge Base, Performance Reviews, Surveys, Visitor Management, Dynamic Form Builder, mobile app, multi-language switcher, third-party/ERP data import-export, and public API/webhooks. These recurred as stakeholder wishes during elicitation (see Appendix B analysis) but are consciously deferred so the current release stays focused and buildable within the course timeline.
 
@@ -444,7 +444,7 @@ Each requirement is Done, Partly or Not built. **The status is read from the cod
 | FR-29 | In-app Notification for task assignment and approvals | Medium | **Done** | ST-126 |  |
 | FR-30 | Action Inbox combining tasks, approvals and notifications | Medium | **Done** | ST-126 |  |
 | FR-31 | Append-only Audit Log of every create, update and delete | High | **Done** | ST-135 |  |
-| FR-32 | Company health analytics (attendance rate, task completion) | Low | **Not built** | ST-134 | Not in the code yet: endpoint /api/v1/analytics/ or /api/v1/dashboard/analytics/ |
+| FR-32 | Company health analytics (attendance rate, task completion) | Low | **Done** | ST-134 |  |
 | FR-33 | Employee limit enforced by the subscription plan | Medium | **Done** | ST-136 |  |
 | FR-34 | Platform Admin must send a Support Access Request with a reason | Medium | **Done** | ST-123 |  |
 | FR-35 | The company approves; access is time-limited and expires by itself | Medium | **Done** | ST-123 |  |
@@ -465,7 +465,7 @@ Each requirement is Done, Partly or Not built. **The status is read from the cod
 | NFR-14 | Versioned REST API under /api/v1/ | Low | **Done** | ST-102 |  |
 | NFR-15 | Every sensitive action attributable to an actor and a time | High | **Done** | ST-123, ST-135 |  |
 
-*51 requirements: 42 Done, 6 Partly, 3 Not built. Status is read from the code by `python manage.py generate_docs`.*
+*51 requirements: 43 Done, 6 Partly, 2 Not built. Status is read from the code by `python manage.py generate_docs`.*
 <!-- END GENERATED:traceability -->
 
 ---

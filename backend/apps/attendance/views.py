@@ -13,6 +13,7 @@ class AttendanceViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, AuditL
     """
     /api/v1/attendance/attendance/            my own attendance records, newest first
     GET  .../today/                           {"date": ..., "record": {...} or null}  (company-local day)
+    GET  .../calendar/?month=2026-10          my own month: a status per day and the summary
     POST .../check_in/   POST .../check_out/  once per day each
     Everybody records and sees only their OWN attendance here.
     """
@@ -30,6 +31,15 @@ class AttendanceViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, AuditL
             'date': today.isoformat(),
             'record': AttendanceSerializer(record).data if record else None,
         })
+
+    @action(detail=False, methods=['get'])
+    def calendar(self, request):
+        """GET .../calendar/?month=2026-10: my own month, a status per day and the summary (default: this month)."""
+        try:
+            data = services.month_calendar(request.user.employee, request.query_params.get('month'))
+        except services.AttendanceError as exc:
+            raise ValidationError(str(exc))
+        return Response(data)
 
     def _run(self, request, service):
         try:

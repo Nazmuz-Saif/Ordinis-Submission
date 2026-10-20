@@ -21,6 +21,27 @@ Read from the Django models. Every model also has `id` (UUID, primary key), `cre
 | `groups` | Many-to-many to Group | | |
 | `user_permissions` | Many-to-many to Permission | | |
 
+## App `analytics`
+
+### CompanyHealthSnapshot
+
+One row per company and day: how healthy the company was on that day.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `company` | FK to tenants.Company |  | on delete: CASCADE |
+| `date` | Date |  |  |
+| `headcount` | PositiveInteger | 0 |  |
+| `attendance_rate` | Decimal(4,1) | 0 |  |
+| `task_completion_rate` | Decimal(4,1) | 0 |  |
+| `open_tasks` | PositiveInteger | 0 |  |
+| `overdue_tasks` | PositiveInteger | 0 |  |
+| `health_score` | Decimal(4,1) | 0 |  |
+
+Rule: `one_health_snapshot_per_company_per_day` (unique)
+
+Rule: `snapshot_rates_0_to_100` (check)
+
 ## App `approvals`
 
 ### ApprovalAction
@@ -436,4 +457,4 @@ One daily progress note on a task, written by the assignee.
 | `fiscal_year_start` | Char(10) | '01-01' |  |
 | `default_language` | Char(10) | 'en' |  |
 
-*30 models.*
+*31 models.*

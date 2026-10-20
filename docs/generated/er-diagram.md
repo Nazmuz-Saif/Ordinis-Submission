@@ -16,6 +16,7 @@ erDiagram
   COMPANY ||--o{ APPROVALCHAIN : company
   COMPANY ||--o{ APPROVALINSTANCE : company
   COMPANY ||--o{ ATTENDANCE : company
+  COMPANY ||--o{ COMPANYHEALTHSNAPSHOT : company
   COMPANY ||--o{ DELEGATIONRULE : company
   COMPANY ||--o{ DEPARTMENT : company
   COMPANY ||--o{ DESIGNATION : company
@@ -74,6 +75,16 @@ erDiagram
     Boolean is_active
     Boolean is_staff
     Boolean is_platform_admin
+  }
+  COMPANYHEALTHSNAPSHOT {
+    fk company
+    Date date
+    PositiveInteger headcount
+    Decimal4_1 attendance_rate
+    Decimal4_1 task_completion_rate
+    PositiveInteger open_tasks
+    PositiveInteger overdue_tasks
+    Decimal4_1 health_score
   }
   APPROVALACTION {
     fk instance
