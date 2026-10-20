@@ -33,6 +33,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | DELETE | `/api/v1/approvals/steps/{id}/` | ApprovalStepViewSet / destroy | Permission `manage_approval_chains` |
 | GET | `/api/v1/attendance/` | APIRootView | Any logged-in employee |
 | GET | `/api/v1/attendance/attendance/` | AttendanceViewSet / list | Any logged-in employee |
+| GET | `/api/v1/attendance/attendance/calendar/` | AttendanceViewSet / calendar | Any logged-in employee |
 | POST | `/api/v1/attendance/attendance/check_in/` | AttendanceViewSet / check_in | Any logged-in employee |
 | POST | `/api/v1/attendance/attendance/check_out/` | AttendanceViewSet / check_out | Any logged-in employee |
 | GET | `/api/v1/attendance/attendance/today/` | AttendanceViewSet / today | Any logged-in employee |
@@ -161,4 +162,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*154 endpoint methods on 104 routes.*
+*155 endpoint methods on 105 routes.*

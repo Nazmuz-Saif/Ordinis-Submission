@@ -27,7 +27,7 @@ The approved mockups are implemented for the screens marked Built. The shared pa
 | Departments, Designations, Employees, Roles | Built | |
 | Tasks: Kanban board with four columns, counts, task cards (title, priority, assignee, deadline, progress) | Built | `KanbanPage`. The category tag on a card is not built |
 | Attendance: check-in and check-out, today's record | Built | |
-| Attendance: monthly calendar and the four summary cards | Not built | ST-137 |
+| Attendance: monthly calendar and the four summary cards | Built | `AttendanceCalendar`; a day shows a dot only on a working day of the company (see SDS 5.2) |
 | Leave, Approvals, Delegations, Inbox, Payslips, Salary Structures | Built | |
 | Analytics page (metric cards, line and bar charts) | Built | `AnalyticsPage`; a month without attendance shows 0 |
 | Audit Logs page | Built | `AuditLogsPage`: table, module filter, export |

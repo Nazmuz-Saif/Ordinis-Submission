@@ -3,6 +3,7 @@ import { CalendarCheck, LogIn, LogOut } from 'lucide-react'
 import { getToday, getRecords, checkIn, checkOut } from '../../services/attendanceService'
 import StatusPill from '../../components/common/StatusPill'
 import EmptyState from '../../components/common/EmptyState'
+import AttendanceCalendar from './AttendanceCalendar'
 
 function errorMessage(err, fallback) {
   return err.response?.data?.error?.message || fallback
@@ -122,6 +123,8 @@ function AttendancePage() {
             {error && <p data-testid="attendance-error" className="text-sm text-[#DC2626] mt-4">{error}</p>}
             {message && <p data-testid="attendance-message" className="text-sm text-[#16A34A] mt-4">{message}</p>}
           </div>
+
+          <AttendanceCalendar />
 
           <h2 className="text-lg font-semibold text-[#14142B] mb-3">My attendance</h2>
           {records.length === 0 ? (
