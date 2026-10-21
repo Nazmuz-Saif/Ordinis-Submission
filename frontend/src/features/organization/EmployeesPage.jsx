@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Users, Plus, Pencil, Check, X, Trash2 } from 'lucide-react'
+import { Users, Plus, Pencil, Check, X, Trash2, Copy } from 'lucide-react'
 import {
   getEmployees,
   getEmployeesPage,
@@ -16,6 +16,8 @@ import { personName, personInitials } from '../../utils/people'
 import Person from '../../components/common/Person'
 
 function EmployeesPage() {
+  const [tempInfo, setTempInfo] = useState(null) // the temporary password of the Employee just created: shown once
+  const [copied, setCopied] = useState(false)
   const [employees, setEmployees] = useState([]) // everyone: for dropdowns and the Reports To column
   const [rows, setRows] = useState([]) // the current page shown in the table
   const [page, setPage] = useState(1)
@@ -85,10 +87,10 @@ function EmployeesPage() {
 
 
     try {
-      await createEmployee({
+      const created = await createEmployee({
         full_name: form.full_name.trim(),
         email: form.email,
-        password: form.password,
+        ...(form.password ? { password: form.password } : {}),   // left empty: the system makes a temporary one
         employee_code: form.employee_code,
         department: form.department || null,
         designation: form.designation || null,
@@ -105,6 +107,12 @@ function EmployeesPage() {
         reports_to: '',
       })
 
+      setCopied(false)
+      setTempInfo(
+        created.temporary_password
+          ? { name: personName(created.full_name, created.user_email), email: created.user_email, password: created.temporary_password }
+          : null,
+      )
       loadAll()
     } catch (err) {
       setError(
@@ -114,6 +122,15 @@ function EmployeesPage() {
     }
 
 
+  }
+
+  async function copyTemporaryPassword() {
+    try {
+      await navigator.clipboard.writeText(tempInfo.password)
+      setCopied(true)
+    } catch {
+      setError('Could not copy automatically. Select the password and copy it by hand.')
+    }
   }
 
   function startEdit(emp) {
@@ -168,6 +185,33 @@ function EmployeesPage() {
       <h1 className="text-2xl font-bold text-[#14142B]">Employees</h1>
       <p className="text-sm text-[#71717A] mt-1 mb-6">Everyone in your company.</p>
 
+      {tempInfo && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl" data-testid="temp-password-box">
+          <p className="text-sm font-medium text-green-800">
+            {tempInfo.name} was added. Give them this temporary password now — it is shown only once.
+          </p>
+          <div className="flex items-center gap-2 mt-2">
+            <code className="text-base font-mono bg-white border border-green-200 rounded-lg px-3 py-1.5 select-all" data-testid="temp-password">
+              {tempInfo.password}
+            </code>
+            <button
+              type="button"
+              onClick={copyTemporaryPassword}
+              data-testid="copy-temp-password"
+              className="flex items-center gap-1.5 border border-green-300 bg-white hover:bg-green-100 rounded-lg px-3 py-1.5 text-sm text-green-800 transition"
+            >
+              <Copy size={14} /> {copied ? 'Copied' : 'Copy'}
+            </button>
+            <button type="button" onClick={() => setTempInfo(null)} className="text-sm text-green-800 underline ml-1">
+              Done
+            </button>
+          </div>
+          <p className="text-xs text-green-700 mt-2">
+            {tempInfo.email} logs in with it and is asked to choose their own password before anything else.
+          </p>
+        </div>
+      )}
+
       {canManageEmployees && (
 <form
         onSubmit={handleCreate}
@@ -179,6 +223,7 @@ function EmployeesPage() {
           value={form.full_name}
           onChange={handleChange}
           placeholder="Full name"
+          autoComplete="off"
           required
           className="border border-[#EEEEF2] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6C31D6] focus:ring-2 focus:ring-[#6C31D6]/15 transition"
         />
@@ -189,6 +234,7 @@ function EmployeesPage() {
           value={form.email}
           onChange={handleChange}
           placeholder="Email"
+          autoComplete="off"
           required
           className="border border-[#EEEEF2] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6C31D6] focus:ring-2 focus:ring-[#6C31D6]/15 transition"
         />
@@ -198,8 +244,9 @@ function EmployeesPage() {
           name="password"
           value={form.password}
           onChange={handleChange}
-          placeholder="Password"
-          required
+          placeholder="Password (optional)"
+          title="Leave empty and the system makes a one-time temporary password"
+          autoComplete="new-password"
           className="border border-[#EEEEF2] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6C31D6] focus:ring-2 focus:ring-[#6C31D6]/15 transition"
         />
 

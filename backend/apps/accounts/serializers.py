@@ -1,4 +1,7 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import RegexValidator
+
+from .passwords import check_new_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.db import transaction
@@ -128,4 +131,29 @@ class ProfileUpdateSerializer(serializers.Serializer):
             extra = {key: 'The Platform Admin profile has a name only.' for key in self.EMPLOYEE_FIELDS if key in attrs}
             if extra:
                 raise serializers.ValidationError(extra)
+        return attrs
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    new_password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    confirm_password = serializers.CharField(write_only=True, required=False, style={'input_type': 'password'})
+    refresh = serializers.CharField(write_only=True, required=False, allow_blank=True)
+
+    def validate_current_password(self, value):
+        if not self.context['request'].user.check_password(value):
+            raise serializers.ValidationError('The current password is not correct.')
+        return value
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        new = attrs['new_password']
+        if 'confirm_password' in attrs and attrs['confirm_password'] != new:
+            raise serializers.ValidationError({'confirm_password': 'The two new passwords do not match.'})
+        if new == attrs['current_password']:
+            raise serializers.ValidationError({'new_password': 'Choose a password different from the current one.'})
+        try:
+            check_new_password(user, new)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({'new_password': list(exc.messages)})
         return attrs

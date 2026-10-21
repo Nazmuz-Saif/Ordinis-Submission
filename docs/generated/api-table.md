@@ -54,6 +54,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/audit-log/logs/export/` | AuditLogViewSet / export | Permission `view_audit_log` |
 | GET | `/api/v1/audit-log/logs/modules/` | AuditLogViewSet / modules | Permission `view_audit_log` |
 | GET | `/api/v1/audit-log/logs/{id}/` | AuditLogViewSet / retrieve | Permission `view_audit_log` |
+| POST | `/api/v1/auth/change-password/` | ChangePasswordView | Any logged-in employee |
 | POST | `/api/v1/auth/login/` | CustomTokenObtainPairView | Public |
 | POST | `/api/v1/auth/logout/` | TokenBlacklistView | Public |
 | GET | `/api/v1/auth/me/` | MeView | Any logged-in employee |
@@ -164,4 +165,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*157 endpoint methods on 106 routes.*
+*158 endpoint methods on 107 routes.*

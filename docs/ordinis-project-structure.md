@@ -8,7 +8,7 @@ backend/
   .env.example, manage.py, regression.py, requirements.txt
   config/   settings/ (base, development, production), urls.py, wsgi.py, asgi.py
   apps/
-    accounts/  admin.py, apps.py, managers.py, models.py, serializers.py, urls.py, views.py, migrations/ (3)  (+ tests)
+    accounts/  admin.py, apps.py, managers.py, models.py, passwords.py, serializers.py, urls.py, views.py, migrations/ (4)  (+ tests)
     analytics/  apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (1), commands: take_health_snapshots  (+ tests)
     approvals/  admin.py, apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (4), commands: start_demo_approval  (+ tests)
     attendance/  admin.py, apps.py, demo_data.py, leave_models.py, leave_serializers.py, leave_services.py, leave_views.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (2)  (+ tests)

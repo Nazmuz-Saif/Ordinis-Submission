@@ -16,6 +16,7 @@ Read from the Django models. Every model also has `id` (UUID, primary key), `cre
 | `company` | FK to tenants.Company |  | can be empty (null); on delete: CASCADE |
 | `email` | Char(254) |  | unique |
 | `full_name` | Char(150) | '' |  |
+| `must_change_password` | Boolean | False |  |
 | `is_active` | Boolean | True |  |
 | `is_staff` | Boolean | False |  |
 | `is_platform_admin` | Boolean | False |  |

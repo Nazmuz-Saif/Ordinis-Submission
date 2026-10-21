@@ -12,6 +12,8 @@ This checklist is the full target. The table says what the delivered system actu
 | MFA / TOTP | Not built | Future work |
 | JWT access 15 min, refresh rotation, blacklist on logout | Done | `accounts` tests |
 | Password reset flow | Not built | Future work |
+| Change password (current password required, other sessions ended) | Done | `POST /api/v1/auth/change-password/`; every other refresh token is blacklisted, the one in use stays (ST-142). Access tokens of other sessions live out their 15 minutes |
+| Temporary password for a new employee, forced change at first login | Done | Generated, shown once, never stored in clear text or in the audit log; until changed every company endpoint answers 403 `PASSWORD_CHANGE_REQUIRED` except change-password, profile, me and logout (ST-142) |
 | Account lockout after failed logins | Not built | Future work |
 | Login error does not say which of email or password is wrong | Done | Wrong credentials give one message. A suspended company gets a specific message on purpose (FR-3) |
 | Company password policy | Not built | Django validators only |

@@ -53,7 +53,7 @@ function Navbar({ onMenuClick }) {
           {me?.is_platform_admin ? 'Ordinis Platform' : me?.company_name}
         </div>
 
-        {!me?.is_platform_admin && <NotificationBell />}
+        {!me?.is_platform_admin && !me?.must_change_password && <NotificationBell />}
 
         <div className="relative" ref={userRef}>
           <button

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Check, UserRound } from 'lucide-react'
-import { getProfile, updateProfile } from '../../services/authService'
+import { changePassword, getProfile, updateProfile } from '../../services/authService'
 import { useAuth } from '../../store/AuthContext'
 import useUnsavedChangesGuard from '../../hooks/useUnsavedChangesGuard'
 
@@ -28,7 +28,12 @@ function ReadOnly({ label, value, testId }) {
 }
 
 function MyProfilePage() {
-  const { refreshMe } = useAuth()
+  const { me, refreshMe } = useAuth()
+  const [pw, setPw] = useState({ current: '', next: '', confirm: '' })
+  const [pwSaving, setPwSaving] = useState(false)
+  const [pwError, setPwError] = useState('')
+  const [pwFieldErrors, setPwFieldErrors] = useState({})
+  const [pwSuccess, setPwSuccess] = useState('')
   const [profile, setProfile] = useState(null)
   const [form, setForm] = useState(null)
   const [saved, setSaved] = useState(null)      // the values as last loaded or saved, to detect changes
@@ -50,7 +55,43 @@ function MyProfilePage() {
   }, [])
 
   const dirty = Boolean(form && saved && EDITABLE.some((key) => form[key] !== saved[key]))
-  useUnsavedChangesGuard(dirty)
+  const pwDirty = Boolean(pw.current || pw.next || pw.confirm)
+  useUnsavedChangesGuard(dirty || pwDirty)
+
+  function handlePwChange(e) {
+    setPw((p) => ({ ...p, [e.target.name]: e.target.value }))
+    setPwSuccess('')
+    setPwFieldErrors((errs) => ({ ...errs, [e.target.name]: undefined }))
+  }
+
+  async function handlePasswordSubmit(e) {
+    e.preventDefault()
+    setPwError('')
+    setPwSuccess('')
+    setPwFieldErrors({})
+    if (pw.next !== pw.confirm) {
+      setPwFieldErrors({ confirm: 'The two new passwords do not match.' })
+      return
+    }
+    setPwSaving(true)
+    try {
+      const result = await changePassword(pw)
+      setPw({ current: '', next: '', confirm: '' })
+      setPwSuccess(result.message || 'Your password was changed.')
+      refreshMe()   // clears the temporary-password lock, if there was one
+    } catch (err) {
+      const body = err.response?.data?.error
+      const fe = body?.field_errors || {}
+      setPwFieldErrors({
+        current: fe.current_password,
+        next: Array.isArray(fe.new_password) ? fe.new_password.join(' ') : fe.new_password,
+        confirm: fe.confirm_password,
+      })
+      setPwError(fe.current_password || fe.new_password || fe.confirm_password ? '' : body?.message || 'Could not change the password.')
+    } finally {
+      setPwSaving(false)
+    }
+  }
 
   function handleChange(e) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
@@ -116,6 +157,11 @@ function MyProfilePage() {
       </div>
       <p className="text-sm text-[#71717A] mb-6">Your own details. You can update your name and contact information; the rest is set by your company.</p>
 
+      {me?.must_change_password && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-sm" data-testid="must-change-banner">
+          You signed in with a temporary password. Set your own password below to continue — nothing else opens until you do.
+        </div>
+      )}
       {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm" data-testid="profile-error">{error}</div>}
       {success && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm flex items-center gap-2" data-testid="profile-success">
@@ -165,6 +211,42 @@ function MyProfilePage() {
           </button>
           {dirty && <span className="text-xs text-[#71717A]">You have unsaved changes.</span>}
         </div>
+      </form>
+
+      <form onSubmit={handlePasswordSubmit} noValidate className="bg-white rounded-xl border border-[#EEEEF2] p-6 mt-8" autoComplete="off">
+        <h2 className="text-base font-semibold text-[#14142B] mb-1">Change password</h2>
+        <p className="text-xs text-[#71717A] mb-4">Changing it logs you out of every other device.</p>
+        {pwError && <div className="mb-3 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm" data-testid="password-error">{pwError}</div>}
+        {pwSuccess && <div className="mb-3 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm" data-testid="password-success">{pwSuccess}</div>}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            ['current', 'Current password', 'current-password'],
+            ['next', 'New password', 'new-password'],
+            ['confirm', 'Confirm new password', 'new-password'],
+          ].map(([key, label, auto]) => (
+            <div key={key}>
+              <label htmlFor={`pw-${key}`} className="block text-xs text-[#71717A] mb-1">{label}</label>
+              <input
+                id={`pw-${key}`}
+                type="password"
+                name={key}
+                value={pw[key]}
+                onChange={handlePwChange}
+                autoComplete={auto}
+                className={`${inputClass} ${pwFieldErrors[key] ? 'border-red-400' : ''}`}
+              />
+              {pwFieldErrors[key] && <p className="text-xs text-red-600 mt-1" data-testid={`error-password-${key}`}>{pwFieldErrors[key]}</p>}
+            </div>
+          ))}
+        </div>
+        <button
+          type="submit"
+          disabled={pwSaving || !pw.current || !pw.next || !pw.confirm}
+          data-testid="password-save"
+          className="mt-4 bg-[#6C31D6] hover:bg-[#5A28B0] disabled:opacity-50 text-white rounded-lg px-5 py-2 text-sm font-medium transition"
+        >
+          {pwSaving ? 'Changing…' : 'Change password'}
+        </button>
       </form>
     </div>
   )

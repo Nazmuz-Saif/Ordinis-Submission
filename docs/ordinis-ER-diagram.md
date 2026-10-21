@@ -76,6 +76,7 @@ erDiagram
     fk company
     Char254 email
     Char150 full_name
+    Boolean must_change_password
     Boolean is_active
     Boolean is_staff
     Boolean is_platform_admin
