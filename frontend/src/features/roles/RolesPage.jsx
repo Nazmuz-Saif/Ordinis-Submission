@@ -1,23 +1,13 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Plus, Shield, Trash2, UserPlus } from 'lucide-react'
 import { useAuth } from '../../store/AuthContext'
 import { getPermissions, getRoles, createRole, deleteRole } from '../../services/rolesService'
+import PermissionPicker from '../../components/roles/PermissionPicker'
+import { errorMessage } from './roleFormat'
 import { getEmployees, getEmployeeRoles, assignEmployeeRole, deleteEmployeeRole } from '../../services/organizationService'
 
 // Permission names, grouping and descriptions come only from the server (rbac/catalog.py).
-function moduleLabel(module) {
-  return (module || 'other').replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase())
-}
-
-function groupByModule(perms) {
-  const groups = {}
-  perms.forEach((p) => {
-    const key = p.module || 'other'
-    if (!groups[key]) groups[key] = []
-    groups[key].push(p)
-  })
-  return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
-}
 
 function RolesPage() {
   const { hasPermission } = useAuth()
@@ -64,14 +54,6 @@ function RolesPage() {
     Promise.resolve().then(loadData)
   }, [])
 
-  function togglePerm(idOrCodename) {
-    setSelectedPerms((prev) =>
-      prev.includes(idOrCodename)
-        ? prev.filter((item) => item !== idOrCodename)
-        : [...prev, idOrCodename]
-    )
-  }
-
   async function handleCreateRole(e) {
     e.preventDefault()
     if (!roleName.trim()) return
@@ -104,7 +86,7 @@ function RolesPage() {
       setSuccess('Role deleted.')
       loadData()
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to delete role.')
+      setError(errorMessage(err, 'Failed to delete role.'))
     }
   }
 
@@ -181,27 +163,9 @@ function RolesPage() {
             required
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-4 mb-2">
-            {permissions.map((perm) => (
-              <label
-                key={perm.id}
-                title={perm.description}
-                className="flex items-start gap-2.5 text-sm text-[#14142B] cursor-pointer select-none"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedPerms.includes(perm.id)}
-                  onChange={() => togglePerm(perm.id)}
-                  className="mt-0.5 rounded border-[#D1D5DB] text-[#6C31D6] focus:ring-[#6C31D6] w-4 h-4"
-                />
-                <span>
-                  <span className="block text-sm font-medium text-[#14142B]">{perm.name}</span>
-                  <span className="block text-xs text-[#71717A]">{perm.description}</span>
-                </span>
-              </label>
-            ))}
+          <div className="mb-6">
+            <PermissionPicker permissions={permissions} selected={selectedPerms} onChange={setSelectedPerms} />
           </div>
-          <p className="text-xs text-[#71717A] mb-6">{selectedPerms.length} of {permissions.length} selected</p>
 
           <button
             type="submit"
@@ -235,7 +199,7 @@ function RolesPage() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Shield size={16} className="text-[#6C31D6]" />
-                      <span className="text-sm font-bold text-[#14142B]">{r.name}</span>
+                      <Link to={`/roles/${r.id}`} className="text-sm font-bold text-[#14142B] hover:text-[#6C31D6]">{r.name}</Link>
                       {r.is_system_default && (
                         <span className="text-[10px] bg-[#6C31D6]/10 text-[#6C31D6] px-1.5 py-0.5 rounded font-medium">
                           System
@@ -260,26 +224,23 @@ function RolesPage() {
                       <p className="text-xs font-medium text-[#14142B] mb-1">
                         {r.permission_details.length} Permission{r.permission_details.length === 1 ? '' : 's'}
                       </p>
-                      {groupByModule(r.permission_details).map(([module, perms]) => (
-                        <div key={module} className="mb-1.5">
-                          <p className="text-[10px] uppercase tracking-wide text-[#A1A1AA]">{moduleLabel(module)}</p>
-                          <div className="flex flex-wrap gap-1">
-                            {perms.map((p) => (
-                              <span
-                                key={p.id}
-                                title={p.description}
-                                className="text-[11px] bg-[#F1EEFB] text-[#6C31D6] px-2 py-0.5 rounded"
-                              >
-                                {p.name}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                      <div className="flex flex-wrap gap-1">
+                        {r.permission_details.slice(0, 3).map((p) => (
+                          <span key={p.id} title={p.description} className="text-[11px] bg-[#F1EEFB] text-[#6C31D6] px-2 py-0.5 rounded">
+                            {p.name}
+                          </span>
+                        ))}
+                        {r.permission_details.length > 3 && (
+                          <span className="text-[11px] text-[#71717A] px-1 py-0.5">+{r.permission_details.length - 3} more</span>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <span className="text-xs text-[#A1A1AA] italic">No permissions assigned</span>
                   )}
+                  <p className="text-xs text-[#71717A] mt-2">
+                    {r.employee_count || 0} employee{(r.employee_count || 0) === 1 ? '' : 's'}
+                  </p>
                 </div>
               </div>
             ))}

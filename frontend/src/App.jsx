@@ -10,6 +10,7 @@ import DesignationsPage from './features/organization/DesignationsPage'
 import EmployeesPage from './features/organization/EmployeesPage'
 import EmployeeDetailPage from './features/organization/EmployeeDetailPage'
 import RolesPage from './features/roles/RolesPage'
+import RoleDetailPage from './features/roles/RoleDetailPage'
 import ApprovalChainsPage from './features/approvals/ApprovalChainsPage'
 import PendingApprovalsPage from './features/approvals/PendingApprovalsPage'
 import UiKitPage from './features/dev/UiKitPage'
@@ -112,6 +113,16 @@ function App() {
           <Route
             path="/roles/employee-roles"
             element={<Navigate to="/roles" replace />}
+          />
+          <Route
+            path="/roles/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <RoleDetailPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/attendance/leave"

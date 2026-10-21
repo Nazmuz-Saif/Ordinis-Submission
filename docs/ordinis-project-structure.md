@@ -30,6 +30,7 @@ frontend/src/
   components/common/  ChartCard.jsx, EmptyState.jsx, MetricCard.jsx, Pagination.jsx, PlanBadge.jsx, StatusPill.jsx
   components/dashboard/  StatCard.jsx
   components/layout/  Navbar.jsx, NotificationBell.jsx, Sidebar.jsx, navigation.js
+  components/roles/  PermissionPicker.jsx
   features/admin/  AccessRequestsPage.jsx, ActivityPage.jsx, CompaniesPage.jsx, TicketsPage.jsx, format.js, shared.jsx, usePagedList.js
   features/analytics/  AnalyticsPage.jsx, analyticsFormat.js
   features/approvals/  ApprovalChainsPage.jsx, DelegationsPage.jsx, PendingApprovalsPage.jsx
@@ -44,7 +45,7 @@ frontend/src/
   features/organization/  DepartmentsPage.jsx, DesignationsPage.jsx, EmployeeDetailPage.jsx, EmployeesPage.jsx
   features/payroll/  MyPayslipsPage.jsx, PayslipViewPage.jsx, PayslipsPage.jsx, SalaryStructuresPage.jsx, payslipFormat.js
   features/platformAdmin/  SupportAccessPage.jsx
-  features/roles/  EmployeeRolesPage.jsx, RolesPage.jsx
+  features/roles/  EmployeeRolesPage.jsx, RoleDetailPage.jsx, RolesPage.jsx, roleFormat.js
   features/tasks/  KanbanPage.jsx, TaskProgressPanel.jsx, TasksPage.jsx
   hooks/  useClickOutside.js
   layouts/  DashboardLayout.jsx
