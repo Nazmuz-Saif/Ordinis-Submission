@@ -391,6 +391,7 @@ System-wide permission (global — NOT company-scoped).
 | `codename` | Char(100) |  | unique |
 | `name` | Char(255) |  |  |
 | `module` | Char(50) |  |  |
+| `description` | Char(500) | '' |  |
 
 ### Role
 

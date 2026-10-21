@@ -4,21 +4,20 @@ import { useAuth } from '../../store/AuthContext'
 import { getPermissions, getRoles, createRole, deleteRole } from '../../services/rolesService'
 import { getEmployees, getEmployeeRoles, assignEmployeeRole, deleteEmployeeRole } from '../../services/organizationService'
 
-// All standard system permissions from design
-const DEFAULT_PERMISSION_CODENAMES = [
-  'approve_leave',
-  'manage_departments',
-  'manage_employees',
-  'manage_roles',
-  'manage_approval_chains',
-  'approve_request',
-  'create_task',
-  'manage_attendance',
-  'manage_payroll',
-  'view_finance',
-  'approve_expense',
-  'approve_support_access',
-]
+// Permission names, grouping and descriptions come only from the server (rbac/catalog.py).
+function moduleLabel(module) {
+  return (module || 'other').replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase())
+}
+
+function groupByModule(perms) {
+  const groups = {}
+  perms.forEach((p) => {
+    const key = p.module || 'other'
+    if (!groups[key]) groups[key] = []
+    groups[key].push(p)
+  })
+  return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
+}
 
 function RolesPage() {
   const { hasPermission } = useAuth()
@@ -44,7 +43,7 @@ function RolesPage() {
     try {
       const [rolesData, permsData, empsData, empRolesData] = await Promise.all([
         getRoles().catch(() => []),
-        getPermissions().catch(() => []),
+        getPermissions(),
         getEmployees().catch(() => []),
         getEmployeeRoles().catch(() => []),
       ])
@@ -53,19 +52,7 @@ function RolesPage() {
       setEmployees(empsData || [])
       setEmployeeRoles(empRolesData || [])
 
-      // Merge backend permissions with standard list to ensure all 12 are available
-      const backendPerms = permsData || []
-      const merged = DEFAULT_PERMISSION_CODENAMES.map((codename) => {
-        const found = backendPerms.find((p) => p.codename === codename)
-        return found || { id: codename, codename, name: codename }
-      })
-      // Add any additional backend permissions not in the default list
-      backendPerms.forEach((bp) => {
-        if (!merged.some((m) => m.codename === bp.codename)) {
-          merged.push(bp)
-        }
-      })
-      setPermissions(merged)
+      setPermissions(permsData || [])
     } catch {
       setError('Failed to load roles and permissions.')
     } finally {
@@ -91,22 +78,17 @@ function RolesPage() {
     setError('')
     setSuccess('')
 
-    // Map selected permissions to backend IDs where possible
-    const permIds = selectedPerms
-      .map((item) => {
-        const match = permissions.find((p) => p.id === item || p.codename === item)
-        return match ? match.id : item
-      })
-      .filter((id) => typeof id === 'string' && id.includes('-')) // only valid UUIDs if applicable
-
+    const name = roleName.trim()
     try {
-      await createRole({
-        name: roleName.trim(),
-        permissions: permIds,
-      })
+      const created = await createRole({ name, permissions: selectedPerms })
+      const saved = (created?.permissions || []).length
       setRoleName('')
       setSelectedPerms([])
-      setSuccess(`Role "${roleName.trim()}" created successfully!`)
+      if (saved !== selectedPerms.length) {
+        setError(`Role "${name}" was created, but the server saved ${saved} of the ${selectedPerms.length} Permissions you ticked. Open the Role and check it.`)
+      } else {
+        setSuccess(`Role "${name}" created with ${saved} Permission${saved === 1 ? '' : 's'}.`)
+      }
       loadData()
     } catch (err) {
       setError(err.response?.data?.error?.message || err.response?.data?.detail || 'Failed to create role.')
@@ -199,29 +181,27 @@ function RolesPage() {
             required
           />
 
-          {/* 3-column permission checkboxes matching screenshot */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-4 mb-6">
-            {permissions.map((perm) => {
-              const key = perm.id || perm.codename
-              const isChecked = selectedPerms.includes(key)
-              return (
-                <label
-                  key={key}
-                  className="flex items-center gap-2.5 text-sm text-[#14142B] cursor-pointer select-none"
-                >
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={() => togglePerm(key)}
-                    className="rounded border-[#D1D5DB] text-[#6C31D6] focus:ring-[#6C31D6] w-4 h-4"
-                  />
-                  <span className="text-sm font-normal text-[#14142B]">
-                    {perm.codename}
-                  </span>
-                </label>
-              )
-            })}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-4 mb-2">
+            {permissions.map((perm) => (
+              <label
+                key={perm.id}
+                title={perm.description}
+                className="flex items-start gap-2.5 text-sm text-[#14142B] cursor-pointer select-none"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedPerms.includes(perm.id)}
+                  onChange={() => togglePerm(perm.id)}
+                  className="mt-0.5 rounded border-[#D1D5DB] text-[#6C31D6] focus:ring-[#6C31D6] w-4 h-4"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-[#14142B]">{perm.name}</span>
+                  <span className="block text-xs text-[#71717A]">{perm.description}</span>
+                </span>
+              </label>
+            ))}
           </div>
+          <p className="text-xs text-[#71717A] mb-6">{selectedPerms.length} of {permissions.length} selected</p>
 
           <button
             type="submit"
@@ -275,20 +255,31 @@ function RolesPage() {
                   {r.description && (
                     <p className="text-xs text-[#71717A] mb-2">{r.description}</p>
                   )}
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {r.permission_details && r.permission_details.length > 0 ? (
-                      r.permission_details.map((p) => (
-                        <span
-                          key={p.id}
-                          className="text-[11px] font-mono bg-[#F1EEFB] text-[#6C31D6] px-2 py-0.5 rounded"
-                        >
-                          {p.codename}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-[#A1A1AA] italic">No permissions assigned</span>
-                    )}
-                  </div>
+                  {r.permission_details && r.permission_details.length > 0 ? (
+                    <div className="mt-2">
+                      <p className="text-xs font-medium text-[#14142B] mb-1">
+                        {r.permission_details.length} Permission{r.permission_details.length === 1 ? '' : 's'}
+                      </p>
+                      {groupByModule(r.permission_details).map(([module, perms]) => (
+                        <div key={module} className="mb-1.5">
+                          <p className="text-[10px] uppercase tracking-wide text-[#A1A1AA]">{moduleLabel(module)}</p>
+                          <div className="flex flex-wrap gap-1">
+                            {perms.map((p) => (
+                              <span
+                                key={p.id}
+                                title={p.description}
+                                className="text-[11px] bg-[#F1EEFB] text-[#6C31D6] px-2 py-0.5 rounded"
+                              >
+                                {p.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-[#A1A1AA] italic">No permissions assigned</span>
+                  )}
                 </div>
               </div>
             ))}

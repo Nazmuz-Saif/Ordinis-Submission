@@ -19,6 +19,10 @@ class Permission(BaseModel):
         max_length=50,
         help_text="Grouping key: organization, roles, attendance, payroll, etc."
     )
+    description = models.CharField(
+        max_length=500, blank=True, default="",
+        help_text="Plain-language explanation of what this Permission lets a person do.",
+    )
 
     class Meta:
         ordering = ['module', 'codename']

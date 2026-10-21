@@ -20,7 +20,7 @@ backend/
     organization/  admin.py, apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (6)  (+ tests)
     payroll/  admin.py, apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (2)  (+ tests)
     platform_admin/  apps.py, demo_data.py, exceptions.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (2), commands: create_platform_admin  (+ tests)
-    rbac/  admin.py, apps.py, decorators.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (14)  (+ tests)
+    rbac/  admin.py, apps.py, catalog.py, decorators.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (15)  (+ tests)
     tasks/  admin.py, apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (2)  (+ tests)
     tenants/  admin.py, apps.py, middleware.py, models.py, serializers.py, urls.py, views.py, migrations/ (1)  (+ tests)
   tests/   browser (Selenium) test files, selenium_helpers.py, selenium_runner.py

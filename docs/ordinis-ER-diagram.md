@@ -272,6 +272,7 @@ erDiagram
     Char100 codename
     Char255 name
     Char50 module
+    Char500 description
   }
   ROLE {
     fk company
