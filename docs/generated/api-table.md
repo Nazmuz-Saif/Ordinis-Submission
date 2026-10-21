@@ -94,6 +94,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/organization/employees/{id}/` | EmployeeViewSet / update | Permission `manage_employees` |
 | PATCH | `/api/v1/organization/employees/{id}/` | EmployeeViewSet / partial_update | Permission `manage_employees` |
 | DELETE | `/api/v1/organization/employees/{id}/` | EmployeeViewSet / destroy | Permission `manage_employees` |
+| GET | `/api/v1/organization/employees/{id}/access/` | EmployeeViewSet / access | Any logged-in employee |
 | GET | `/api/v1/organization/employees/{id}/subordinates/` | EmployeeViewSet / subordinates | Any logged-in employee |
 | GET | `/api/v1/payroll/` | APIRootView | Any logged-in employee |
 | GET | `/api/v1/payroll/payslips/` | PayslipViewSet / list | Any logged-in employee |
@@ -165,4 +166,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*158 endpoint methods on 107 routes.*
+*159 endpoint methods on 108 routes.*

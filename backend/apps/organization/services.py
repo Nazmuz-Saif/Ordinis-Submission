@@ -48,6 +48,44 @@ def can_view_employee_data(viewer: Employee, target: Employee) -> bool:
     return target in subordinates
 
 
+def can_see_private_details(viewer: Employee, target: Employee) -> bool:
+    """
+    Who may see a person's phone, address, emergency contact and joining date (D4): the person,
+    anyone above them in the reporting line, and holders of manage_employees.
+    """
+    return viewer.has_permission('manage_employees') or can_view_employee_data(viewer, target)
+
+
+def can_see_access(viewer: Employee, target: Employee) -> bool:
+    """Who may see a person's Roles and effective Permissions: the same people, plus holders of assign_roles."""
+    return can_see_private_details(viewer, target) or viewer.has_permission('assign_roles')
+
+
+def build_access(employee: Employee) -> dict:
+    """
+    The Roles a person holds and the Permissions they really have through them.
+    `permissions` is the union over all Roles; each entry also says which Roles give it.
+    """
+    links = employee.employee_roles.select_related('role').prefetch_related('role__permissions').order_by('role__name')
+    roles, effective = [], {}
+    for link in links:
+        role = link.role
+        perms = sorted(role.permissions.all(), key=lambda p: (p.module, p.codename))
+        roles.append({
+            'id': str(role.id), 'name': role.name, 'is_system_default': role.is_system_default,
+            'permissions': [_perm_dict(p) for p in perms],
+        })
+        for p in perms:
+            entry = effective.setdefault(p.codename, {**_perm_dict(p), 'roles': []})
+            entry['roles'].append(role.name)
+    ordered = sorted(effective.values(), key=lambda e: (e['module'], e['codename']))
+    return {'employee': str(employee.id), 'roles': roles, 'permissions': ordered}
+
+
+def _perm_dict(p):
+    return {'codename': p.codename, 'name': p.name, 'module': p.module, 'description': p.description}
+
+
 def creates_reporting_cycle(employee: Employee, new_manager: Employee) -> bool:
     """
     True if making `new_manager` the manager of `employee` would make an

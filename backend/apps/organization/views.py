@@ -1,17 +1,18 @@
 from django.db import transaction
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
 from core.mixins import AuditLoggingMixin, PermissionRequiredMixin
 from rbac.models import EmployeeRole
 
 from .models import Department, Designation, Employee
-from .services import get_all_subordinates
+from .services import build_access, can_see_access, get_all_subordinates
 from .serializers import (
     DepartmentSerializer,
     DesignationSerializer,
+    EmployeeDetailSerializer,
     EmployeeSerializer,
 )
 
@@ -78,6 +79,9 @@ class EmployeeViewSet(
         "destroy": "manage_employees",
     }
 
+    def get_serializer_class(self):
+        return EmployeeDetailSerializer if self.action == "retrieve" else EmployeeSerializer
+
     def get_queryset(self):
         company = self.request.user.company
         return Employee.objects.filter(company=company).order_by('employee_code', 'id')
@@ -107,6 +111,14 @@ class EmployeeViewSet(
             # employee record could otherwise still sign in and read company data.
             user.is_active = False
             user.save(update_fields=["is_active"])
+
+    @action(detail=True, methods=["get"])
+    def access(self, request, pk=None):
+        """GET /employees/{id}/access/ — the Roles this person holds and the Permissions they really have."""
+        employee = self.get_object()  # company-scoped: another company's id returns 404
+        if not can_see_access(request.user.employee, employee):
+            raise PermissionDenied("You may not see this person's Roles and Permissions.")
+        return Response(build_access(employee))
 
     @action(detail=True, methods=["get"])
     def subordinates(self, request, pk=None):
