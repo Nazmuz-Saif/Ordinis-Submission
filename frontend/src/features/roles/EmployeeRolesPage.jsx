@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { UserPlus, Trash2, Shield } from 'lucide-react'
+import { personName } from '../../utils/people'
 
 function EmployeeRolesPage() {
   const [employee, setEmployee] = useState('')
@@ -70,7 +71,7 @@ function EmployeeRolesPage() {
             <option value="">Select Employee</option>
             {employees.map((emp) => (
               <option key={emp.id} value={emp.id}>
-                {emp.employee_code} — {emp.email}
+                {personName(emp.full_name, emp.user_email || emp.email)} · {emp.employee_code}
               </option>
             ))}
           </select>
@@ -140,7 +141,7 @@ function EmployeeRolesPage() {
                   </td>
 
                   <td className="px-4 py-3 text-[#71717A]">
-                    {item.employee_email}
+                    {personName(item.employee_name, item.employee_email)}
                   </td>
 
                   <td className="px-4 py-3">

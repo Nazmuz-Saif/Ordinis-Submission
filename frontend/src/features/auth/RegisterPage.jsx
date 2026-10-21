@@ -15,6 +15,7 @@ function RegisterPage() {
     company_name: '',
     subdomain: '',
     industry: '',
+    ceo_full_name: '',
     ceo_email: '',
     ceo_password: '',
   })
@@ -46,6 +47,7 @@ function RegisterPage() {
         company_name: form.company_name,
         subdomain: form.subdomain,
         industry: form.industry,
+        ceo_full_name: form.ceo_full_name.trim(),
         ceo_email: form.ceo_email,
         ceo_password: form.ceo_password,
       })
@@ -91,6 +93,12 @@ function RegisterPage() {
             <label className="block text-sm text-[#14142B] mb-1">Industry (optional)</label>
             <input name="industry" value={form.industry} onChange={handleChange} className={inputClass} />
             {fieldError('industry')}
+          </div>
+
+          <div>
+            <label className="block text-sm text-[#14142B] mb-1">Your full name</label>
+            <input name="ceo_full_name" value={form.ceo_full_name} onChange={handleChange} placeholder="e.g. Reza Chowdhury" className={inputClass} required />
+            {fieldError('ceo_full_name')}
           </div>
 
           <div>

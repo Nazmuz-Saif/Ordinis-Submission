@@ -6,6 +6,7 @@ import { getPermissions, getRoles, createRole, deleteRole } from '../../services
 import PermissionPicker from '../../components/roles/PermissionPicker'
 import { errorMessage } from './roleFormat'
 import { getEmployees, getEmployeeRoles, assignEmployeeRole, deleteEmployeeRole } from '../../services/organizationService'
+import { personName } from '../../utils/people'
 
 // Permission names, grouping and descriptions come only from the server (rbac/catalog.py).
 
@@ -266,7 +267,7 @@ function RolesPage() {
             <option value="">Employee...</option>
             {employees.map((emp) => (
               <option key={emp.id} value={emp.id}>
-                {emp.employee_code} {emp.email || emp.user?.email ? `— ${emp.email || emp.user?.email}` : ''}
+                {personName(emp.full_name, emp.user_email || emp.email)} · {emp.employee_code}
               </option>
             ))}
           </select>
@@ -324,10 +325,10 @@ function RolesPage() {
                 >
                   <div className="flex items-center gap-3">
                     <span className="font-semibold text-sm text-[#14142B]">
-                      {item.employee_code || item.employee}
+                      {personName(item.employee_name, item.employee_email) !== '—' ? personName(item.employee_name, item.employee_email) : (item.employee_code || item.employee)}
                     </span>
-                    {item.employee_email && (
-                      <span className="text-xs text-[#71717A]">({item.employee_email})</span>
+                    {item.employee_code && (
+                      <span className="text-xs text-[#71717A]">({item.employee_code})</span>
                     )}
                   </div>
 

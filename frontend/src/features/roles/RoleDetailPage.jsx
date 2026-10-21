@@ -5,6 +5,7 @@ import { useAuth } from '../../store/AuthContext'
 import { getPermissions, getRole, updateRole, deleteRole } from '../../services/rolesService'
 import PermissionPicker from '../../components/roles/PermissionPicker'
 import { errorMessage, groupByModule, moduleLabel } from './roleFormat'
+import { personName } from '../../utils/people'
 
 const SYSTEM_NOTE =
   'The CEO system Role always holds every Permission so the company can never lock itself out. It cannot be edited or deleted.'
@@ -198,8 +199,8 @@ function RoleDetailPage() {
           <ul className="divide-y divide-[#EEEEF2]">
             {role.employees.map((e) => (
               <li key={e.id} className="py-2 text-sm">
-                <Link to={`/organization/employees/${e.id}`} className="text-[#6C31D6] hover:underline">{e.employee_code}</Link>
-                <span className="text-[#71717A]"> — {e.email}</span>
+                <Link to={`/organization/employees/${e.id}`} className="text-[#6C31D6] hover:underline">{personName(e.name, e.email)}</Link>
+                <span className="text-[#71717A]"> · {e.employee_code}</span>
               </li>
             ))}
           </ul>

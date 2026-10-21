@@ -4,6 +4,7 @@ import { ArrowLeft, Printer } from 'lucide-react'
 import { getPayslip } from '../../services/payrollService'
 import EmptyState from '../../components/common/EmptyState'
 import { formatMoney } from './payslipFormat'
+import { personName } from '../../utils/people'
 
 // When printing, show only the payslip: hide the menu, the top bar and the buttons.
 const PRINT_CSS = `@media print {
@@ -60,7 +61,8 @@ function PayslipViewPage() {
             <p data-testid="payslip-month-label" className="text-sm text-[#71717A]">{payslip.month_label}</p>
           </div>
           <div className="text-right text-sm">
-            <p data-testid="payslip-employee-email" className="font-medium text-[#14142B]">{payslip.employee_email}</p>
+            <p data-testid="payslip-employee-name" className="font-medium text-[#14142B]">{personName(payslip.employee_name, payslip.employee_email)}</p>
+            <p data-testid="payslip-employee-email" className="text-xs text-[#71717A]">{payslip.employee_email}</p>
             <p className="text-[#71717A]">{payslip.employee_code}</p>
           </div>
         </header>
@@ -84,7 +86,7 @@ function PayslipViewPage() {
         </table>
 
         <footer className="text-xs text-[#71717A]">
-          Generated {new Date(payslip.created_at).toLocaleDateString()} by {payslip.generated_by_email || 'finance'}.
+          Generated {new Date(payslip.created_at).toLocaleDateString()} by {payslip.generated_by_name || payslip.generated_by_email || 'finance'}.
         </footer>
       </article>
     </div>

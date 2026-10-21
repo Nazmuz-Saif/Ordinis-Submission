@@ -3,6 +3,7 @@ import { AlertTriangle, CalendarDays, Flag } from 'lucide-react'
 import { getBoard, moveTask } from '../../services/tasksService'
 import EmptyState from '../../components/common/EmptyState'
 import TaskProgressPanel from './TaskProgressPanel'
+import { personName, personInitials } from '../../utils/people'
 
 const PRIORITY = {
   high: 'bg-[#DC2626]/10 text-[#B91C1C]',
@@ -19,7 +20,6 @@ const MOVE_LABEL = {
 }
 
 const columnOf = (board, cardId) => board.columns.find((c) => c.cards.some((card) => card.id === cardId))
-const initials = (email) => (email || '?').split('@')[0].slice(0, 2).toUpperCase()
 const errorMessage = (err, fallback) => err.response?.data?.error?.message || fallback
 
 function Card({ card, columnKey, dragging, onDragStart, onDragEnd, onMove, onOpen }) {
@@ -53,8 +53,8 @@ function Card({ card, columnKey, dragging, onDragStart, onDragEnd, onMove, onOpe
 
       <div className="flex items-center justify-between text-xs text-[#71717A]">
         <span className="flex items-center gap-1.5 min-w-0">
-          <span className="h-5 w-5 shrink-0 rounded-full bg-[#6C31D6] text-white text-[10px] font-semibold flex items-center justify-center">{initials(card.assigned_to_email)}</span>
-          <span className="truncate" title={card.assigned_to_email}>{card.assigned_to_email}</span>
+          <span className="h-5 w-5 shrink-0 rounded-full bg-[#6C31D6] text-white text-[10px] font-semibold flex items-center justify-center">{personInitials(card.assigned_to_name, card.assigned_to_email)}</span>
+          <span className="truncate" title={card.assigned_to_email}>{personName(card.assigned_to_name, card.assigned_to_email)}</span>
         </span>
         {card.deadline && (
           <span data-testid="card-deadline" className={`flex items-center gap-1 whitespace-nowrap ${card.overdue ? 'text-[#B91C1C] font-medium' : ''}`}>

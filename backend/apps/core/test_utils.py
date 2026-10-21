@@ -5,12 +5,13 @@ from organization.models import Employee
 from rbac.models import Permission, Role
 
 
-def register_company(name, subdomain, email):
+def register_company(name, subdomain, email, full_name='Test Owner'):
     """Registers a company through the real endpoint. Returns an APIClient logged in as its CEO."""
     client = APIClient()
     res = client.post('/api/v1/auth/register/', {
         'company_name': name,
         'subdomain': subdomain,
+        'ceo_full_name': full_name,
         'ceo_email': email,
         'ceo_password': 'StrongPass123',
     }, format='json')

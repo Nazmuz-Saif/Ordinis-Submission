@@ -26,12 +26,14 @@ class EmployeeSerializer(serializers.ModelSerializer):
     user_email = serializers.CharField(source='user.email', read_only=True)
     email = serializers.EmailField(write_only=True)
     password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    # The person's name lives on the User; blank is allowed so old rows and old clients still work.
+    full_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
 
     class Meta:
         model = Employee
         fields = [
-            'id', 'email', 'user_email', 'password', 'company', 'department', 'department_name',
-            'designation', 'designation_title', 'reports_to', 'employee_code',
+            'id', 'email', 'user_email', 'full_name', 'password', 'company', 'department', 'department_name',
+            'designation', 'designation_title', 'reports_to', 'employee_code', 'joined_on',
         ]
         read_only_fields = ['id', 'company']
 
@@ -70,15 +72,20 @@ class EmployeeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         email = validated_data.pop('email')
         password = validated_data.pop('password')
+        full_name = validated_data.pop('full_name', '').strip()
         company = validated_data.pop('company')
         with transaction.atomic():
             from billing.services import ensure_can_add_employee
             ensure_can_add_employee(company)   # refuses with an "upgrade your plan" message when the plan is full
-            user = User.objects.create_user(email=email, password=password, company=company)
+            user = User.objects.create_user(email=email, password=password, company=company, full_name=full_name)
             employee = Employee.objects.create(user=user, company=company, **validated_data)
         return employee
 
     def update(self, instance, validated_data):
         validated_data.pop('email', None)
         validated_data.pop('password', None)
+        full_name = validated_data.pop('full_name', None)
+        if full_name is not None:
+            instance.user.full_name = full_name.strip()
+            instance.user.save(update_fields=['full_name', 'updated_at'])
         return super().update(instance, validated_data)

@@ -15,6 +15,7 @@ Read from the Django models. Every model also has `id` (UUID, primary key), `cre
 | `is_superuser` | Boolean | False |  |
 | `company` | FK to tenants.Company |  | can be empty (null); on delete: CASCADE |
 | `email` | Char(254) |  | unique |
+| `full_name` | Char(150) | '' |  |
 | `is_active` | Boolean | True |  |
 | `is_staff` | Boolean | False |  |
 | `is_platform_admin` | Boolean | False |  |
@@ -273,6 +274,11 @@ One message for ONE employee ("you were assigned a task", "an approval needs you
 | `designation` | FK to organization.Designation |  | can be empty (null); on delete: SET_NULL |
 | `reports_to` | FK to organization.Employee |  | can be empty (null); on delete: SET_NULL |
 | `employee_code` | Char(50) |  |  |
+| `phone` | Char(30) | '' |  |
+| `address` | Char(255) | '' |  |
+| `emergency_contact_name` | Char(100) | '' |  |
+| `emergency_contact_phone` | Char(30) | '' |  |
+| `joined_on` | Date |  | can be empty (null) |
 
 Rule: `unique_employee_code_per_company` (unique)
 

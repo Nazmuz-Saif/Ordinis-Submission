@@ -43,6 +43,12 @@ class Employee(BaseModel):
         related_name="direct_reports"
     )
     employee_code = models.CharField(max_length=50)
+    # Profile details. The person edits phone, address and emergency contact themselves (auth/profile/).
+    phone = models.CharField(max_length=30, blank=True, default="")
+    address = models.CharField(max_length=255, blank=True, default="")
+    emergency_contact_name = models.CharField(max_length=100, blank=True, default="")
+    emergency_contact_phone = models.CharField(max_length=30, blank=True, default="")
+    joined_on = models.DateField(null=True, blank=True)
 
     class Meta:
         constraints = [
@@ -51,6 +57,10 @@ class Employee(BaseModel):
                 name="unique_employee_code_per_company",
             )
         ]
+
+    @property
+    def full_name(self):
+        return self.user.full_name
 
     def __str__(self):
         return f"{self.user.email} — {self.designation}"

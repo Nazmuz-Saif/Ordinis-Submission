@@ -12,6 +12,9 @@ def _admin(ctx):
     if admin is None:
         admin = User.objects.create_user(email=email, password=demo.PASSWORD, is_platform_admin=True)
         ctx.note('platform admin logins', True)
+    if not admin.full_name:
+        admin.full_name = demo.name(demo.PLATFORM_LOGIN[1])
+        admin.save(update_fields=['full_name', 'updated_at'])
     return admin
 
 

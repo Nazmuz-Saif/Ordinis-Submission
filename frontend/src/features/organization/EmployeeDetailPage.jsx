@@ -11,6 +11,7 @@ import {
 } from '../../services/organizationService'
 import { getRoles } from '../../services/rolesService'
 import { useAuth } from '../../store/AuthContext'
+import { personName } from '../../utils/people'
 
 function errorMessage(err, fallback) {
   return err.response?.data?.error?.message || fallback
@@ -105,8 +106,8 @@ function EmployeeDetailPage() {
         <ArrowLeft size={14} /> Back to employees
       </Link>
 
-      <h1 className="text-2xl font-bold text-[#14142B]">{employee.employee_code}</h1>
-      <p className="text-sm text-[#71717A] mt-1 mb-6">Employee details, team, and roles.</p>
+      <h1 className="text-2xl font-bold text-[#14142B]">{personName(employee.full_name, employee.user_email)}</h1>
+      <p className="text-sm text-[#71717A] mt-1 mb-6">{employee.employee_code}{employee.full_name ? ` · ${employee.user_email}` : ''} — details, team, and roles.</p>
 
       {error && <p className="text-sm text-[#DC2626] mb-4">{error}</p>}
 
@@ -123,7 +124,7 @@ function EmployeeDetailPage() {
           <p className="text-xs text-[#71717A] mb-1">Reports to</p>
           {manager ? (
             <Link to={`/organization/employees/${manager.id}`} className="text-[#6C31D6] font-medium hover:underline">
-              {manager.employee_code}
+              {personName(manager.full_name, manager.user_email)}
             </Link>
           ) : (
             <p className="text-[#14142B] font-medium">—</p>
@@ -145,7 +146,7 @@ function EmployeeDetailPage() {
             {team.map((member) => (
               <div key={member.id} className="px-5 py-3 flex items-center justify-between hover:bg-[#FAFAFA] transition-colors">
                 <Link to={`/organization/employees/${member.id}`} className="text-sm font-medium text-[#14142B] hover:text-[#6C31D6]">
-                  {member.employee_code}
+                  {personName(member.full_name, member.user_email)} <span className="text-xs font-normal text-[#71717A]">· {member.employee_code}</span>
                 </Link>
                 <span className="text-xs text-[#71717A]">
                   {member.designation_title || '—'} · {member.department_name || '—'}

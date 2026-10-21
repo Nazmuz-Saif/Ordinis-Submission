@@ -5,6 +5,7 @@ import { getEmployees } from '../../services/organizationService'
 import { getDelegations, createDelegation, deleteDelegation } from '../../services/approvalsService'
 import StatusPill from '../../components/common/StatusPill'
 import EmptyState from '../../components/common/EmptyState'
+import { personName } from '../../utils/people'
 
 const EMPTY_FORM = { delegate: '', start_date: '', end_date: '', reason: '' }
 
@@ -126,7 +127,7 @@ function DelegationsPage() {
           >
             <option value="">Choose a colleague...</option>
             {colleagues.map((emp) => (
-              <option key={emp.id} value={emp.id}>{`${emp.user_email} · ${emp.employee_code}`}</option>
+              <option key={emp.id} value={emp.id}>{`${personName(emp.full_name, emp.user_email)} · ${emp.employee_code}`}</option>
             ))}
           </select>
         </div>
@@ -197,8 +198,8 @@ function DelegationsPage() {
                 return (
                   <tr key={rule.id} data-testid="delegation-row" className="hover:bg-[#FAFAFA] transition-colors duration-150">
                     <td className="px-4 py-3 text-[#14142B]">{mine ? 'Given by me' : 'Given to me'}</td>
-                    <td className="px-4 py-3 text-[#14142B]">{rule.delegator_email}</td>
-                    <td className="px-4 py-3 text-[#14142B]">{rule.delegate_email}</td>
+                    <td className="px-4 py-3 text-[#14142B]">{personName(rule.delegator_name, rule.delegator_email)}</td>
+                    <td className="px-4 py-3 text-[#14142B]">{personName(rule.delegate_name, rule.delegate_email)}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-[#14142B]">
                       <span className="inline-flex items-center gap-1">
                         <CalendarDays size={13} aria-hidden="true" />

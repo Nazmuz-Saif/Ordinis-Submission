@@ -67,7 +67,8 @@ class RoleDetailSerializer(RoleSerializer):
     def get_employees(self, obj):
         links = obj.employee_roles.select_related('employee__user').order_by('employee__employee_code')
         return [
-            {'id': str(link.employee_id), 'employee_code': link.employee.employee_code, 'email': link.employee.user.email}
+            {'id': str(link.employee_id), 'employee_code': link.employee.employee_code,
+             'email': link.employee.user.email, 'name': link.employee.user.full_name}
             for link in links
         ]
 
@@ -76,10 +77,11 @@ class EmployeeRoleSerializer(serializers.ModelSerializer):
     role_name = serializers.CharField(source='role.name', read_only=True)
     employee_code = serializers.CharField(source='employee.employee_code', read_only=True)
     employee_email = serializers.CharField(source='employee.user.email', read_only=True)
+    employee_name = serializers.CharField(source='employee.user.full_name', read_only=True)
 
     class Meta:
         model = EmployeeRole
-        fields = ['id', 'employee', 'role', 'role_name', 'employee_code', 'employee_email', 'company']
+        fields = ['id', 'employee', 'role', 'role_name', 'employee_code', 'employee_email', 'employee_name', 'company']
         read_only_fields = ['id', 'company']
 
     def get_fields(self):

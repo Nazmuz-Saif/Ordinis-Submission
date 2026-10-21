@@ -6,6 +6,8 @@ import {
   getSalaryStructures, createSalaryStructure, updateSalaryStructure, deleteSalaryStructure,
 } from '../../services/payrollService'
 import EmptyState from '../../components/common/EmptyState'
+import { personName } from '../../utils/people'
+import Person from '../../components/common/Person'
 
 const inputClass =
   'w-full border border-[#EEEEF2] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6C31D6] focus:ring-2 focus:ring-[#6C31D6]/15 transition'
@@ -147,7 +149,7 @@ function SalaryStructuresPage() {
   }
 
   async function handleDelete(item) {
-    if (!confirm(`Delete the salary structure of ${item.employee_email}?`)) return
+    if (!confirm(`Delete the salary structure of ${personName(item.employee_name, item.employee_email)}?`)) return
     setError('')
     setMessage('')
     try {
@@ -204,8 +206,7 @@ function SalaryStructuresPage() {
               {items.map((item) => (
                 <tr key={item.id} data-testid="salary-row" className="hover:bg-[#FAFAFA] transition-colors duration-150">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-[#14142B]">{item.employee_email}</p>
-                    <p className="text-xs text-[#71717A]">{item.employee_code}</p>
+                    <Person name={item.employee_name} email={item.employee_email} sub={item.employee_code} />
                   </td>
                   <td className="px-4 py-3 text-right text-[#14142B]">{money(item.base_salary)}</td>
                   <td className="px-4 py-3 text-[#14142B]">
@@ -257,7 +258,10 @@ function SalaryStructuresPage() {
             <label className="block text-sm font-medium text-[#14142B] mb-1">Employee</label>
             {editingId ? (
               <p className="text-sm text-[#14142B] mb-3">
-                {items.find((i) => i.id === editingId)?.employee_email}
+                {(() => {
+                  const row = items.find((i) => i.id === editingId)
+                  return row ? personName(row.employee_name, row.employee_email) : ''
+                })()}
               </p>
             ) : (
               <select
@@ -269,7 +273,7 @@ function SalaryStructuresPage() {
               >
                 <option value="">Choose an employee...</option>
                 {available.map((emp) => (
-                  <option key={emp.id} value={emp.id}>{`${emp.user_email} · ${emp.employee_code}`}</option>
+                  <option key={emp.id} value={emp.id}>{`${personName(emp.full_name, emp.user_email)} · ${emp.employee_code}`}</option>
                 ))}
               </select>
             )}

@@ -2,6 +2,7 @@ import { getActionsPage } from '../../services/adminService'
 import { DataTable, Notice, PageHeader } from './shared'
 import { formatDate } from './format'
 import { usePagedList } from './usePagedList'
+import { personName } from '../../utils/people'
 
 const LABELS = {
   suspend: 'Suspended company',
@@ -12,7 +13,7 @@ const LABELS = {
 
 const columns = [
   { key: 'when', label: 'When', render: (a) => <span className="text-[#71717A] whitespace-nowrap">{formatDate(a.created_at)}</span> },
-  { key: 'who', label: 'Who', render: (a) => <span className="whitespace-nowrap">{a.actor_email}</span> },
+  { key: 'who', label: 'Who', render: (a) => <span className="whitespace-nowrap">{personName(a.actor_name, a.actor_email)}</span> },
   { key: 'action', label: 'Action', render: (a) => LABELS[a.action] || a.action },
   { key: 'company', label: 'Company', render: (a) => <span className="font-medium whitespace-nowrap">{a.company_name}</span> },
   { key: 'note', label: 'Note', render: (a) => a.note || <span className="text-[#71717A]">-</span> },

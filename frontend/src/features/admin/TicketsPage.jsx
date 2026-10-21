@@ -4,6 +4,7 @@ import StatusPill from '../../components/common/StatusPill'
 import { DataTable, Notice, PageHeader } from './shared'
 import { formatDate } from './format'
 import { usePagedList } from './usePagedList'
+import { personName } from '../../utils/people'
 
 const FILTERS = [
   { key: '', label: 'All' },
@@ -33,7 +34,7 @@ function TicketsPage() {
       key: 'subject', label: 'Ticket',
       render: (t) => (<><p className="font-medium">{t.subject}</p>{t.description && <p className="text-xs text-[#71717A] mt-0.5 max-w-md">{t.description}</p>}</>),
     },
-    { key: 'by', label: 'Raised by', render: (t) => <span className="whitespace-nowrap">{t.created_by_email || '-'}</span> },
+    { key: 'by', label: 'Raised by', render: (t) => <span className="whitespace-nowrap">{t.created_by_email ? personName(t.created_by_name, t.created_by_email) : '-'}</span> },
     {
       key: 'status', label: 'Status',
       render: (t) => <StatusPill status={t.status === 'open' ? 'warning' : 'success'} label={t.status === 'open' ? 'Open' : 'Resolved'} />,

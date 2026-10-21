@@ -12,6 +12,8 @@ import {
 } from '../../services/organizationService'
 import { useAuth } from '../../store/AuthContext'
 import Pagination from '../../components/common/Pagination'
+import { personName, personInitials } from '../../utils/people'
+import Person from '../../components/common/Person'
 
 function EmployeesPage() {
   const [employees, setEmployees] = useState([]) // everyone: for dropdowns and the Reports To column
@@ -24,6 +26,7 @@ function EmployeesPage() {
   const [error, setError] = useState('')
 
   const [form, setForm] = useState({
+    full_name: '',
     email: '',
     password: '',
     employee_code: '',
@@ -33,7 +36,7 @@ function EmployeesPage() {
   })
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({
-    employee_code: '', department: '', designation: '', reports_to: '',
+    full_name: '', employee_code: '', department: '', designation: '', reports_to: '',
   })
 
   const { hasPermission } = useAuth()
@@ -83,6 +86,7 @@ function EmployeesPage() {
 
     try {
       await createEmployee({
+        full_name: form.full_name.trim(),
         email: form.email,
         password: form.password,
         employee_code: form.employee_code,
@@ -92,6 +96,7 @@ function EmployeesPage() {
       })
 
       setForm({
+        full_name: '',
         email: '',
         password: '',
         employee_code: '',
@@ -114,6 +119,7 @@ function EmployeesPage() {
   function startEdit(emp) {
     setEditingId(emp.id)
     setEditForm({
+      full_name: emp.full_name || '',
       employee_code: emp.employee_code,
       department: emp.department || '',
       designation: emp.designation || '',
@@ -133,6 +139,7 @@ function EmployeesPage() {
     setError('')
     try {
       await updateEmployee(id, {
+        full_name: editForm.full_name.trim(),
         employee_code: editForm.employee_code,
         department: editForm.department || null,
         designation: editForm.designation || null,
@@ -166,6 +173,16 @@ function EmployeesPage() {
         onSubmit={handleCreate}
         className="bg-white rounded-xl border border-[#EEEEF2] p-4 mb-6 grid grid-cols-2 md:grid-cols-3 gap-3"
       >
+        <input
+          type="text"
+          name="full_name"
+          value={form.full_name}
+          onChange={handleChange}
+          placeholder="Full name"
+          required
+          className="border border-[#EEEEF2] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6C31D6] focus:ring-2 focus:ring-[#6C31D6]/15 transition"
+        />
+
         <input
           type="email"
           name="email"
@@ -276,7 +293,12 @@ function EmployeesPage() {
               {rows.map((emp) => (
                 editingId === emp.id ? (
                   <tr key={emp.id} className="bg-[#FAFAFA]">
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 space-y-1">
+                      <input
+                        type="text" name="full_name" value={editForm.full_name} placeholder="Full name"
+                        onChange={handleEditChange}
+                        className="border border-[#6C31D6]/40 rounded-lg px-2 py-1 text-sm outline-none focus:border-[#6C31D6] w-full"
+                      />
                       <input
                         type="text" name="employee_code" value={editForm.employee_code}
                         onChange={handleEditChange}
@@ -308,7 +330,7 @@ function EmployeesPage() {
                       >
                         <option value="">—</option>
                         {employees.filter((e) => e.id !== emp.id).map((e) => (
-                          <option key={e.id} value={e.id}>{e.employee_code}</option>
+                          <option key={e.id} value={e.id}>{personName(e.full_name, e.user_email)} · {e.employee_code}</option>
                         ))}
                       </select>
                     </td>
@@ -326,15 +348,20 @@ function EmployeesPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-[#6C31D6]/10 text-[#6C31D6] flex items-center justify-center text-xs font-semibold shrink-0">
-                          {emp.employee_code?.slice(-2) || '??'}
+                          {personInitials(emp.full_name, emp.user_email)}
                         </div>
-                        <Link to={`/organization/employees/${emp.id}`} className="font-medium hover:text-[#6C31D6] hover:underline">{emp.employee_code}</Link>
+                        <Link to={`/organization/employees/${emp.id}`} className="block min-w-0 hover:text-[#6C31D6]">
+                          <Person name={emp.full_name} email={emp.user_email} sub={emp.employee_code} />
+                        </Link>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-[#71717A]">{emp.designation_title || '—'}</td>
                     <td className="px-4 py-3 text-[#71717A]">{emp.department_name || '—'}</td>
                     <td className="px-4 py-3 text-[#71717A]">
-                      {employees.find((e) => e.id === emp.reports_to)?.employee_code || '—'}
+                      {(() => {
+                        const boss = employees.find((e) => e.id === emp.reports_to)
+                        return boss ? personName(boss.full_name, boss.user_email) : '—'
+                      })()}
                     </td>
                     <td className="px-4 py-3">
                       {canManageEmployees && (

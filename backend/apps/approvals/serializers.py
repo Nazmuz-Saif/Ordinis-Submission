@@ -70,10 +70,11 @@ class ApprovalChainSerializer(serializers.ModelSerializer):
 
 class ApprovalActionSerializer(serializers.ModelSerializer):
     actor_email = serializers.CharField(source='actor.user.email', read_only=True)
+    actor_name = serializers.CharField(source='actor.user.full_name', read_only=True)
 
     class Meta:
         model = ApprovalAction
-        fields = ['id', 'step_order', 'actor', 'actor_email', 'decision', 'comment', 'created_at']
+        fields = ['id', 'step_order', 'actor', 'actor_email', 'actor_name', 'decision', 'comment', 'created_at']
         read_only_fields = fields
 
 
@@ -83,6 +84,7 @@ class ApprovalInstanceSerializer(serializers.ModelSerializer):
     target_repr = serializers.SerializerMethodField()
     target_summary = serializers.SerializerMethodField()
     requested_by_email = serializers.CharField(source='requested_by.user.email', read_only=True)
+    requested_by_name = serializers.CharField(source='requested_by.user.full_name', read_only=True)
     current_step_role_name = serializers.SerializerMethodField()
     total_steps = serializers.SerializerMethodField()
     can_act = serializers.SerializerMethodField()
@@ -92,7 +94,7 @@ class ApprovalInstanceSerializer(serializers.ModelSerializer):
         model = ApprovalInstance
         fields = [
             'id', 'approval_chain', 'chain_name', 'target_type', 'target_repr', 'target_summary',
-            'requested_by', 'requested_by_email', 'current_step', 'current_step_role_name',
+            'requested_by', 'requested_by_email', 'requested_by_name', 'current_step', 'current_step_role_name',
             'total_steps', 'status', 'can_act', 'actions', 'created_at',
         ]
         read_only_fields = fields
@@ -125,13 +127,15 @@ class ApprovalInstanceSerializer(serializers.ModelSerializer):
 
 class DelegationRuleSerializer(serializers.ModelSerializer):
     delegator_email = serializers.CharField(source='delegator.user.email', read_only=True)
+    delegator_name = serializers.CharField(source='delegator.user.full_name', read_only=True)
     delegate_email = serializers.CharField(source='delegate.user.email', read_only=True)
+    delegate_name = serializers.CharField(source='delegate.user.full_name', read_only=True)
     is_active = serializers.SerializerMethodField()
 
     class Meta:
         model = DelegationRule
         fields = [
-            'id', 'delegator', 'delegator_email', 'delegate', 'delegate_email',
+            'id', 'delegator', 'delegator_email', 'delegator_name', 'delegate', 'delegate_email', 'delegate_name',
             'start_date', 'end_date', 'reason', 'is_active', 'created_at',
         ]
         read_only_fields = ['id', 'delegator', 'created_at']

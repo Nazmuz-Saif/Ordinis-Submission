@@ -8,6 +8,8 @@ import {
 import StatusPill from '../../components/common/StatusPill'
 import EmptyState from '../../components/common/EmptyState'
 import Pagination from '../../components/common/Pagination'
+import { personName } from '../../utils/people'
+import Person from '../../components/common/Person'
 
 const STATUS = {
   not_started: { status: 'neutral', label: 'Not Started' },
@@ -33,7 +35,7 @@ function errorMessage(err, fallback) {
 }
 
 function employeeLabel(emp) {
-  return `${emp.user_email} · ${emp.employee_code}`
+  return `${personName(emp.full_name, emp.user_email)} · ${emp.employee_code}`
 }
 
 function isOverdue(task) {
@@ -211,7 +213,7 @@ function TasksPage() {
                       <p className="font-medium text-[#14142B]">{task.title}</p>
                       {task.description && <p className="text-xs text-[#71717A] truncate">{task.description}</p>}
                     </td>
-                    <td className="px-4 py-3 text-[#14142B]">{task.assigned_to_email}</td>
+                    <td className="px-4 py-3 text-[#14142B]"><Person name={task.assigned_to_name} email={task.assigned_to_email} /></td>
                     <td className="px-4 py-3">
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${priority.className}`}>
                         {priority.label}

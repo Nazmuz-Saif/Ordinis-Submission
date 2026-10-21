@@ -4,6 +4,7 @@ import { ChevronDown, Layers } from 'lucide-react'
 import { useAuth } from '../../store/AuthContext'
 import PlanBadge from '../common/PlanBadge'
 import { isPathActive, visibleNav } from './navigation'
+import { personName, personInitials } from '../../utils/people'
 
 const itemBase = 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors duration-150'
 
@@ -72,9 +73,6 @@ function NavGroup({ group, pathname, isOpen, onToggle, onNavigate }) {
   )
 }
 
-function initials(email) {
-  return (email || '?').slice(0, 2).toUpperCase()
-}
 
 function Sidebar({ open, onClose }) {
   const { me, hasPermission } = useAuth()
@@ -122,10 +120,10 @@ function Sidebar({ open, onClose }) {
 
         <div className="border-t border-[#EEEEF2] p-4 flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-[#6C31D6] text-white text-sm font-semibold flex items-center justify-center shrink-0">
-            {initials(me?.email)}
+            {personInitials(me?.full_name, me?.email)}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-[#14142B] truncate">{me?.email}</p>
+            <p className="text-sm font-medium text-[#14142B] truncate">{personName(me?.full_name, me?.email)}</p>
             <p className="text-xs text-[#71717A] truncate">{me?.designation_title || ''}</p>
           </div>
         </div>

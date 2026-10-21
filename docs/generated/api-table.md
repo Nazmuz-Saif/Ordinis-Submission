@@ -57,6 +57,8 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | POST | `/api/v1/auth/login/` | CustomTokenObtainPairView | Public |
 | POST | `/api/v1/auth/logout/` | TokenBlacklistView | Public |
 | GET | `/api/v1/auth/me/` | MeView | Any logged-in employee |
+| GET | `/api/v1/auth/profile/` | ProfileView | Any logged-in employee |
+| PATCH | `/api/v1/auth/profile/` | ProfileView | Any logged-in employee |
 | POST | `/api/v1/auth/refresh/` | TokenRefreshView | Public |
 | POST | `/api/v1/auth/register/` | CompanyRegisterView | Public |
 | GET | `/api/v1/billing/` | APIRootView | Any logged-in employee |
@@ -162,4 +164,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*155 endpoint methods on 105 routes.*
+*157 endpoint methods on 106 routes.*

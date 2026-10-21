@@ -1,3 +1,4 @@
+from django.core.validators import RegexValidator
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.db import transaction
@@ -31,12 +32,19 @@ class CompanyRegisterSerializer(serializers.Serializer):
     company_name = serializers.CharField(max_length=255)
     subdomain = serializers.SlugField(max_length=100)
     industry = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    ceo_full_name = serializers.CharField(max_length=150)
     ceo_email = serializers.EmailField()
     ceo_password = serializers.CharField(write_only=True, min_length=8)
 
     def validate_subdomain(self, value):
         if Company.objects.filter(subdomain=value).exists():
             raise serializers.ValidationError("This subdomain is already taken.")
+        return value
+
+    def validate_ceo_full_name(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("Enter the owner's full name.")
         return value
 
     def validate_ceo_email(self, value):
@@ -64,6 +72,7 @@ class CompanyRegisterSerializer(serializers.Serializer):
             email=validated_data['ceo_email'],
             password=validated_data['ceo_password'],
             company=company,
+            full_name=validated_data['ceo_full_name'],
         )
 
         employee_code = f"{company.subdomain[:4].upper()}-EMP001"
@@ -78,3 +87,45 @@ class CompanyRegisterSerializer(serializers.Serializer):
         create_ceo_role(company, employee)
 
         return {"company": company, "user": user, "employee": employee}
+
+
+PROFILE_PHONE = RegexValidator(r'^[0-9+()\- ]*$', 'Use digits, spaces, + ( ) and - only.')
+
+
+class ProfileUpdateSerializer(serializers.Serializer):
+    """
+    What a person may change about themselves. Anything else (email, department, designation,
+    manager, Roles, salary, employee code ...) is refused, never silently ignored.
+    """
+    EMPLOYEE_FIELDS = ('phone', 'address', 'emergency_contact_name', 'emergency_contact_phone')
+
+    full_name = serializers.CharField(max_length=150)
+    phone = serializers.CharField(max_length=30, required=False, allow_blank=True, validators=[PROFILE_PHONE])
+    address = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    emergency_contact_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    emergency_contact_phone = serializers.CharField(
+        max_length=30, required=False, allow_blank=True, validators=[PROFILE_PHONE],
+    )
+
+    def to_internal_value(self, data):
+        refused = {
+            key: 'This field cannot be changed here.'
+            for key in data if key not in self.fields
+        }
+        if refused:
+            raise serializers.ValidationError(refused)
+        return super().to_internal_value(data)
+
+    def validate_full_name(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError('Enter your full name.')
+        return value
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        if getattr(user, 'employee', None) is None:
+            extra = {key: 'The Platform Admin profile has a name only.' for key in self.EMPLOYEE_FIELDS if key in attrs}
+            if extra:
+                raise serializers.ValidationError(extra)
+        return attrs

@@ -51,7 +51,7 @@ class LeaveRequestSerializer(serializers.ModelSerializer):
             'total_steps': len(steps),
             'actions': [
                 {
-                    'step_order': a.step_order, 'actor_email': a.actor.user.email,
+                    'step_order': a.step_order, 'actor_email': a.actor.user.email, 'actor_name': a.actor.user.full_name,
                     'decision': a.decision, 'comment': a.comment, 'created_at': a.created_at,
                 }
                 for a in instance.actions.all()

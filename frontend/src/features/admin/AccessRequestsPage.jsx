@@ -3,6 +3,7 @@ import StatusPill from '../../components/common/StatusPill'
 import { DataTable, Notice, PageHeader } from './shared'
 import { formatDate } from './format'
 import { usePagedList } from './usePagedList'
+import { personName } from '../../utils/people'
 
 const STATUS = {
   pending: { variant: 'warning', label: 'Pending' },
@@ -14,7 +15,7 @@ const STATUS = {
 
 const columns = [
   { key: 'company', label: 'Company', render: (r) => <span className="font-medium whitespace-nowrap">{r.company_name}</span> },
-  { key: 'by', label: 'Requested by', render: (r) => <span className="whitespace-nowrap">{r.requested_by_email}</span> },
+  { key: 'by', label: 'Requested by', render: (r) => <span className="whitespace-nowrap">{personName(r.requested_by_name, r.requested_by_email)}</span> },
   { key: 'reason', label: 'Reason', render: (r) => <span className="block max-w-xs">{r.reason}</span> },
   {
     key: 'status', label: 'Status',

@@ -29,6 +29,17 @@ class IsPlatformAdmin(BasePermission):
         return bool(user and user.is_authenticated and user.is_active and user.is_platform_admin)
 
 
+class IsCompanyUserOrPlatformAdmin(BasePermission):
+    """For the few endpoints that belong to every person, the Platform Admin included (the profile)."""
+    message = "This company's account is currently suspended."
+
+    def has_permission(self, request, view):
+        user = request.user
+        if user and user.is_authenticated and user.is_platform_admin and user.is_active:
+            return True
+        return IsCompanyActive().has_permission(request, view)
+
+
 class HasPermission(BasePermission):
     """
     Real permission check. The view names the Permission codename it needs

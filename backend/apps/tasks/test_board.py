@@ -258,7 +258,7 @@ class ProgressTests(BoardBase):
     def test_no_file_or_code_can_be_uploaded(self):
         res = self.add(file='data:text/plain;base64,aGk=', attachment='x.zip', code='print(1)')
         self.assertEqual(res.status_code, 201)
-        self.assertEqual(set(res.data), {'id', 'date', 'employee_email', 'update_text', 'progress_percent',
+        self.assertEqual(set(res.data), {'id', 'date', 'employee_email', 'employee_name', 'update_text', 'progress_percent',
                                          'blocker_text', 'external_reference_url', 'created_at'})
 
     def test_only_the_assignee_can_add(self):

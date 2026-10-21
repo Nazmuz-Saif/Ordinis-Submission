@@ -7,6 +7,7 @@ import { useAuth } from '../../store/AuthContext'
 import StatusPill from '../../components/common/StatusPill'
 import EmptyState from '../../components/common/EmptyState'
 import Pagination from '../../components/common/Pagination'
+import { personName } from '../../utils/people'
 
 const PERMISSION = 'approve_support_access'
 const HOURS = [1, 2, 4, 8, 24, 48, 72]
@@ -164,7 +165,7 @@ function SupportAccessPage() {
                   const s = STATUS[r.status] || STATUS.pending
                   return (
                     <tr key={r.id} data-testid="request-row" className="text-[#14142B]">
-                      <td className="px-4 py-3 whitespace-nowrap">{r.requested_by_email}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">{personName(r.requested_by_name, r.requested_by_email)}</td>
                       <td className="px-4 py-3 max-w-xs">{r.reason}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <StatusPill status={s.variant} label={s.label} />
@@ -231,7 +232,7 @@ function SupportAccessPage() {
                 {data.items.map((e) => (
                   <tr key={e.id} data-testid="log-row" className="text-[#14142B]">
                     <td className="px-4 py-3 whitespace-nowrap text-[#71717A]">{formatDate(e.created_at)}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">{e.actor_email}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">{personName(e.actor_name, e.actor_email)}</td>
                     <td className="px-4 py-3">{e.detail}</td>
                     <td className="px-4 py-3 text-xs text-[#71717A] break-all">{e.method} {e.endpoint}</td>
                   </tr>
@@ -253,7 +254,7 @@ function SupportAccessPage() {
               {dialog.kind === 'approve' ? 'Approve support access' : dialog.kind === 'deny' ? 'Deny request' : 'End access now'}
             </h2>
             <p className="text-sm text-[#71717A] mt-1">
-              {dialog.request.requested_by_email}: {dialog.request.reason}
+              {personName(dialog.request.requested_by_name, dialog.request.requested_by_email)}: {dialog.request.reason}
             </p>
 
             {dialog.kind === 'approve' && (

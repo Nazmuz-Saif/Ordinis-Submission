@@ -6,6 +6,7 @@ import { logout } from '../../services/authService'
 import useClickOutside from '../../hooks/useClickOutside'
 import NotificationBell from './NotificationBell'
 import { pageTitle } from './navigation'
+import { personName, personInitials } from '../../utils/people'
 
 function Navbar({ onMenuClick }) {
   const { me, clearMe } = useAuth()
@@ -62,9 +63,9 @@ function Navbar({ onMenuClick }) {
             className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white transition-colors duration-150"
           >
             <span className="w-8 h-8 rounded-full bg-[#6C31D6] text-white text-xs font-semibold flex items-center justify-center">
-              {(me?.email || '?').slice(0, 2).toUpperCase()}
+              {personInitials(me?.full_name, me?.email)}
             </span>
-            <span className="hidden md:block text-sm text-[#14142B] max-w-[10rem] truncate">{me?.email}</span>
+            <span className="hidden md:block text-sm text-[#14142B] max-w-[10rem] truncate" data-testid="user-name">{personName(me?.full_name, me?.email)}</span>
             <ChevronDown size={14} className="text-[#71717A]" />
           </button>
           {userOpen && (
@@ -73,7 +74,8 @@ function Navbar({ onMenuClick }) {
               className="absolute right-0 mt-2 w-56 bg-white rounded-xl border border-[#EEEEF2] shadow-lg py-2"
             >
               <div className="px-4 pb-2 border-b border-[#EEEEF2]">
-                <p className="text-sm font-medium text-[#14142B] truncate">{me?.email}</p>
+                <p className="text-sm font-medium text-[#14142B] truncate">{personName(me?.full_name, me?.email)}</p>
+                {me?.full_name && <p className="text-xs text-[#71717A] truncate">{me?.email}</p>}
                 <p className="text-xs text-[#71717A]">{me?.designation_title || ''}</p>
               </div>
               <button
