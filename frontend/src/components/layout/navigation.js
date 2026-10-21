@@ -92,5 +92,6 @@ export function pageTitle(pathname) {
   const match = all
     .filter((item) => isPathActive(pathname, item.path))
     .sort((a, b) => b.path.length - a.path.length)[0]
+  if (pathname === '/profile') return 'My Profile'
   return match ? match.label : 'Ordinis'
 }

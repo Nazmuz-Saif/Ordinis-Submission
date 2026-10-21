@@ -134,6 +134,13 @@ class ProfileTests(APITestCase):
                      {'address': 'x' * 256}, {'emergency_contact_phone': 'abc'}):
             self.assertEqual(self.me.patch('/api/v1/auth/profile/', body, format='json').status_code, 400, body)
 
+    def test_a_bad_value_names_its_field_so_the_page_can_show_it(self):
+        res = self.me.patch('/api/v1/auth/profile/', {'phone': 'call me', 'full_name': ' '}, format='json')
+        self.assertEqual(res.status_code, 400)
+        errors = res.data['error']['field_errors']
+        self.assertIn('phone', errors)
+        self.assertIn('full_name', errors)
+
     def test_blank_optional_details_can_be_cleared(self):
         self.me.patch('/api/v1/auth/profile/', {'phone': '0170'}, format='json')
         self.assertEqual(self.me.patch('/api/v1/auth/profile/', {'phone': ''}, format='json').status_code, 200)

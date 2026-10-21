@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Building2, ChevronDown, LogOut, Menu, Search } from 'lucide-react'
+import { Building2, ChevronDown, LogOut, Menu, Search, UserRound } from 'lucide-react'
 import { useAuth } from '../../store/AuthContext'
 import { logout } from '../../services/authService'
 import useClickOutside from '../../hooks/useClickOutside'
@@ -78,6 +78,13 @@ function Navbar({ onMenuClick }) {
                 {me?.full_name && <p className="text-xs text-[#71717A] truncate">{me?.email}</p>}
                 <p className="text-xs text-[#71717A]">{me?.designation_title || ''}</p>
               </div>
+              <button
+                onClick={() => { setUserOpen(false); navigate('/profile') }}
+                data-testid="my-profile-link"
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#14142B] hover:bg-[#FAFAFA]"
+              >
+                <UserRound size={15} /> My Profile
+              </button>
               <button
                 onClick={handleLogout}
                 data-testid="logout-button"

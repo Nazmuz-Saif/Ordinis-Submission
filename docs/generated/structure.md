@@ -44,9 +44,10 @@ frontend/src/
   features/organization/  DepartmentsPage.jsx, DesignationsPage.jsx, EmployeeDetailPage.jsx, EmployeesPage.jsx
   features/payroll/  MyPayslipsPage.jsx, PayslipViewPage.jsx, PayslipsPage.jsx, SalaryStructuresPage.jsx, payslipFormat.js
   features/platformAdmin/  SupportAccessPage.jsx
+  features/profile/  MyProfilePage.jsx
   features/roles/  EmployeeRolesPage.jsx, RoleDetailPage.jsx, RolesPage.jsx, roleFormat.js
   features/tasks/  KanbanPage.jsx, TaskProgressPanel.jsx, TasksPage.jsx
-  hooks/  useClickOutside.js
+  hooks/  useClickOutside.js, useUnsavedChangesGuard.js
   layouts/  DashboardLayout.jsx
   routes/  AdminRoute.jsx, HomeRedirect.jsx, ProtectedRoute.jsx
   services/  adminService.js, analyticsService.js, apiClient.js, approvalsService.js, attendanceService.js, auditLogService.js, authService.js, billingService.js, dashboardService.js, leaveService.js, notificationsService.js, organizationService.js, paging.js, payrollService.js, rolesService.js, supportAccessService.js, tasksService.js

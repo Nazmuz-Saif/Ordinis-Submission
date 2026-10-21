@@ -35,3 +35,14 @@ export async function registerCompany(payload) {
   localStorage.setItem('refresh_token', refresh)
   return response.data.data
 }
+
+// The logged-in person's own profile. There is no id: the server only ever returns the caller's own data.
+export async function getProfile() {
+  const response = await apiClient.get('/auth/profile/')
+  return response.data.data
+}
+
+export async function updateProfile(values) {
+  const response = await apiClient.patch('/auth/profile/', values)
+  return response.data.data
+}
