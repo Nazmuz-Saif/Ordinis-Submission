@@ -23,3 +23,8 @@ export async function deleteRole(id) {
   const res = await apiClient.delete(`/rbac/roles/${id}/`)
   return res.data
 }
+
+export async function getRole(id) {
+  const res = await apiClient.get(`/rbac/roles/${id}/`)
+  return res.data
+}

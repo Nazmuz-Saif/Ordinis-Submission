@@ -1,10 +1,13 @@
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import status
+from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
-from .serializers import CompanyRegisterSerializer, CustomTokenObtainPairSerializer
+from core.permissions import IsCompanyUserOrPlatformAdmin
+from .passwords import end_other_sessions
+from .serializers import ChangePasswordSerializer, CompanyRegisterSerializer, CustomTokenObtainPairSerializer, ProfileUpdateSerializer
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -64,6 +67,9 @@ class MeView(APIView):
 
         data = {
             "email": user.email,
+            "full_name": user.full_name,
+            "must_change_password": user.must_change_password,
+            "has_team": bool(getattr(user, "employee", None) and user.employee.direct_reports.exists()),
             "company_id": str(company.id) if company else None,
             "company_name": company.name if company else None,
             "plan_name": self._plan_name(company),
@@ -84,3 +90,90 @@ class MeView(APIView):
             })
 
         return Response({"success": True, "data": data})
+
+
+class ProfileView(APIView):
+    """
+    GET / PATCH /api/v1/auth/profile/
+    The logged-in person's own details (the Platform Admin included). Only a short whitelist can be
+    changed here: full name, phone, address and the emergency contact. The login email, department,
+    designation, manager, Roles and salary can never be changed through this endpoint.
+    """
+    permission_classes = [IsAuthenticated, IsCompanyUserOrPlatformAdmin]
+    allow_when_password_change_required = True
+
+    @staticmethod
+    def payload(user):
+        employee = getattr(user, 'employee', None)
+        data = {
+            'email': user.email,
+            'full_name': user.full_name,
+            'must_change_password': user.must_change_password,
+            'is_platform_admin': user.is_platform_admin,
+            'company_name': user.company.name if user.company_id else None,
+            'employee_id': None, 'employee_code': None, 'designation_title': None, 'department_name': None,
+            'manager_name': None, 'joined_on': None,
+            'phone': None, 'address': None, 'emergency_contact_name': None, 'emergency_contact_phone': None,
+        }
+        if employee:
+            manager = employee.reports_to
+            data.update({
+                'employee_id': str(employee.id),
+                'employee_code': employee.employee_code,
+                'designation_title': employee.designation.title if employee.designation_id else None,
+                'department_name': employee.department.name if employee.department_id else None,
+                'manager_name': (manager.user.display_name if manager else None),
+                'joined_on': employee.joined_on,
+                'phone': employee.phone,
+                'address': employee.address,
+                'emergency_contact_name': employee.emergency_contact_name,
+                'emergency_contact_phone': employee.emergency_contact_phone,
+            })
+        return data
+
+    def get(self, request):
+        return Response({"success": True, "data": self.payload(request.user)})
+
+    @transaction.atomic
+    def patch(self, request):
+        serializer = ProfileUpdateSerializer(data=request.data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        values = serializer.validated_data
+        user = request.user
+        if 'full_name' in values:
+            user.full_name = values['full_name']
+            user.save(update_fields=['full_name', 'updated_at'])
+        employee = getattr(user, 'employee', None)
+        if employee is not None:
+            changed = [key for key in ProfileUpdateSerializer.EMPLOYEE_FIELDS if key in values]
+            for key in changed:
+                setattr(employee, key, values[key])
+            if changed:
+                employee.save(update_fields=changed + ['updated_at'])
+        return Response({"success": True, "data": self.payload(user), "message": "Profile updated."})
+
+
+class ChangePasswordView(APIView):
+    """
+    POST /api/v1/auth/change-password/
+    Needs the current password and a new one that passes the password rules. Ends the person's other
+    sessions: every refresh token except the one sent as `refresh` (the one in use here) is blacklisted.
+    Works for every logged-in person, also while a temporary password is still in force.
+    """
+    permission_classes = [IsAuthenticated, IsCompanyUserOrPlatformAdmin]
+    allow_when_password_change_required = True
+
+    @transaction.atomic
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        user.set_password(serializer.validated_data['new_password'])
+        user.must_change_password = False
+        user.save(update_fields=['password', 'must_change_password', 'updated_at'])
+        ended = end_other_sessions(user, keep_refresh_token=serializer.validated_data.get('refresh'))
+        return Response({
+            "success": True,
+            "data": {"other_sessions_ended": ended},
+            "message": "Your password was changed. Your other sessions were logged out.",
+        })

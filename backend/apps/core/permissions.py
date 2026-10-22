@@ -1,6 +1,18 @@
 from rest_framework.permissions import BasePermission
 
 
+def _password_change_required():
+    # Imported here: core.exceptions imports DRF views, which import this module through the settings.
+    from .exceptions import OrdinisException
+
+    class PasswordChangeRequired(OrdinisException):
+        code = "PASSWORD_CHANGE_REQUIRED"
+        message = "You are using a temporary password. Set your own password before you continue."
+        status_code = 403
+
+    return PasswordChangeRequired()
+
+
 class IsCompanyActive(BasePermission):
     """
     Blocks access if the authenticated user's company has been suspended.
@@ -17,7 +29,13 @@ class IsCompanyActive(BasePermission):
         if getattr(request.user, 'employee', None) is None:
             # A login with no employee record (e.g. the employee was removed) has no access.
             return False
-        return company.is_active
+        if not company.is_active:
+            return False
+        # The temporary-password gate. A view that every person needs in order to set a password
+        # (profile, change-password) opts out with `allow_when_password_change_required = True`.
+        if request.user.must_change_password and not getattr(view, 'allow_when_password_change_required', False):
+            raise _password_change_required()
+        return True
 
 
 class IsPlatformAdmin(BasePermission):
@@ -27,6 +45,17 @@ class IsPlatformAdmin(BasePermission):
     def has_permission(self, request, view):
         user = request.user
         return bool(user and user.is_authenticated and user.is_active and user.is_platform_admin)
+
+
+class IsCompanyUserOrPlatformAdmin(BasePermission):
+    """For the few endpoints that belong to every person, the Platform Admin included (the profile)."""
+    message = "This company's account is currently suspended."
+
+    def has_permission(self, request, view):
+        user = request.user
+        if user and user.is_authenticated and user.is_platform_admin and user.is_active:
+            return True
+        return IsCompanyActive().has_permission(request, view)
 
 
 class HasPermission(BasePermission):

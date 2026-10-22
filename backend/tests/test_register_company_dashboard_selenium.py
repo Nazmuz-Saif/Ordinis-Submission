@@ -102,6 +102,10 @@ class RegisterCompanyDashboardSeleniumTest(unittest.TestCase):
         industry_input.send_keys(INDUSTRY)
         time.sleep(1)
 
+        name_input = driver.find_element(By.NAME, "ceo_full_name")
+        name_input.clear()
+        name_input.send_keys("Test Owner")
+
         email_input = driver.find_element(By.NAME, "ceo_email")
         email_input.clear()
         email_input.send_keys(CEO_EMAIL)

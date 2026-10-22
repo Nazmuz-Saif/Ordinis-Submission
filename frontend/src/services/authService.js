@@ -35,3 +35,26 @@ export async function registerCompany(payload) {
   localStorage.setItem('refresh_token', refresh)
   return response.data.data
 }
+
+// Changes the password. The refresh token in use is sent so this session stays logged in
+// while every other session of the person is ended by the server.
+export async function changePassword({ current, next, confirm }) {
+  const response = await apiClient.post('/auth/change-password/', {
+    current_password: current,
+    new_password: next,
+    confirm_password: confirm,
+    refresh: localStorage.getItem('refresh_token') || '',
+  })
+  return response.data
+}
+
+// The logged-in person's own profile. There is no id: the server only ever returns the caller's own data.
+export async function getProfile() {
+  const response = await apiClient.get('/auth/profile/')
+  return response.data.data
+}
+
+export async function updateProfile(values) {
+  const response = await apiClient.patch('/auth/profile/', values)
+  return response.data.data
+}

@@ -17,17 +17,20 @@ function dayNumber(isoDate) {
   return Number(isoDate.slice(8))
 }
 
-function AttendanceCalendar() {
+// By default it shows MY month. Team Attendance passes its own `fetcher` (month -> promise) and `onData`
+// to show another person's month with the same calendar and cards.
+function AttendanceCalendar({ fetcher = getCalendar, onData, title = 'Monthly calendar' }) {
   const [month, setMonth] = useState(undefined) // undefined = this month; then "2026-09" and so on
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
     let active = true
-    getCalendar(month)
+    fetcher(month)
       .then((result) => {
         if (!active) return
         setData(result)
+        if (onData) onData(result)
         setError('')
       })
       .catch((err) => {
@@ -36,7 +39,7 @@ function AttendanceCalendar() {
     return () => {
       active = false
     }
-  }, [month])
+  }, [month, fetcher]) // eslint-disable-line react-hooks/exhaustive-deps -- onData is a state setter
 
   const summary = data?.summary
   const loading = !data && !error
@@ -44,7 +47,7 @@ function AttendanceCalendar() {
 
   return (
     <section data-testid="attendance-calendar" className="mb-6">
-      <h2 className="text-lg font-semibold text-[#14142B] mb-3">Monthly calendar</h2>
+      {title && <h2 className="text-lg font-semibold text-[#14142B] mb-3">{title}</h2>}
       {error && <Notice>{error}</Notice>}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-4">

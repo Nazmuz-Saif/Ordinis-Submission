@@ -29,7 +29,7 @@ def _ensure_company():
         return company
     serializer = CompanyRegisterSerializer(data={
         'company_name': demo.COMPANY_NAME, 'subdomain': demo.SUBDOMAIN, 'industry': demo.INDUSTRY,
-        'ceo_email': demo.email('ceo'), 'ceo_password': demo.PASSWORD,
+        'ceo_full_name': demo.name('ceo'), 'ceo_email': demo.email('ceo'), 'ceo_password': demo.PASSWORD,
     })
     serializer.is_valid(raise_exception=True)
     return serializer.save()['company']

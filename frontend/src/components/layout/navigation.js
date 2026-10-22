@@ -38,6 +38,7 @@ export const NAV = [
     items: [
       { label: 'Check In', path: '/attendance' },
       { label: 'Leave', path: '/attendance/leave' },
+      { label: 'Team Attendance', path: '/attendance/team', permission: 'view_team_attendance', orTeam: true },
       { label: 'Leave Types', path: '/attendance/leave-types', permission: 'manage_leave_types' },
     ],
   },
@@ -63,9 +64,10 @@ export const NAV = [
 ]
 
 // Items the user is allowed to see. Groups with nothing visible disappear.
-export function visibleNav(hasPermission, isPlatformAdmin = false) {
+export function visibleNav(hasPermission, isPlatformAdmin = false, hasTeam = false) {
   if (isPlatformAdmin) return ADMIN_NAV // a Platform Admin has no company, so no company menu
-  const allowed = (item) => !item.permission || hasPermission(item.permission)
+  // orTeam: the Permission OR having people below you (Team Attendance)
+  const allowed = (item) => !item.permission || hasPermission(item.permission) || Boolean(item.orTeam && hasTeam)
   return NAV.map((entry) =>
     entry.type === 'group' ? { ...entry, items: entry.items.filter(allowed) } : entry,
   ).filter((entry) => (entry.type === 'group' ? entry.items.length > 0 : allowed(entry)))   // links obey permission too
@@ -92,5 +94,6 @@ export function pageTitle(pathname) {
   const match = all
     .filter((item) => isPathActive(pathname, item.path))
     .sort((a, b) => b.path.length - a.path.length)[0]
+  if (pathname === '/profile') return 'My Profile'
   return match ? match.label : 'Ordinis'
 }

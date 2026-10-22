@@ -175,6 +175,7 @@ def build_board(queryset, actor, can_review, per_column=50):
             'rejected': t.status == Task.STATUS_REJECTED,
             'assigned_to': t.assigned_to_id,
             'assigned_to_email': t.assigned_to.user.email,
+            'assigned_to_name': t.assigned_to.user.full_name,
             'overdue': bool(t.deadline and t.deadline < today and t.status != Task.STATUS_COMPLETED),
             'progress_percent': t.latest_percent or 0,
             'blocked': bool(t.latest_blocker),

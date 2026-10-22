@@ -11,6 +11,11 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
         null=True, blank=True,
     )
     email = models.EmailField(unique=True)
+    # The person's real name, shown first on every page. Blank for old rows: pages then fall back to the email.
+    full_name = models.CharField(max_length=150, blank=True, default="")
+    # True for an account created with a temporary password: until the person sets their own,
+    # every company endpoint except change-password, profile, me and logout answers 403.
+    must_change_password = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     # Platform Admin: runs Ordinis itself. Has no company, no Employee, and no default access to any company's data.
@@ -20,6 +25,10 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+
+    @property
+    def display_name(self):
+        return self.full_name.strip() or self.email
 
     def __str__(self):
         return self.email

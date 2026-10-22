@@ -1,3 +1,4 @@
+import { personName } from '../../utils/people'
 // Where a leave request is in its approval chain: the step it waits on, and every decision with its comment.
 function ApprovalProgress({ approval }) {
   if (!approval) return <span className="text-xs text-[#71717A]">No approval</span>
@@ -14,7 +15,7 @@ function ApprovalProgress({ approval }) {
           <span className={a.decision === 'approved' ? 'text-[#15803D]' : 'text-[#B91C1C]'}>
             Step {a.step_order} {a.decision}
           </span>{' '}
-          by {a.actor_email}
+          by {personName(a.actor_name, a.actor_email)}
           {a.comment && <span data-testid="leave-approval-comment" className="block text-[#14142B] mt-0.5">“{a.comment}”</span>}
         </p>
       ))}

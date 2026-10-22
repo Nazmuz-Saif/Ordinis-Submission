@@ -36,6 +36,8 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/attendance/attendance/calendar/` | AttendanceViewSet / calendar | Any logged-in employee |
 | POST | `/api/v1/attendance/attendance/check_in/` | AttendanceViewSet / check_in | Any logged-in employee |
 | POST | `/api/v1/attendance/attendance/check_out/` | AttendanceViewSet / check_out | Any logged-in employee |
+| GET | `/api/v1/attendance/attendance/team/` | AttendanceViewSet / team | Any logged-in employee |
+| GET | `/api/v1/attendance/attendance/team/people/` | AttendanceViewSet / team_people | Any logged-in employee |
 | GET | `/api/v1/attendance/attendance/today/` | AttendanceViewSet / today | Any logged-in employee |
 | GET | `/api/v1/attendance/attendance/{id}/` | AttendanceViewSet / retrieve | Any logged-in employee |
 | GET | `/api/v1/attendance/leave-requests/` | LeaveRequestViewSet / list | Any logged-in employee |
@@ -54,9 +56,12 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/audit-log/logs/export/` | AuditLogViewSet / export | Permission `view_audit_log` |
 | GET | `/api/v1/audit-log/logs/modules/` | AuditLogViewSet / modules | Permission `view_audit_log` |
 | GET | `/api/v1/audit-log/logs/{id}/` | AuditLogViewSet / retrieve | Permission `view_audit_log` |
+| POST | `/api/v1/auth/change-password/` | ChangePasswordView | Any logged-in employee |
 | POST | `/api/v1/auth/login/` | CustomTokenObtainPairView | Public |
 | POST | `/api/v1/auth/logout/` | TokenBlacklistView | Public |
 | GET | `/api/v1/auth/me/` | MeView | Any logged-in employee |
+| GET | `/api/v1/auth/profile/` | ProfileView | Any logged-in employee |
+| PATCH | `/api/v1/auth/profile/` | ProfileView | Any logged-in employee |
 | POST | `/api/v1/auth/refresh/` | TokenRefreshView | Public |
 | POST | `/api/v1/auth/register/` | CompanyRegisterView | Public |
 | GET | `/api/v1/billing/` | APIRootView | Any logged-in employee |
@@ -91,6 +96,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/organization/employees/{id}/` | EmployeeViewSet / update | Permission `manage_employees` |
 | PATCH | `/api/v1/organization/employees/{id}/` | EmployeeViewSet / partial_update | Permission `manage_employees` |
 | DELETE | `/api/v1/organization/employees/{id}/` | EmployeeViewSet / destroy | Permission `manage_employees` |
+| GET | `/api/v1/organization/employees/{id}/access/` | EmployeeViewSet / access | Any logged-in employee |
 | GET | `/api/v1/organization/employees/{id}/subordinates/` | EmployeeViewSet / subordinates | Any logged-in employee |
 | GET | `/api/v1/payroll/` | APIRootView | Any logged-in employee |
 | GET | `/api/v1/payroll/payslips/` | PayslipViewSet / list | Any logged-in employee |
@@ -162,4 +168,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*155 endpoint methods on 105 routes.*
+*161 endpoint methods on 110 routes.*

@@ -201,6 +201,8 @@ Read from the Django models. Every model also has `id` (UUID, primary key), `cre
 | `is_superuser` | Boolean | False |  |
 | `company` | FK to tenants.Company |  | can be empty (null); on delete: CASCADE |
 | `email` | Char(254) |  | unique |
+| `full_name` | Char(150) | '' |  |
+| `must_change_password` | Boolean | False |  |
 | `is_active` | Boolean | True |  |
 | `is_staff` | Boolean | False |  |
 | `is_platform_admin` | Boolean | False |  |
@@ -459,6 +461,11 @@ One message for ONE employee ("you were assigned a task", "an approval needs you
 | `designation` | FK to organization.Designation |  | can be empty (null); on delete: SET_NULL |
 | `reports_to` | FK to organization.Employee |  | can be empty (null); on delete: SET_NULL |
 | `employee_code` | Char(50) |  |  |
+| `phone` | Char(30) | '' |  |
+| `address` | Char(255) | '' |  |
+| `emergency_contact_name` | Char(100) | '' |  |
+| `emergency_contact_phone` | Char(30) | '' |  |
+| `joined_on` | Date |  | can be empty (null) |
 
 Rule: `unique_employee_code_per_company` (unique)
 
@@ -577,6 +584,7 @@ System-wide permission (global — NOT company-scoped).
 | `codename` | Char(100) |  | unique |
 | `name` | Char(255) |  |  |
 | `module` | Char(50) |  |  |
+| `description` | Char(500) | '' |  |
 
 #### Role
 
@@ -802,6 +810,8 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/attendance/attendance/calendar/` | AttendanceViewSet / calendar | Any logged-in employee |
 | POST | `/api/v1/attendance/attendance/check_in/` | AttendanceViewSet / check_in | Any logged-in employee |
 | POST | `/api/v1/attendance/attendance/check_out/` | AttendanceViewSet / check_out | Any logged-in employee |
+| GET | `/api/v1/attendance/attendance/team/` | AttendanceViewSet / team | Any logged-in employee |
+| GET | `/api/v1/attendance/attendance/team/people/` | AttendanceViewSet / team_people | Any logged-in employee |
 | GET | `/api/v1/attendance/attendance/today/` | AttendanceViewSet / today | Any logged-in employee |
 | GET | `/api/v1/attendance/attendance/{id}/` | AttendanceViewSet / retrieve | Any logged-in employee |
 | GET | `/api/v1/attendance/leave-requests/` | LeaveRequestViewSet / list | Any logged-in employee |
@@ -820,9 +830,12 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/audit-log/logs/export/` | AuditLogViewSet / export | Permission `view_audit_log` |
 | GET | `/api/v1/audit-log/logs/modules/` | AuditLogViewSet / modules | Permission `view_audit_log` |
 | GET | `/api/v1/audit-log/logs/{id}/` | AuditLogViewSet / retrieve | Permission `view_audit_log` |
+| POST | `/api/v1/auth/change-password/` | ChangePasswordView | Any logged-in employee |
 | POST | `/api/v1/auth/login/` | CustomTokenObtainPairView | Public |
 | POST | `/api/v1/auth/logout/` | TokenBlacklistView | Public |
 | GET | `/api/v1/auth/me/` | MeView | Any logged-in employee |
+| GET | `/api/v1/auth/profile/` | ProfileView | Any logged-in employee |
+| PATCH | `/api/v1/auth/profile/` | ProfileView | Any logged-in employee |
 | POST | `/api/v1/auth/refresh/` | TokenRefreshView | Public |
 | POST | `/api/v1/auth/register/` | CompanyRegisterView | Public |
 | GET | `/api/v1/billing/` | APIRootView | Any logged-in employee |
@@ -857,6 +870,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/organization/employees/{id}/` | EmployeeViewSet / update | Permission `manage_employees` |
 | PATCH | `/api/v1/organization/employees/{id}/` | EmployeeViewSet / partial_update | Permission `manage_employees` |
 | DELETE | `/api/v1/organization/employees/{id}/` | EmployeeViewSet / destroy | Permission `manage_employees` |
+| GET | `/api/v1/organization/employees/{id}/access/` | EmployeeViewSet / access | Any logged-in employee |
 | GET | `/api/v1/organization/employees/{id}/subordinates/` | EmployeeViewSet / subordinates | Any logged-in employee |
 | GET | `/api/v1/payroll/` | APIRootView | Any logged-in employee |
 | GET | `/api/v1/payroll/payslips/` | PayslipViewSet / list | Any logged-in employee |
@@ -928,7 +942,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*155 endpoint methods on 105 routes.*
+*161 endpoint methods on 110 routes.*
 <!-- END GENERATED:api-table -->
 
 ## 6.4 Hardware Interfaces

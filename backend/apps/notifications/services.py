@@ -27,7 +27,7 @@ def notify(recipient, kind, title, message='', link=''):
 
 
 def _name(employee):
-    return employee.user.email if employee else 'Someone'
+    return employee.user.display_name if employee else 'Someone'
 
 
 # ---------- Creating notifications ----------

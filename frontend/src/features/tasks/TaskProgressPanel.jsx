@@ -3,6 +3,7 @@ import { ExternalLink, Flag, X } from 'lucide-react'
 import { addProgress, getProgressPage } from '../../services/tasksService'
 import Pagination from '../../components/common/Pagination'
 import EmptyState from '../../components/common/EmptyState'
+import { personName } from '../../utils/people'
 
 const formatDay = (value) => new Date(value + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 const isWebLink = (value) => /^https?:\/\//i.test(value || '')
@@ -72,7 +73,7 @@ function TaskProgressPanel({ card, onClose, onChanged }) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-[#14142B]">{card.title}</h2>
-            <p className="text-sm text-[#71717A]">{card.assigned_to_email}</p>
+            <p className="text-sm text-[#71717A]">{personName(card.assigned_to_name, card.assigned_to_email)}</p>
           </div>
           <button type="button" aria-label="Close" onClick={onClose} className="p-1.5 rounded-lg hover:bg-[#FAFAFA]">
             <X size={18} />
@@ -137,7 +138,7 @@ function TaskProgressPanel({ card, onClose, onChanged }) {
                 <li key={entry.id} data-testid="progress-entry" className="relative">
                   <span className="absolute -left-[22px] top-1.5 h-2.5 w-2.5 rounded-full bg-[#6C31D6]" />
                   <div className="flex items-center justify-between text-xs text-[#71717A]">
-                    <span>{formatDay(entry.date)} · {entry.employee_email}</span>
+                    <span>{formatDay(entry.date)} · {personName(entry.employee_name, entry.employee_email)}</span>
                     <span className="font-medium text-[#6C31D6]">{entry.progress_percent}%</span>
                   </div>
                   <p className="text-sm text-[#14142B] mt-1 whitespace-pre-wrap">{entry.update_text}</p>

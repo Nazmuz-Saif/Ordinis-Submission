@@ -37,6 +37,26 @@ PEOPLE = [
     ('designer', 'mehedi.hasan', 'UI Designer', 'Engineering', 'manager', []),
     ('sales1', 'rafiq.islam', 'Sales Executive', 'Sales', 'sales_head', []),
 ]
+# Real names for the demo people, by the email name above. Shown first on every page.
+NAMES = {
+    'ceo': 'Reza Chowdhury',
+    'nusrat.jahan': 'Nusrat Jahan',
+    'manager': 'Tanvir Rahman',
+    'imran.hossain': 'Imran Hossain',
+    'hr': 'Sadia Karim',
+    'accountant': 'Mahbub Alam',
+    'employee': 'Ayesha Siddiqua',
+    'farhan.ahmed': 'Farhan Ahmed',
+    'mehedi.hasan': 'Mehedi Hasan',
+    'rafiq.islam': 'Rafiq Islam',
+    'platform': 'Ordinis Support',
+}
+
+
+def name(local):
+    return NAMES[local]
+
+
 DEPARTMENTS = ['Management', 'Engineering', 'Sales', 'Human Resources', 'Finance']
 
 # The Platform Admin (company-less). It is not part of the demo company, so --reset and --delete keep it.

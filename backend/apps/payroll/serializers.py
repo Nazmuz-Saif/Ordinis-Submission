@@ -12,13 +12,14 @@ from .services import gross_amount, month_label
 
 class SalaryStructureSerializer(serializers.ModelSerializer):
     employee_email = serializers.CharField(source='employee.user.email', read_only=True)
+    employee_name = serializers.CharField(source='employee.user.full_name', read_only=True)
     employee_code = serializers.CharField(source='employee.employee_code', read_only=True)
     gross_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = SalaryStructure
         fields = [
-            'id', 'employee', 'employee_email', 'employee_code',
+            'id', 'employee', 'employee_email', 'employee_name', 'employee_code',
             'base_salary', 'allowances', 'gross_amount', 'created_at',
         ]
         read_only_fields = ['id', 'created_at']
@@ -59,8 +60,10 @@ MONTH_FORMAT = re.compile(r'^(\d{4})-(0[1-9]|1[0-2])$')
 class PayslipSerializer(serializers.ModelSerializer):
     """A payslip as it is shown: the month as YYYY-MM plus a readable label, and the frozen amounts."""
     employee_email = serializers.CharField(source='employee.user.email', read_only=True)
+    employee_name = serializers.CharField(source='employee.user.full_name', read_only=True)
     employee_code = serializers.CharField(source='employee.employee_code', read_only=True)
     generated_by_email = serializers.SerializerMethodField()
+    generated_by_name = serializers.SerializerMethodField()
     month = serializers.SerializerMethodField()
     month_label = serializers.SerializerMethodField()
     currency = serializers.SerializerMethodField()
@@ -68,9 +71,9 @@ class PayslipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payslip
         fields = [
-            'id', 'employee', 'employee_email', 'employee_code', 'month', 'month_label', 'currency',
+            'id', 'employee', 'employee_email', 'employee_name', 'employee_code', 'month', 'month_label', 'currency',
             'base_salary', 'allowances', 'gross_amount', 'deductions', 'deduction_note', 'net_amount',
-            'generated_by_email', 'created_at',
+            'generated_by_email', 'generated_by_name', 'created_at',
         ]
         read_only_fields = fields
 
@@ -86,6 +89,9 @@ class PayslipSerializer(serializers.ModelSerializer):
 
     def get_generated_by_email(self, obj):
         return obj.generated_by.user.email if obj.generated_by else None
+
+    def get_generated_by_name(self, obj):
+        return obj.generated_by.user.full_name if obj.generated_by else None
 
 
 class PayslipGenerateSerializer(serializers.Serializer):

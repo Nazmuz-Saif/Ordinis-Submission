@@ -28,7 +28,7 @@ class AuditLogViewSet(PermissionRequiredMixin, viewsets.ReadOnlyModelViewSet):
     permission_required = 'view_audit_log'
 
     def get_queryset(self):
-        queryset = AuditLog.objects.filter(company=self.request.user.company)
+        queryset = AuditLog.objects.filter(company=self.request.user.company).select_related('actor')
         return self.filter_rows(queryset)
 
     def filter_rows(self, queryset):

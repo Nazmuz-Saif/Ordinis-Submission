@@ -87,3 +87,9 @@ export async function getEmployee(id) {
 export async function getSubordinates(id) {
   return getAllPages(`/organization/employees/${id}/subordinates/`)
 }
+
+// The Roles a person holds and the Permissions they really have. Answers 403 for people who may not see it.
+export async function getEmployeeAccess(id) {
+  const res = await apiClient.get(`/organization/employees/${id}/access/`)
+  return res.data
+}

@@ -1,12 +1,20 @@
+from django.db.models import Count
 from rest_framework import viewsets, mixins
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
+from core.exceptions import OrdinisException
 from core.permissions import IsCompanyActive
 from core.mixins import AuditLoggingMixin, PermissionRequiredMixin
 
 from .models import EmployeeRole, Permission, Role
-from .serializers import EmployeeRoleSerializer, PermissionSerializer, RoleSerializer
+from .serializers import EmployeeRoleSerializer, PermissionSerializer, RoleDetailSerializer, RoleSerializer
+
+
+class RoleInUse(OrdinisException):
+    code = "ROLE_IN_USE"
+    message = "This Role is still held by employees."
+    status_code = 409
 
 
 class PermissionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -27,6 +35,9 @@ class RoleViewSet(PermissionRequiredMixin, AuditLoggingMixin, viewsets.ModelView
     """
     serializer_class = RoleSerializer
 
+    def get_serializer_class(self):
+        return RoleDetailSerializer if self.action == "retrieve" else RoleSerializer
+
     permission_required = {
         "create": "manage_roles",
         "update": "manage_roles",
@@ -38,6 +49,7 @@ class RoleViewSet(PermissionRequiredMixin, AuditLoggingMixin, viewsets.ModelView
         return (
             Role.objects.filter(company=self.request.user.company)
             .prefetch_related("permissions")
+            .annotate(holder_count=Count("employee_roles", distinct=True))
             .order_by("name", "id")
         )
 
@@ -53,6 +65,12 @@ class RoleViewSet(PermissionRequiredMixin, AuditLoggingMixin, viewsets.ModelView
     def perform_destroy(self, instance):
         if instance.is_system_default:
             raise ValidationError("The system CEO role cannot be deleted.")
+        holders = instance.employee_roles.count()
+        if holders:
+            raise RoleInUse(
+                f"{instance.name} is still held by {holders} employee{'s' if holders != 1 else ''}. "
+                "Take the Role away from them first, then delete it.",
+            )
         if instance.approval_steps.exists():
             raise ValidationError("This role is used by an approval chain step. Change that step first.")
         super().perform_destroy(instance)

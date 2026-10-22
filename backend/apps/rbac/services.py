@@ -1,3 +1,4 @@
+from .catalog import PERMISSION_CATALOG
 from .models import EmployeeRole, Permission, Role
 
 CEO_ROLE_NAME = "CEO"
@@ -32,6 +33,29 @@ def sync_system_roles(**kwargs):
         all_permissions = list(Permission.objects.all())
         for role in Role.objects.filter(is_system_default=True):
             role.permissions.set(all_permissions)
+    except (OperationalError, ProgrammingError):
+        # Tables do not exist yet (e.g. migrating to an early migration).
+        return
+
+
+def sync_permission_catalog(**kwargs):
+    """
+    Makes the Permission table match rbac/catalog.py: adds a missing Permission and
+    refreshes the name, module and description of an existing one. Runs after every
+    migrate, so a new Permission needs only a line in the catalog, not a migration.
+    """
+    from django.db.utils import OperationalError, ProgrammingError
+
+    try:
+        for entry in PERMISSION_CATALOG:
+            Permission.objects.update_or_create(
+                codename=entry["codename"],
+                defaults={
+                    "name": entry["name"],
+                    "module": entry["module"],
+                    "description": entry["description"],
+                },
+            )
     except (OperationalError, ProgrammingError):
         # Tables do not exist yet (e.g. migrating to an early migration).
         return

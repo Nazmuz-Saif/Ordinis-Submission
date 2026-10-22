@@ -12,7 +12,7 @@ class PermissionSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Permission
-        fields = ['id', 'codename', 'name', 'module']
+        fields = ['id', 'codename', 'name', 'module', 'description']
         read_only_fields = fields
 
 
@@ -29,23 +29,59 @@ class RoleSerializer(serializers.ModelSerializer):
         source='permissions', many=True, read_only=True
     )
 
+    # How many employees hold this Role (the view annotates it so a list costs one query).
+    employee_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Role
         fields = [
             'id', 'name', 'description', 'is_system_default',
-            'permissions', 'permission_details',
+            'permissions', 'permission_details', 'employee_count',
         ]
-        read_only_fields = ['id', 'is_system_default']
+        read_only_fields = ['id', 'is_system_default', 'employee_count']
+
+    def get_employee_count(self, obj):
+        count = getattr(obj, 'holder_count', None)
+        return count if count is not None else obj.employee_roles.count()
+
+    def validate_name(self, value):
+        """One Role name per company (the database enforces it; this gives a clear 400 instead of a 500)."""
+        value = value.strip()
+        company = self.context['request'].user.company
+        clash = Role.objects.filter(company=company, name__iexact=value)
+        if self.instance is not None:
+            clash = clash.exclude(pk=self.instance.pk)
+        if clash.exists():
+            raise serializers.ValidationError('A Role with this name already exists.')
+        return value
+
+
+class RoleDetailSerializer(RoleSerializer):
+    """The Role detail page: the same fields plus the employees who hold the Role."""
+    employees = serializers.SerializerMethodField()
+
+    class Meta(RoleSerializer.Meta):
+        fields = RoleSerializer.Meta.fields + ['employees']
+        read_only_fields = RoleSerializer.Meta.read_only_fields + ['employees']
+
+    def get_employees(self, obj):
+        links = obj.employee_roles.select_related('employee__user').order_by('employee__employee_code')
+        return [
+            {'id': str(link.employee_id), 'employee_code': link.employee.employee_code,
+             'email': link.employee.user.email, 'name': link.employee.user.full_name}
+            for link in links
+        ]
 
 
 class EmployeeRoleSerializer(serializers.ModelSerializer):
     role_name = serializers.CharField(source='role.name', read_only=True)
     employee_code = serializers.CharField(source='employee.employee_code', read_only=True)
     employee_email = serializers.CharField(source='employee.user.email', read_only=True)
+    employee_name = serializers.CharField(source='employee.user.full_name', read_only=True)
 
     class Meta:
         model = EmployeeRole
-        fields = ['id', 'employee', 'role', 'role_name', 'employee_code', 'employee_email', 'company']
+        fields = ['id', 'employee', 'role', 'role_name', 'employee_code', 'employee_email', 'employee_name', 'company']
         read_only_fields = ['id', 'company']
 
     def get_fields(self):

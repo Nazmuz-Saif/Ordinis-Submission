@@ -68,7 +68,7 @@ class PlatformAdminAccountTests(BaseCase):
 
     def test_nobody_can_make_themselves_a_platform_admin_when_registering(self):
         res = APIClient().post('/api/v1/auth/register/', {
-            'company_name': 'Evil', 'subdomain': 'evil', 'ceo_email': 'evil@x.com',
+            'company_name': 'Evil', 'subdomain': 'evil', 'ceo_full_name': 'Evil Owner', 'ceo_email': 'evil@x.com',
             'ceo_password': 'StrongPass123', 'is_platform_admin': True}, format='json')
         self.assertEqual(res.status_code, 201)
         self.assertFalse(User.objects.get(email='evil@x.com').is_platform_admin)
@@ -172,7 +172,7 @@ class RequestFlowTests(BaseCase):
     def test_decision_records_who_and_when(self):
         rid = self.ask().data['id']
         res = self.ceo.post(f'{CO_REQUESTS}{rid}/approve/')
-        self.assertEqual(res.data['decided_by_name'], 'ceo@acme.com')
+        self.assertEqual(res.data['decided_by_name'], 'Test Owner')   # the CEO's full name (the email when a row has no name)
         self.assertIsNotNone(res.data['decided_at'])
 
     def test_platform_admin_sees_only_their_own_requests(self):

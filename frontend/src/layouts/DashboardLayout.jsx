@@ -1,9 +1,18 @@
 import { useState } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../store/AuthContext'
 import Sidebar from '../components/layout/Sidebar'
 import Navbar from '../components/layout/Navbar'
 
 function DashboardLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const { me } = useAuth()
+  const { pathname } = useLocation()
+
+  // A temporary password must be replaced first: My Profile is the only page that opens until then.
+  if (me?.must_change_password && pathname !== '/profile') {
+    return <Navigate to="/profile" replace />
+  }
 
   return (
     <div className="flex">

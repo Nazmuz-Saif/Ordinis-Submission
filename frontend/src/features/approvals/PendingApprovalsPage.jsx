@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CheckCircle2, ClipboardCheck, XCircle } from 'lucide-react'
 import { getInstances, approveInstance, rejectInstance } from '../../services/approvalsService'
+import { personName } from '../../utils/people'
 
 const STATUS_STYLE = {
   pending: 'bg-[#F59E0B]/10 text-[#B45309]',
@@ -181,7 +182,7 @@ function PendingApprovalsPage() {
               <p className="text-sm text-[#14142B] mt-2">{item.target_repr}</p>
               <LeaveDetails summary={item.target_summary} />
               <p className="text-xs text-[#71717A] mt-0.5">
-                Requested by {item.requested_by_email} · {formatDate(item.created_at)}
+                Requested by {personName(item.requested_by_name, item.requested_by_email)} · {formatDate(item.created_at)}
               </p>
 
               {item.actions.length > 0 && (
@@ -191,7 +192,7 @@ function PendingApprovalsPage() {
                       <span className={a.decision === 'approved' ? 'text-[#15803D]' : 'text-[#B91C1C]'}>
                         Step {a.step_order} {a.decision}
                       </span>{' '}
-                      by {a.actor_email} · {formatDate(a.created_at)}
+                      by {personName(a.actor_name, a.actor_email)} · {formatDate(a.created_at)}
                       {a.comment && <span className="block text-[#14142B] mt-0.5">“{a.comment}”</span>}
                     </li>
                   ))}

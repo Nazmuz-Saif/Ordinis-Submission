@@ -9,12 +9,13 @@ class AccessRequestSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
     company_name = serializers.CharField(source='company.name', read_only=True)
     requested_by_email = serializers.CharField(source='requested_by.email', read_only=True)
+    requested_by_name = serializers.CharField(source='requested_by.full_name', read_only=True)
     decided_by_name = serializers.SerializerMethodField()
 
     class Meta:
         model = SupportAccessRequest
         fields = [
-            'id', 'company', 'company_name', 'requested_by_email', 'reason', 'status',
+            'id', 'company', 'company_name', 'requested_by_email', 'requested_by_name', 'reason', 'status',
             'decided_by_name', 'decided_at', 'expires_at', 'created_at',
         ]
         read_only_fields = fields
@@ -24,7 +25,7 @@ class AccessRequestSerializer(serializers.ModelSerializer):
 
     def get_decided_by_name(self, obj):
         employee = obj.decided_by
-        return employee.user.email if employee else None
+        return employee.user.display_name if employee else None
 
 
 class AccessRequestCreateSerializer(serializers.Serializer):
@@ -34,10 +35,11 @@ class AccessRequestCreateSerializer(serializers.Serializer):
 
 class ImpersonationLogSerializer(serializers.ModelSerializer):
     actor_email = serializers.CharField(source='actor.email', read_only=True)
+    actor_name = serializers.CharField(source='actor.full_name', read_only=True)
 
     class Meta:
         model = ImpersonationLog
-        fields = ['id', 'access_request', 'actor_email', 'method', 'endpoint', 'detail', 'created_at']
+        fields = ['id', 'access_request', 'actor_email', 'actor_name', 'method', 'endpoint', 'detail', 'created_at']
         read_only_fields = fields
 
 
@@ -56,20 +58,25 @@ class CompanyAdminSerializer(serializers.ModelSerializer):
 class TicketSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.name', read_only=True)
     created_by_email = serializers.SerializerMethodField()
+    created_by_name = serializers.SerializerMethodField()
 
     class Meta:
         model = SupportTicket
-        fields = ['id', 'company', 'company_name', 'created_by_email', 'subject', 'description', 'status', 'created_at', 'resolved_at']
-        read_only_fields = ['id', 'company', 'company_name', 'created_by_email', 'status', 'created_at', 'resolved_at']
+        fields = ['id', 'company', 'company_name', 'created_by_email', 'created_by_name', 'subject', 'description', 'status', 'created_at', 'resolved_at']
+        read_only_fields = ['id', 'company', 'company_name', 'created_by_email', 'created_by_name', 'status', 'created_at', 'resolved_at']
 
     def get_created_by_email(self, obj):
         return obj.created_by.user.email if obj.created_by else None
 
+    def get_created_by_name(self, obj):
+        return obj.created_by.user.full_name if obj.created_by else None
+
 
 class PlatformActionLogSerializer(serializers.ModelSerializer):
     actor_email = serializers.CharField(source='actor.email', read_only=True)
+    actor_name = serializers.CharField(source='actor.full_name', read_only=True)
 
     class Meta:
         model = PlatformActionLog
-        fields = ['id', 'actor_email', 'company', 'company_name', 'action', 'note', 'created_at']
+        fields = ['id', 'actor_email', 'actor_name', 'company', 'company_name', 'action', 'note', 'created_at']
         read_only_fields = fields

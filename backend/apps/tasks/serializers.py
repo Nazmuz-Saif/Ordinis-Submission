@@ -9,13 +9,15 @@ from .services import TaskError, check_transition
 
 class TaskSerializer(serializers.ModelSerializer):
     assigned_to_email = serializers.CharField(source='assigned_to.user.email', read_only=True)
+    assigned_to_name = serializers.CharField(source='assigned_to.user.full_name', read_only=True)
     assigned_by_email = serializers.CharField(source='assigned_by.user.email', read_only=True, default=None)
+    assigned_by_name = serializers.CharField(source='assigned_by.user.full_name', read_only=True, default=None)
 
     class Meta:
         model = Task
         fields = [
-            'id', 'title', 'description', 'assigned_to', 'assigned_to_email',
-            'assigned_by', 'assigned_by_email', 'priority', 'deadline', 'status', 'created_at',
+            'id', 'title', 'description', 'assigned_to', 'assigned_to_email', 'assigned_to_name',
+            'assigned_by', 'assigned_by_email', 'assigned_by_name', 'priority', 'deadline', 'status', 'created_at',
         ]
         read_only_fields = ['id', 'assigned_by', 'created_at']
 
@@ -47,6 +49,7 @@ class TaskSerializer(serializers.ModelSerializer):
 class TaskProgressSerializer(serializers.ModelSerializer):
     """One progress note. There is deliberately no file field: nothing is ever uploaded."""
     employee_email = serializers.CharField(source='employee.user.email', read_only=True)
+    employee_name = serializers.CharField(source='employee.user.full_name', read_only=True)
     external_reference_url = serializers.CharField(
         required=False, allow_blank=True, max_length=500,
         validators=[URLValidator(schemes=['http', 'https'])],
@@ -55,10 +58,10 @@ class TaskProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskProgressLog
         fields = [
-            'id', 'date', 'employee_email', 'update_text', 'progress_percent',
+            'id', 'date', 'employee_email', 'employee_name', 'update_text', 'progress_percent',
             'blocker_text', 'external_reference_url', 'created_at',
         ]
-        read_only_fields = ['id', 'date', 'employee_email', 'created_at']
+        read_only_fields = ['id', 'date', 'employee_email', 'employee_name', 'created_at']
 
     def validate_update_text(self, value):
         value = value.strip()

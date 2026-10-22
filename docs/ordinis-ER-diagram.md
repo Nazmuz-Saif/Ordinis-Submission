@@ -75,6 +75,8 @@ erDiagram
     Boolean is_superuser
     fk company
     Char254 email
+    Char150 full_name
+    Boolean must_change_password
     Boolean is_active
     Boolean is_staff
     Boolean is_platform_admin
@@ -212,6 +214,11 @@ erDiagram
     fk designation
     fk reports_to
     Char50 employee_code
+    Char30 phone
+    Char255 address
+    Char100 emergency_contact_name
+    Char30 emergency_contact_phone
+    Date joined_on
   }
   PAYSLIP {
     fk company
@@ -272,6 +279,7 @@ erDiagram
     Char100 codename
     Char255 name
     Char50 module
+    Char500 description
   }
   ROLE {
     fk company

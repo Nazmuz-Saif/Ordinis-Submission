@@ -7,6 +7,7 @@ import StatusPill from '../../components/common/StatusPill'
 import { DataTable, Notice, PageHeader } from '../admin/shared'
 import { usePagedList } from '../admin/usePagedList'
 import { actionText, formatWhen, moduleLabel } from './auditFormat'
+import { personName } from '../../utils/people'
 
 const field = 'border border-[#EEEEF2] rounded-lg px-3 py-2 text-sm bg-white outline-none focus:border-[#6C31D6] focus:ring-2 focus:ring-[#6C31D6]/15'
 const ACTIONS = [['create', 'Created'], ['update', 'Updated'], ['delete', 'Deleted'], ['read', 'Break-Glass read'], ['export', 'Exported'], ['denied', 'Refused']]
@@ -49,7 +50,7 @@ function AuditLogsPage() {
   }
 
   const columns = [
-    { key: 'user', label: 'User', render: (r) => <span data-testid="audit-user" className="font-medium">{r.actor_email || 'Unknown'}</span> },
+    { key: 'user', label: 'User', render: (r) => <span data-testid="audit-user" className="font-medium">{r.actor_email ? personName(r.actor_name, r.actor_email) : 'Unknown'}</span> },
     {
       key: 'action', label: 'Action',
       render: (r) => (

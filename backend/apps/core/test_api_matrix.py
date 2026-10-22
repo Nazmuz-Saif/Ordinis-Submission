@@ -23,6 +23,8 @@ SELF_SERVICE = {
     'POST /api/v1/approvals/instances/{pk}/approve/', 'POST /api/v1/approvals/instances/{pk}/reject/',
     'POST /api/v1/attendance/attendance/check_in/', 'POST /api/v1/attendance/attendance/check_out/',
     'POST /api/v1/attendance/leave-requests/', 'POST /api/v1/attendance/leave-requests/{pk}/cancel/',
+    'PATCH /api/v1/auth/profile/',   # a person edits only their own whitelisted details
+    'POST /api/v1/auth/change-password/',   # a person changes only their own password, with the current one
     'POST /api/v1/notifications/{pk}/read/', 'POST /api/v1/notifications/read-all/',
     'POST /api/v1/platform-admin/company/tickets/',
     'POST /api/v1/tasks/tasks/{pk}/move/', 'POST /api/v1/tasks/tasks/{pk}/progress/',

@@ -8,6 +8,8 @@ import EmptyState from '../../components/common/EmptyState'
 import { ConfirmDialog, DataTable, Notice, PageHeader } from '../admin/shared'
 import { usePagedList } from '../admin/usePagedList'
 import { currentMonth, errorText, formatMoney } from './payslipFormat'
+import { personName } from '../../utils/people'
+import Person from '../../components/common/Person'
 
 const input = 'mt-1 w-full border border-[#EEEEF2] rounded-lg px-3 py-2 text-sm bg-white outline-none focus:border-[#6C31D6] focus:ring-2 focus:ring-[#6C31D6]/15'
 
@@ -46,7 +48,7 @@ function GenerateCard({ employees, onCreated }) {
           Employee
           <select data-testid="payslip-employee" required value={form.employee} onChange={set('employee')} className={input}>
             <option value="">Choose an employee</option>
-            {employees.map((e) => <option key={e.id} value={e.id}>{e.employee_code} · {e.email}</option>)}
+            {employees.map((e) => <option key={e.id} value={e.id}>{personName(e.full_name, e.user_email)} · {e.employee_code}</option>)}
           </select>
         </label>
         <label className="text-sm text-[#14142B]">
@@ -76,7 +78,7 @@ function GenerateCard({ employees, onCreated }) {
 
       {result && (
         <div data-testid="payslip-result" className="mt-4 rounded-xl border border-[#16A34A]/30 bg-[#16A34A]/5 p-4">
-          <p className="text-sm font-medium text-[#15803D]">Payslip generated for {result.employee_email}, {result.month_label}.</p>
+          <p className="text-sm font-medium text-[#15803D]">Payslip generated for {personName(result.employee_name, result.employee_email)}, {result.month_label}.</p>
           <dl className="grid grid-cols-3 gap-4 mt-3 text-sm">
             <div><dt className="text-[#71717A]">Gross</dt><dd data-testid="result-gross" className="font-semibold text-[#14142B]">{formatMoney(result.gross_amount, result.currency)}</dd></div>
             <div><dt className="text-[#71717A]">Deductions</dt><dd data-testid="result-deductions" className="font-semibold text-[#14142B]">{formatMoney(result.deductions, result.currency)}</dd></div>
@@ -112,7 +114,7 @@ function PayslipsPage() {
     setVoidError('')
     try {
       await voidPayslip(voiding.id)
-      setMessage(`The payslip of ${voiding.employee_email} for ${voiding.month_label} was voided. You can generate it again.`)
+      setMessage(`The payslip of ${personName(voiding.employee_name, voiding.employee_email)} for ${voiding.month_label} was voided. You can generate it again.`)
       setVoiding(null)
       list.reload()
     } catch (err) {
@@ -127,7 +129,7 @@ function PayslipsPage() {
   }
 
   const columns = [
-    { key: 'employee', label: 'Employee', render: (p) => (<><p className="font-medium">{p.employee_email}</p><p className="text-xs text-[#71717A]">{p.employee_code}</p></>) },
+    { key: 'employee', label: 'Employee', render: (p) => (<Person name={p.employee_name} email={p.employee_email} sub={p.employee_code} />) },
     { key: 'month', label: 'Month', render: (p) => <span className="whitespace-nowrap">{p.month_label}</span> },
     { key: 'gross', label: 'Gross', render: (p) => formatMoney(p.gross_amount, p.currency) },
     { key: 'deductions', label: 'Deductions', render: (p) => formatMoney(p.deductions, p.currency) },
@@ -170,7 +172,7 @@ function PayslipsPage() {
           title="Void this payslip?" confirmLabel="Void payslip" danger busy={busy} error={voidError}
           onCancel={() => setVoiding(null)} onConfirm={confirmVoid}
         >
-          <p>{voiding.employee_email}, {voiding.month_label}: net pay {formatMoney(voiding.net_amount, voiding.currency)}.</p>
+          <p>{personName(voiding.employee_name, voiding.employee_email)}, {voiding.month_label}: net pay {formatMoney(voiding.net_amount, voiding.currency)}.</p>
           <p>The employee will no longer see it. You can then generate the month again.</p>
         </ConfirmDialog>
       )}

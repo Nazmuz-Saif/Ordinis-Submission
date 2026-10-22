@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Users, Plus, Pencil, Check, X, Trash2 } from 'lucide-react'
+import { Users, Plus, Pencil, Check, X, Trash2, Copy } from 'lucide-react'
 import {
   getEmployees,
   getEmployeesPage,
@@ -12,8 +12,12 @@ import {
 } from '../../services/organizationService'
 import { useAuth } from '../../store/AuthContext'
 import Pagination from '../../components/common/Pagination'
+import { personName, personInitials } from '../../utils/people'
+import Person from '../../components/common/Person'
 
 function EmployeesPage() {
+  const [tempInfo, setTempInfo] = useState(null) // the temporary password of the Employee just created: shown once
+  const [copied, setCopied] = useState(false)
   const [employees, setEmployees] = useState([]) // everyone: for dropdowns and the Reports To column
   const [rows, setRows] = useState([]) // the current page shown in the table
   const [page, setPage] = useState(1)
@@ -24,6 +28,7 @@ function EmployeesPage() {
   const [error, setError] = useState('')
 
   const [form, setForm] = useState({
+    full_name: '',
     email: '',
     password: '',
     employee_code: '',
@@ -33,7 +38,7 @@ function EmployeesPage() {
   })
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({
-    employee_code: '', department: '', designation: '', reports_to: '',
+    full_name: '', employee_code: '', department: '', designation: '', reports_to: '',
   })
 
   const { hasPermission } = useAuth()
@@ -82,9 +87,10 @@ function EmployeesPage() {
 
 
     try {
-      await createEmployee({
+      const created = await createEmployee({
+        full_name: form.full_name.trim(),
         email: form.email,
-        password: form.password,
+        ...(form.password ? { password: form.password } : {}),   // left empty: the system makes a temporary one
         employee_code: form.employee_code,
         department: form.department || null,
         designation: form.designation || null,
@@ -92,6 +98,7 @@ function EmployeesPage() {
       })
 
       setForm({
+        full_name: '',
         email: '',
         password: '',
         employee_code: '',
@@ -100,6 +107,12 @@ function EmployeesPage() {
         reports_to: '',
       })
 
+      setCopied(false)
+      setTempInfo(
+        created.temporary_password
+          ? { name: personName(created.full_name, created.user_email), email: created.user_email, password: created.temporary_password }
+          : null,
+      )
       loadAll()
     } catch (err) {
       setError(
@@ -111,9 +124,19 @@ function EmployeesPage() {
 
   }
 
+  async function copyTemporaryPassword() {
+    try {
+      await navigator.clipboard.writeText(tempInfo.password)
+      setCopied(true)
+    } catch {
+      setError('Could not copy automatically. Select the password and copy it by hand.')
+    }
+  }
+
   function startEdit(emp) {
     setEditingId(emp.id)
     setEditForm({
+      full_name: emp.full_name || '',
       employee_code: emp.employee_code,
       department: emp.department || '',
       designation: emp.designation || '',
@@ -133,6 +156,7 @@ function EmployeesPage() {
     setError('')
     try {
       await updateEmployee(id, {
+        full_name: editForm.full_name.trim(),
         employee_code: editForm.employee_code,
         department: editForm.department || null,
         designation: editForm.designation || null,
@@ -161,17 +185,56 @@ function EmployeesPage() {
       <h1 className="text-2xl font-bold text-[#14142B]">Employees</h1>
       <p className="text-sm text-[#71717A] mt-1 mb-6">Everyone in your company.</p>
 
+      {tempInfo && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl" data-testid="temp-password-box">
+          <p className="text-sm font-medium text-green-800">
+            {tempInfo.name} was added. Give them this temporary password now — it is shown only once.
+          </p>
+          <div className="flex items-center gap-2 mt-2">
+            <code className="text-base font-mono bg-white border border-green-200 rounded-lg px-3 py-1.5 select-all" data-testid="temp-password">
+              {tempInfo.password}
+            </code>
+            <button
+              type="button"
+              onClick={copyTemporaryPassword}
+              data-testid="copy-temp-password"
+              className="flex items-center gap-1.5 border border-green-300 bg-white hover:bg-green-100 rounded-lg px-3 py-1.5 text-sm text-green-800 transition"
+            >
+              <Copy size={14} /> {copied ? 'Copied' : 'Copy'}
+            </button>
+            <button type="button" onClick={() => setTempInfo(null)} className="text-sm text-green-800 underline ml-1">
+              Done
+            </button>
+          </div>
+          <p className="text-xs text-green-700 mt-2">
+            {tempInfo.email} logs in with it and is asked to choose their own password before anything else.
+          </p>
+        </div>
+      )}
+
       {canManageEmployees && (
 <form
         onSubmit={handleCreate}
         className="bg-white rounded-xl border border-[#EEEEF2] p-4 mb-6 grid grid-cols-2 md:grid-cols-3 gap-3"
       >
         <input
+          type="text"
+          name="full_name"
+          value={form.full_name}
+          onChange={handleChange}
+          placeholder="Full name"
+          autoComplete="off"
+          required
+          className="border border-[#EEEEF2] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6C31D6] focus:ring-2 focus:ring-[#6C31D6]/15 transition"
+        />
+
+        <input
           type="email"
           name="email"
           value={form.email}
           onChange={handleChange}
           placeholder="Email"
+          autoComplete="off"
           required
           className="border border-[#EEEEF2] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6C31D6] focus:ring-2 focus:ring-[#6C31D6]/15 transition"
         />
@@ -181,8 +244,9 @@ function EmployeesPage() {
           name="password"
           value={form.password}
           onChange={handleChange}
-          placeholder="Password"
-          required
+          placeholder="Password (optional)"
+          title="Leave empty and the system makes a one-time temporary password"
+          autoComplete="new-password"
           className="border border-[#EEEEF2] rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6C31D6] focus:ring-2 focus:ring-[#6C31D6]/15 transition"
         />
 
@@ -276,7 +340,12 @@ function EmployeesPage() {
               {rows.map((emp) => (
                 editingId === emp.id ? (
                   <tr key={emp.id} className="bg-[#FAFAFA]">
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 space-y-1">
+                      <input
+                        type="text" name="full_name" value={editForm.full_name} placeholder="Full name"
+                        onChange={handleEditChange}
+                        className="border border-[#6C31D6]/40 rounded-lg px-2 py-1 text-sm outline-none focus:border-[#6C31D6] w-full"
+                      />
                       <input
                         type="text" name="employee_code" value={editForm.employee_code}
                         onChange={handleEditChange}
@@ -308,7 +377,7 @@ function EmployeesPage() {
                       >
                         <option value="">—</option>
                         {employees.filter((e) => e.id !== emp.id).map((e) => (
-                          <option key={e.id} value={e.id}>{e.employee_code}</option>
+                          <option key={e.id} value={e.id}>{personName(e.full_name, e.user_email)} · {e.employee_code}</option>
                         ))}
                       </select>
                     </td>
@@ -326,15 +395,20 @@ function EmployeesPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-[#6C31D6]/10 text-[#6C31D6] flex items-center justify-center text-xs font-semibold shrink-0">
-                          {emp.employee_code?.slice(-2) || '??'}
+                          {personInitials(emp.full_name, emp.user_email)}
                         </div>
-                        <Link to={`/organization/employees/${emp.id}`} className="font-medium hover:text-[#6C31D6] hover:underline">{emp.employee_code}</Link>
+                        <Link to={`/organization/employees/${emp.id}`} className="block min-w-0 hover:text-[#6C31D6]">
+                          <Person name={emp.full_name} email={emp.user_email} sub={emp.employee_code} />
+                        </Link>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-[#71717A]">{emp.designation_title || '—'}</td>
                     <td className="px-4 py-3 text-[#71717A]">{emp.department_name || '—'}</td>
                     <td className="px-4 py-3 text-[#71717A]">
-                      {employees.find((e) => e.id === emp.reports_to)?.employee_code || '—'}
+                      {(() => {
+                        const boss = employees.find((e) => e.id === emp.reports_to)
+                        return boss ? personName(boss.full_name, boss.user_email) : '—'
+                      })()}
                     </td>
                     <td className="px-4 py-3">
                       {canManageEmployees && (
