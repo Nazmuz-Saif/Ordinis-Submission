@@ -25,3 +25,15 @@ export async function getCalendar(month) {
   const res = await apiClient.get('/attendance/attendance/calendar/', { params: month ? { month } : {} })
   return res.data
 }
+
+// Team Attendance: the people I may open (everyone with view_team_attendance, otherwise my team).
+export async function getTeamPeople() {
+  const res = await apiClient.get('/attendance/attendance/team/people/')
+  return res.data
+}
+
+// One person's month with check-in, check-out and hours. month = "2026-10"; leave it out for this month.
+export async function getTeamMonth(employeeId, month) {
+  const res = await apiClient.get('/attendance/attendance/team/', { params: { employee: employeeId, ...(month ? { month } : {}) } })
+  return res.data
+}

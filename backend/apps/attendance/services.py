@@ -146,3 +146,61 @@ def month_calendar(employee, month=None):
             'attendance_rate': rate,
         },
     }
+
+
+# ---------------------------------------------------------------- ST-144: team attendance
+
+TEAM_PERMISSION = 'view_team_attendance'
+
+
+def team_scope(viewer):
+    """
+    Whose attendance the viewer may open: everybody in the company with view_team_attendance,
+    otherwise only the people below them in the hierarchy (never themself: My Attendance covers that).
+    """
+    from organization.models import Employee
+    from organization.services import get_all_subordinates
+
+    if viewer.has_permission(TEAM_PERMISSION):
+        return Employee.objects.filter(company=viewer.company)
+    return Employee.objects.filter(id__in=[e.id for e in get_all_subordinates(viewer)])
+
+
+def team_people(viewer):
+    """The people for the dropdown, in the viewer's scope."""
+    return team_scope(viewer).select_related('user', 'designation', 'department').order_by('employee_code', 'id')
+
+
+def _hours(record):
+    if record.check_out is None:
+        return None
+    return round((record.check_out - record.check_in).total_seconds() / 3600, 2)
+
+
+def team_month(target, month=None):
+    """
+    One month of someone else's attendance: the same calendar and cards as My Attendance, plus a row per
+    day worked (check-in, check-out, hours) and the month's total hours. A day with no check-out has
+    check_out null and no hours, and adds nothing to the total.
+    """
+    data = month_calendar(target, month)
+    year, mon = (int(part) for part in data['month'].split('-'))
+    first = datetime.date(year, mon, 1)
+    last = datetime.date(year, mon, calendar.monthrange(year, mon)[1])
+    zone = company_zone(target.company)
+    records, total = [], 0.0
+    for record in Attendance.objects.filter(employee=target, date__range=(first, last)).order_by('date'):
+        hours = _hours(record)
+        total += hours or 0
+        records.append({
+            'date': record.date.isoformat(),
+            'check_in': record.check_in.isoformat(),
+            'check_in_time': record.check_in.astimezone(zone).strftime('%H:%M'),
+            'check_out': record.check_out.isoformat() if record.check_out else None,
+            'check_out_time': record.check_out.astimezone(zone).strftime('%H:%M') if record.check_out else None,
+            'hours': hours,
+        })
+    data['records'] = records
+    data['days_present'] = len(records)
+    data['total_hours'] = round(total, 2)
+    return data

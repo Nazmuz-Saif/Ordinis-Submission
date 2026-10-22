@@ -31,6 +31,8 @@ PERMISSION_CATALOG = [
     # attendance
     {"codename": "manage_leave_types", "name": "Manage Leave Types", "module": "attendance",
      "description": "Define the kinds of leave the company offers and how many days a year each allows."},
+    {"codename": "view_team_attendance", "name": "View Team Attendance", "module": "attendance",
+     "description": "See any employee's attendance month by month. Without it, a manager still sees the people below them."},
     # payroll
     {"codename": "manage_finance", "name": "Manage Finance", "module": "payroll",
      "description": "See and change salary structures and generate payslips for everyone. Salary data is visible only with this Permission."},

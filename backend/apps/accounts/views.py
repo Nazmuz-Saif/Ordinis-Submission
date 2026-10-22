@@ -69,6 +69,7 @@ class MeView(APIView):
             "email": user.email,
             "full_name": user.full_name,
             "must_change_password": user.must_change_password,
+            "has_team": bool(getattr(user, "employee", None) and user.employee.direct_reports.exists()),
             "company_id": str(company.id) if company else None,
             "company_name": company.name if company else None,
             "plan_name": self._plan_name(company),

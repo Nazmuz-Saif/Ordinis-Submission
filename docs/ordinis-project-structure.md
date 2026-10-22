@@ -34,7 +34,7 @@ frontend/src/
   features/admin/  AccessRequestsPage.jsx, ActivityPage.jsx, CompaniesPage.jsx, TicketsPage.jsx, format.js, shared.jsx, usePagedList.js
   features/analytics/  AnalyticsPage.jsx, analyticsFormat.js
   features/approvals/  ApprovalChainsPage.jsx, DelegationsPage.jsx, PendingApprovalsPage.jsx
-  features/attendance/  AttendanceCalendar.jsx, AttendancePage.jsx
+  features/attendance/  AttendanceCalendar.jsx, AttendancePage.jsx, TeamAttendancePage.jsx
   features/audit/  AuditLogsPage.jsx, auditFormat.js
   features/auth/  LoginPage.jsx, RegisterPage.jsx
   features/billing/  BillingPage.jsx

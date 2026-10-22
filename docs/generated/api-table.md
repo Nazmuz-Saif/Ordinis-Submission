@@ -36,6 +36,8 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/attendance/attendance/calendar/` | AttendanceViewSet / calendar | Any logged-in employee |
 | POST | `/api/v1/attendance/attendance/check_in/` | AttendanceViewSet / check_in | Any logged-in employee |
 | POST | `/api/v1/attendance/attendance/check_out/` | AttendanceViewSet / check_out | Any logged-in employee |
+| GET | `/api/v1/attendance/attendance/team/` | AttendanceViewSet / team | Any logged-in employee |
+| GET | `/api/v1/attendance/attendance/team/people/` | AttendanceViewSet / team_people | Any logged-in employee |
 | GET | `/api/v1/attendance/attendance/today/` | AttendanceViewSet / today | Any logged-in employee |
 | GET | `/api/v1/attendance/attendance/{id}/` | AttendanceViewSet / retrieve | Any logged-in employee |
 | GET | `/api/v1/attendance/leave-requests/` | LeaveRequestViewSet / list | Any logged-in employee |
@@ -166,4 +168,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*159 endpoint methods on 108 routes.*
+*161 endpoint methods on 110 routes.*
