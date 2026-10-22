@@ -11,6 +11,7 @@ class PlanViewSet(PermissionRequiredMixin, mixins.ListModelMixin, viewsets.Gener
     """The plans a company can be on. The same list for every company, so there is no detail route."""
     serializer_class = PlanSerializer
     permission_required = 'view_billing'
+    allow_when_restricted = True      # a restricted company must be able to see its plan and pay
     pagination_class = None
 
     def get_queryset(self):
@@ -20,6 +21,7 @@ class PlanViewSet(PermissionRequiredMixin, mixins.ListModelMixin, viewsets.Gener
 class SubscriptionViewSet(PermissionRequiredMixin, viewsets.ViewSet):
     """GET /billing/subscription/: the company's plan and how many of its employee seats are used."""
     permission_required = 'view_billing'
+    allow_when_restricted = True
 
     def list(self, request):
         company = request.user.company
@@ -30,6 +32,7 @@ class SubscriptionViewSet(PermissionRequiredMixin, viewsets.ViewSet):
                 'plan': PlanSerializer(subscription.plan).data,
                 'status': subscription.status,
                 'started_on': subscription.started_on,
+                'timeline': services.subscription_summary(company),
                 'usage': services.usage(company),
             },
         })
@@ -39,6 +42,7 @@ class InvoiceViewSet(PermissionRequiredMixin, viewsets.ReadOnlyModelViewSet):
     """The company's own invoices, newest month first. Another company's invoice is a 404."""
     serializer_class = InvoiceSerializer
     permission_required = 'view_billing'
+    allow_when_restricted = True
 
     def get_queryset(self):
         queryset = Invoice.objects.filter(company=self.request.user.company)

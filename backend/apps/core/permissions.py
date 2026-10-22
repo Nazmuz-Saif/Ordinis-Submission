@@ -13,6 +13,30 @@ def _password_change_required():
     return PasswordChangeRequired()
 
 
+def _subscription_restricted(state):
+    # Same lazy import as above, for the same reason.
+    from .exceptions import OrdinisException
+
+    class SubscriptionRestricted(OrdinisException):
+        code = "SUBSCRIPTION_RESTRICTED"
+        status_code = 403
+        message = (
+            "Your company is waiting for its first payment to be approved. Only Billing, your profile and support work until then."
+            if state == 'pending_payment' else
+            "Your subscription has ended. Only Billing, your profile and support work until you renew."
+        )
+
+    return SubscriptionRestricted()
+
+
+def _restriction(request, company):
+    """The restricted state of the user's company, looked up once per request."""
+    if not hasattr(request, '_ordinis_restriction'):
+        from billing.services import restriction_for
+        request._ordinis_restriction = restriction_for(company)
+    return request._ordinis_restriction
+
+
 class IsCompanyActive(BasePermission):
     """
     Blocks access if the authenticated user's company has been suspended.
@@ -35,6 +59,13 @@ class IsCompanyActive(BasePermission):
         # (profile, change-password) opts out with `allow_when_password_change_required = True`.
         if request.user.must_change_password and not getattr(view, 'allow_when_password_change_required', False):
             raise _password_change_required()
+        # Restricted mode (a company waiting for its first payment, or past its end date and grace):
+        # only views that pay, read their own profile or ask for support opt out with
+        # `allow_when_restricted = True`. This is not Suspend: a suspended company is blocked above, completely.
+        if not getattr(view, 'allow_when_restricted', False):
+            state = _restriction(request, company)
+            if state:
+                raise _subscription_restricted(state)
         return True
 
 

@@ -15,6 +15,18 @@ DEFAULT_PLANS = [
 ]
 STARTING_PLAN = 'Basic'
 
+# ---- Subscription period rules. One place to change them. ----
+GRACE_DAYS = 3                 # days after the end date the company still works (with a warning banner)
+REMINDER_DAYS = (7, 3, 1)      # in-app reminders this many days before the end
+DEFAULT_MONTHS = 12            # length of the period a company gets when it is started without a payment (registration, demo)
+
+# Effective states, as shown to the frontend
+STATE_PENDING_PAYMENT = 'pending_payment'
+STATE_ACTIVE = 'active'
+STATE_GRACE = 'grace'
+STATE_EXPIRED = 'expired'
+STATE_CANCELLED = 'cancelled'
+
 
 class PlanLimitError(OrdinisException):
     code = 'PLAN_LIMIT_REACHED'
@@ -33,14 +45,175 @@ def seed_plans():
         SubscriptionPlan.objects.get_or_create(name=name, defaults={'max_employees': limit, 'price_monthly': price})
 
 
-def start_subscription(company, plan_name=STARTING_PLAN):
+def add_months(day, months):
+    """`day` plus whole months; the day number is cut to the last day of a shorter month (31 Jan + 1 month = 28/29 Feb)."""
+    index = day.month - 1 + months
+    year, month = day.year + index // 12, index % 12 + 1
+    return datetime.date(year, month, min(day.day, calendar.monthrange(year, month)[1]))
+
+
+def period_end_for(start, months):
+    """The LAST day of a period of `months` months that begins on `start`."""
+    return add_months(start, months) - datetime.timedelta(days=1)
+
+
+def start_subscription(company, plan_name=STARTING_PLAN, months=DEFAULT_MONTHS, status=Subscription.STATUS_ACTIVE):
     """Put a company on a plan (new companies start on Basic). Safe to call twice."""
     seed_plans()
     plan = SubscriptionPlan.objects.get(name=plan_name)
+    today = datetime.date.today()
     subscription, _ = Subscription.objects.get_or_create(
-        company=company, defaults={'plan': plan, 'started_on': datetime.date.today()},
+        company=company,
+        defaults={
+            'plan': plan, 'status': status, 'started_on': today, 'billing_months': months,
+            'current_period_start': today, 'current_period_end': period_end_for(today, months),
+        },
     )
     return subscription
+
+
+def set_period(subscription, start, months):
+    """Give the subscription a new paid period and forget the reminders of the old one. The caller saves."""
+    subscription.current_period_start = start
+    subscription.current_period_end = period_end_for(start, months)
+    subscription.billing_months = months
+    subscription.reminders_sent = []
+    return subscription
+
+
+# ---------- Days left, state, restricted mode ----------
+
+def _today(company):
+    from attendance.services import local_today
+    return local_today(company)[0]
+
+
+def days_left(subscription, today=None):
+    """End date minus the company's own today. Never stored. 0 on the last day, negative after it."""
+    today = today or _today(subscription.company)
+    return (subscription.current_period_end - today).days
+
+
+def effective_state(subscription, today=None):
+    """What the company can do right now. Works even when the daily job did not run."""
+    if subscription.status == Subscription.STATUS_PENDING_PAYMENT:
+        return STATE_PENDING_PAYMENT
+    if subscription.status == Subscription.STATUS_EXPIRED:
+        return STATE_EXPIRED
+    if subscription.status == Subscription.STATUS_CANCELLED:
+        return STATE_CANCELLED
+    left = days_left(subscription, today)
+    if left >= 0:
+        return STATE_ACTIVE
+    return STATE_GRACE if left >= -GRACE_DAYS else STATE_EXPIRED
+
+
+def is_restricted(subscription, today=None):
+    return effective_state(subscription, today) in (STATE_PENDING_PAYMENT, STATE_EXPIRED)
+
+
+def restriction_for(company):
+    """The state name when the company is in restricted mode, else None. Used on every request: one query,
+    and no time zone lookup while the end date is clearly far away."""
+    subscription = Subscription.objects.filter(company=company).first()
+    if subscription is None:
+        return None
+    if subscription.status == Subscription.STATUS_ACTIVE:
+        # Time zones differ by less than 2 days from UTC, so a far end date needs no exact check.
+        from attendance.services import _now
+        if subscription.current_period_end - _now().date() > datetime.timedelta(days=2):
+            return None
+    state = effective_state(subscription)
+    return state if state in (STATE_PENDING_PAYMENT, STATE_EXPIRED) else None
+
+
+def subscription_summary(company):
+    """What the frontend needs for the banner and the route guard (sent inside /auth/me/)."""
+    subscription = Subscription.objects.filter(company=company).select_related('plan').first()
+    if subscription is None:
+        return None
+    state = effective_state(subscription)
+    return {
+        'status': state,
+        'restricted': state in (STATE_PENDING_PAYMENT, STATE_EXPIRED),
+        'days_left': days_left(subscription),
+        'period_start': subscription.current_period_start,
+        'period_end': subscription.current_period_end,
+        'billing_months': subscription.billing_months,
+        'grace_days': GRACE_DAYS,
+        'plan': subscription.plan.name,
+    }
+
+
+# ---------- The daily job ----------
+
+def _billing_recipients(company):
+    """The CEO and everyone who holds view_billing (the CEO role holds every Permission). Nobody twice."""
+    from organization.models import Employee
+    return Employee.objects.filter(
+        company=company, employee_roles__role__permissions__codename='view_billing',
+    ).select_related('user').distinct()
+
+
+def send_reminder(subscription, left):
+    from notifications.models import Notification
+    from notifications.services import notify
+    noun = 'day' if left == 1 else 'days'
+    when = 'ends today' if left == 0 else f'ends in {left} {noun}'
+    sent = 0
+    for employee in _billing_recipients(subscription.company):
+        notify(
+            employee, Notification.KIND_BILLING_REMINDER, f'Your subscription {when}',
+            f'The {subscription.plan.name} plan {when} (on {subscription.current_period_end}). '
+            'Renew to keep using Ordinis.', '/settings/billing',
+        )
+        sent += 1
+    return sent
+
+
+def process_subscription(subscription, today=None):
+    """One company's daily work. Running it twice in a row changes nothing more.
+    Returns (reminder_sent, expired)."""
+    company = subscription.company
+    today = today or _today(company)
+    left = days_left(subscription, today)
+    if left < -GRACE_DAYS:
+        subscription.status = Subscription.STATUS_EXPIRED
+        subscription.save(update_fields=['status', 'updated_at'])
+        return False, True
+    if left < 0 or not company.is_active:
+        return False, False          # in grace (banner only), or suspended: nobody to remind
+    # A reminder is due for every threshold we have reached. A missed day is not a lost reminder:
+    # the first run after the threshold sends ONE message and marks every reached threshold as sent.
+    reached = [t for t in REMINDER_DAYS if left <= t]
+    sent = list(subscription.reminders_sent or [])
+    if not reached or all(t in sent for t in reached):
+        return False, False
+    send_reminder(subscription, left)
+    subscription.reminders_sent = sorted(set(sent) | set(reached))
+    subscription.save(update_fields=['reminders_sent', 'updated_at'])
+    return True, False
+
+
+def process_subscriptions():
+    """The daily job for every active subscription. One company's error never stops the others."""
+    result = {'checked': 0, 'reminded': 0, 'expired': 0, 'errors': 0}
+    for subscription in Subscription.objects.filter(status=Subscription.STATUS_ACTIVE).select_related('company', 'plan'):
+        result['checked'] += 1
+        try:
+            with transaction.atomic():
+                subscription = Subscription.objects.select_for_update().select_related('company', 'plan').get(pk=subscription.pk)
+                if subscription.status != Subscription.STATUS_ACTIVE:
+                    continue
+                reminded, expired = process_subscription(subscription)
+        except Exception:      # noqa: BLE001  one bad company must not stop the rest
+            import logging
+            logging.getLogger(__name__).exception('process_subscriptions failed for %s', subscription.company_id)
+            result['errors'] += 1
+            continue
+        result['reminded'] += reminded
+        result['expired'] += expired
+    return result
 
 
 def get_subscription(company):

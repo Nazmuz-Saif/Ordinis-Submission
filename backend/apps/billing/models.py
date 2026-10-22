@@ -21,14 +21,34 @@ class SubscriptionPlan(BaseModel):
 
 class Subscription(BaseModel):
     """The plan a company is on now. One per company."""
+    STATUS_PENDING_PAYMENT = 'pending_payment'
     STATUS_ACTIVE = 'active'
+    STATUS_EXPIRED = 'expired'
     STATUS_CANCELLED = 'cancelled'
-    STATUS_CHOICES = [(STATUS_ACTIVE, 'Active'), (STATUS_CANCELLED, 'Cancelled')]
+    STATUS_CHOICES = [
+        (STATUS_PENDING_PAYMENT, 'Pending payment'), (STATUS_ACTIVE, 'Active'),
+        (STATUS_EXPIRED, 'Expired'), (STATUS_CANCELLED, 'Cancelled'),
+    ]
 
     company = models.OneToOneField('tenants.Company', on_delete=models.CASCADE, related_name='subscription')
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT, related_name='subscriptions')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
     started_on = models.DateField()
+    # The paid period. The last day of the period is `current_period_end`. Days left are NEVER stored:
+    # they are computed from this date and the company's own today (billing.services.days_left).
+    current_period_start = models.DateField()
+    current_period_end = models.DateField()
+    billing_months = models.PositiveSmallIntegerField(default=12)
+    # Which reminder thresholds (7, 3, 1 days) were already sent in this period; emptied when the period changes.
+    reminders_sent = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(current_period_end__gte=models.F('current_period_start')),
+                name='subscription_period_end_not_before_start',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.company_id}: {self.plan.name}'

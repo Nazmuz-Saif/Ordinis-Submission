@@ -181,6 +181,10 @@ erDiagram
     fk plan
     Char20 status
     Date started_on
+    Date current_period_start
+    Date current_period_end
+    PositiveSmallInteger billing_months
+    JSON reminders_sent
   }
   SUBSCRIPTIONPLAN {
     Char50 name

@@ -401,8 +401,14 @@ The plan a company is on now. One per company.
 |---|---|---|---|
 | `company` | FK to tenants.Company |  | unique; on delete: CASCADE |
 | `plan` | FK to billing.SubscriptionPlan |  | on delete: PROTECT |
-| `status` | Char(20) | 'active' | one of: active, cancelled |
+| `status` | Char(20) | 'active' | one of: pending_payment, active, expired, cancelled |
 | `started_on` | Date |  |  |
+| `current_period_start` | Date |  |  |
+| `current_period_end` | Date |  |  |
+| `billing_months` | PositiveSmallInteger | 12 |  |
+| `reminders_sent` | JSON | list() |  |
+
+Rule: `subscription_period_end_not_before_start` (check)
 
 #### SubscriptionPlan
 
@@ -428,7 +434,7 @@ One message for ONE employee ("you were assigned a task", "an approval needs you
 |---|---|---|---|
 | `company` | FK to tenants.Company |  | on delete: CASCADE |
 | `recipient` | FK to organization.Employee |  | on delete: CASCADE |
-| `kind` | Char(30) |  | one of: task_assigned, approval_requested, approval_decided |
+| `kind` | Char(30) |  | one of: task_assigned, approval_requested, approval_decided, billing_reminder |
 | `title` | Char(200) |  |  |
 | `message` | Char(500) |  |  |
 | `link` | Char(200) |  |  |

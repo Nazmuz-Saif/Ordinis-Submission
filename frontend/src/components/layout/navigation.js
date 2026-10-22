@@ -58,16 +58,19 @@ export const NAV = [
     type: 'group', key: 'settings', label: 'Settings', icon: Settings,
     items: [
       { label: 'Support Access', path: '/settings/support-access', permission: 'approve_support_access' },
-      { label: 'Billing', path: '/settings/billing', permission: 'view_billing' },
+      { label: 'Billing', path: '/settings/billing', permission: 'view_billing', openWhenRestricted: true },
     ],
   },
 ]
 
 // Items the user is allowed to see. Groups with nothing visible disappear.
-export function visibleNav(hasPermission, isPlatformAdmin = false, hasTeam = false) {
+export function visibleNav(hasPermission, isPlatformAdmin = false, hasTeam = false, restricted = false) {
   if (isPlatformAdmin) return ADMIN_NAV // a Platform Admin has no company, so no company menu
   // orTeam: the Permission OR having people below you (Team Attendance)
-  const allowed = (item) => !item.permission || hasPermission(item.permission) || Boolean(item.orTeam && hasTeam)
+  // restricted: a company waiting for payment or past its end keeps only the items marked openWhenRestricted
+  const allowed = (item) =>
+    (!restricted || item.openWhenRestricted) &&
+    (!item.permission || hasPermission(item.permission) || Boolean(item.orTeam && hasTeam))
   return NAV.map((entry) =>
     entry.type === 'group' ? { ...entry, items: entry.items.filter(allowed) } : entry,
   ).filter((entry) => (entry.type === 'group' ? entry.items.length > 0 : allowed(entry)))   // links obey permission too

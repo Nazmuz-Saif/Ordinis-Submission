@@ -3,6 +3,9 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../store/AuthContext'
 import Sidebar from '../components/layout/Sidebar'
 import Navbar from '../components/layout/Navbar'
+import SubscriptionBanner from '../components/layout/SubscriptionBanner'
+import RestrictedNotice from '../components/layout/RestrictedNotice'
+import { isRestricted, pathOpenWhenRestricted } from '../utils/subscription'
 
 function DashboardLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -14,6 +17,9 @@ function DashboardLayout({ children }) {
     return <Navigate to="/profile" replace />
   }
 
+  // A restricted company (waiting for its first payment, or past its end date and grace) keeps only Billing and My Profile.
+  const blocked = isRestricted(me) && !pathOpenWhenRestricted(pathname)
+
   return (
     <div className="flex">
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
@@ -24,7 +30,8 @@ function DashboardLayout({ children }) {
         }}
       >
         <Navbar onMenuClick={() => setMenuOpen(true)} />
-        <main className="p-4 md:p-6">{children}</main>
+        <SubscriptionBanner />
+        <main className="p-4 md:p-6">{blocked ? <RestrictedNotice /> : children}</main>
       </div>
     </div>
   )

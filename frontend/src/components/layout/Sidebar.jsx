@@ -5,6 +5,7 @@ import { useAuth } from '../../store/AuthContext'
 import PlanBadge from '../common/PlanBadge'
 import { isPathActive, visibleNav } from './navigation'
 import { personName, personInitials } from '../../utils/people'
+import { isRestricted } from '../../utils/subscription'
 
 const itemBase = 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors duration-150'
 
@@ -79,7 +80,7 @@ function Sidebar({ open, onClose }) {
   const { pathname } = useLocation()
   // Only groups the user clicked are stored; every other group opens when it holds the active page.
   const [toggled, setToggled] = useState({})
-  const nav = visibleNav(hasPermission, me?.is_platform_admin, me?.has_team)
+  const nav = visibleNav(hasPermission, me?.is_platform_admin, me?.has_team, isRestricted(me))
 
   const isGroupOpen = (group) =>
     group.key in toggled ? toggled[group.key] : group.items.some((i) => isPathActive(pathname, i.path))

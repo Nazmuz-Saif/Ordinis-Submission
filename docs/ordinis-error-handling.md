@@ -32,7 +32,8 @@ What the delivered system does for each scenario below. "Done" is backed by a te
 | Email failure fallback | Not applicable | No email channel |
 | Employee added beyond the plan's limit | Done | Refused with an "upgrade your plan" message (code `PLAN_LIMIT_REACHED`); nothing is created; tested at exactly full and over |
 | A plan too small for the current team | Done | A downgrade is refused while there are more employees than the plan allows |
-| Payment failure, grace period, read-only mode, webhooks | Not built | There is no payment gateway |
+| Subscription ends: a grace period, then a restricted mode | Done | 3 grace days after the end date, then only Billing, profile and support work (code `SUBSCRIPTION_RESTRICTED`, 403); it is not a read-only mode and not Suspend. The check runs on every request, so it holds even when the daily job did not run (ST-145) |
+| Payment failure, webhooks | Not built | There is no payment gateway |
 | File too large or wrong type, storage down | Not applicable | No file upload |
 | Another company's id in the URL | Done | 404, tested for every object route |
 | Expired JWT | Done | 401, refresh flow |

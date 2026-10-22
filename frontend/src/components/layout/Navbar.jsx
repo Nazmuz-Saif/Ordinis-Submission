@@ -7,6 +7,7 @@ import useClickOutside from '../../hooks/useClickOutside'
 import NotificationBell from './NotificationBell'
 import { pageTitle } from './navigation'
 import { personName, personInitials } from '../../utils/people'
+import { isRestricted } from '../../utils/subscription'
 
 function Navbar({ onMenuClick }) {
   const { me, clearMe } = useAuth()
@@ -53,7 +54,7 @@ function Navbar({ onMenuClick }) {
           {me?.is_platform_admin ? 'Ordinis Platform' : me?.company_name}
         </div>
 
-        {!me?.is_platform_admin && !me?.must_change_password && <NotificationBell />}
+        {!me?.is_platform_admin && !me?.must_change_password && !isRestricted(me) && <NotificationBell />}
 
         <div className="relative" ref={userRef}>
           <button

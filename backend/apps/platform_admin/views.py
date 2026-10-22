@@ -215,6 +215,7 @@ class CompanyTicketViewSet(
     Any employee can raise a ticket and sees their own. Someone with approve_support_access sees the company's.
     """
     serializer_class = TicketSerializer
+    allow_when_restricted = True      # a restricted company must still be able to ask for help
 
     def get_queryset(self):
         user = self.request.user
