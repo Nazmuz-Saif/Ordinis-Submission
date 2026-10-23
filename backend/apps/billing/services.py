@@ -4,8 +4,10 @@ from decimal import Decimal
 
 import re
 import uuid
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from django.db import IntegrityError, transaction
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError, models, transaction
 from django.utils import timezone
 
 from core.exceptions import OrdinisException
@@ -561,3 +563,59 @@ def payment_instructions():
         for item in getattr(settings, 'PAYMENT_INSTRUCTIONS', []) if item.get('method') in allowed
     ]
     return {'methods': methods, 'note': getattr(settings, 'PAYMENT_NOTE', '')}
+
+
+# ---------- Platform Admin: every company's subscription (ST-148) ----------
+
+EXPIRING_DAYS = 7          # "expiring soon" = this many days left or fewer
+
+
+def _zone_today(tz_name, now, cache):
+    """Today's date in one time zone; each zone is worked out once per request."""
+    if tz_name not in cache:
+        try:
+            zone = ZoneInfo(tz_name) if tz_name else timezone.get_default_timezone()
+        except (ZoneInfoNotFoundError, ValueError):
+            zone = timezone.get_default_timezone()
+        cache[tz_name] = now.astimezone(zone).date()
+    return cache[tz_name]
+
+
+def admin_subscription_rows(flt='', query=''):
+    """One row per company with its plan, state, end date and days left (the company's own today),
+    soonest-ending first. A company waiting for its first payment has no days left and goes last.
+    flt: 'expiring' (7 days or fewer, still working) or 'restricted' (expired or waiting for payment)."""
+    from attendance.services import _now
+    now, cache = _now(), {}
+    subscriptions = Subscription.objects.select_related('company', 'plan', 'company__settings')
+    if query:
+        subscriptions = subscriptions.filter(
+            models.Q(company__name__icontains=query) | models.Q(company__subdomain__icontains=query),
+        )
+    rows = []
+    for sub in subscriptions:
+        company = sub.company
+        try:
+            tz_name = company.settings.timezone
+        except ObjectDoesNotExist:
+            tz_name = ''
+        today = _zone_today(tz_name, now, cache)
+        state = effective_state(sub, today)
+        left = None if state in (STATE_PENDING_PAYMENT, STATE_CANCELLED) else (sub.current_period_end - today).days
+        restricted = state in (STATE_PENDING_PAYMENT, STATE_EXPIRED)
+        if flt == 'restricted' and not restricted:
+            continue
+        if flt == 'expiring' and not (state in (STATE_ACTIVE, STATE_GRACE) and left <= EXPIRING_DAYS):
+            continue
+        rows.append({
+            'id': sub.id, 'company': company.id, 'company_name': company.name, 'company_subdomain': company.subdomain,
+            'company_suspended': not company.is_active, 'plan_name': sub.plan.name, 'status': state,
+            'restricted': restricted, 'period_start': sub.current_period_start, 'period_end': sub.current_period_end,
+            'billing_months': sub.billing_months, 'days_left': left,
+        })
+    rows.sort(key=lambda r: (r['days_left'] is None, r['days_left'] if r['days_left'] is not None else 0, r['company_name'].lower()))
+    return rows
+
+
+def pending_payment_count():
+    return PaymentSubmission.objects.filter(status=PaymentSubmission.STATUS_PENDING).count()

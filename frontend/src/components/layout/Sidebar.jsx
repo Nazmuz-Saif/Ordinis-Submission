@@ -6,6 +6,7 @@ import PlanBadge from '../common/PlanBadge'
 import { isPathActive, visibleNav } from './navigation'
 import { personName, personInitials } from '../../utils/people'
 import { isRestricted } from '../../utils/subscription'
+import { usePendingPayments } from './usePendingPayments'
 
 const itemBase = 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors duration-150'
 
@@ -13,8 +14,9 @@ function Soon() {
   return <span className="ml-auto text-[10px] rounded-full bg-[#EEEEF2] text-[#71717A] px-1.5 py-0.5">Soon</span>
 }
 
-function NavItem({ item, pathname, onNavigate, nested = false }) {
+function NavItem({ item, pathname, onNavigate, nested = false, badges = {} }) {
   const Icon = item.icon
+  const badge = item.badge ? badges[item.badge] : 0
   const padding = nested ? 'pl-9' : ''
   if (item.soon) {
     return (
@@ -38,6 +40,15 @@ function NavItem({ item, pathname, onNavigate, nested = false }) {
     >
       {Icon && <Icon size={17} />}
       {item.label}
+      {badge > 0 && (
+        <span
+          data-testid={`sidebar-badge-${item.label}`}
+          aria-label={`${badge} waiting`}
+          className="ml-auto min-w-[20px] text-center rounded-full bg-[#6C31D6] text-white text-[11px] font-semibold px-1.5 py-0.5"
+        >
+          {badge}
+        </span>
+      )}
     </Link>
   )
 }
@@ -81,6 +92,7 @@ function Sidebar({ open, onClose }) {
   // Only groups the user clicked are stored; every other group opens when it holds the active page.
   const [toggled, setToggled] = useState({})
   const nav = visibleNav(hasPermission, me?.is_platform_admin, me?.has_team, isRestricted(me))
+  const badges = { pendingPayments: usePendingPayments(Boolean(me?.is_platform_admin)) }
 
   const isGroupOpen = (group) =>
     group.key in toggled ? toggled[group.key] : group.items.some((i) => isPathActive(pathname, i.path))
@@ -114,7 +126,7 @@ function Sidebar({ open, onClose }) {
                 onNavigate={onClose}
               />
             ) : (
-              <NavItem key={entry.path} item={entry} pathname={pathname} onNavigate={onClose} />
+              <NavItem key={entry.path} item={entry} pathname={pathname} onNavigate={onClose} badges={badges} />
             ),
           )}
         </nav>

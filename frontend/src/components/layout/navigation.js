@@ -1,5 +1,5 @@
 import {
-  BarChart3, Building2, CalendarCheck, CheckSquare, GitBranch, History, Inbox, LayoutDashboard, LifeBuoy, ScrollText, ShieldCheck, Settings, Wallet,
+  BarChart3, Building2, CalendarCheck, CalendarClock, CheckSquare, CreditCard, GitBranch, History, Inbox, LayoutDashboard, LifeBuoy, ScrollText, ShieldCheck, Settings, Wallet,
 } from 'lucide-react'
 
 // Single source of truth for the sidebar and the page title.
@@ -79,6 +79,8 @@ export function visibleNav(hasPermission, isPlatformAdmin = false, hasTeam = fal
 // The menu of a Platform Admin. A normal user never gets these items, not even hidden.
 export const ADMIN_NAV = [
   { type: 'link', label: 'Companies', path: '/admin/companies', icon: Building2 },
+  { type: 'link', label: 'Payments', path: '/admin/payments', icon: CreditCard, badge: 'pendingPayments' },
+  { type: 'link', label: 'Subscriptions', path: '/admin/subscriptions', icon: CalendarClock },
   { type: 'link', label: 'Support Tickets', path: '/admin/tickets', icon: LifeBuoy },
   { type: 'link', label: 'Access Requests', path: '/admin/access-requests', icon: ShieldCheck },
   { type: 'link', label: 'Activity', path: '/admin/activity', icon: History },

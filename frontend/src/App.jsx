@@ -40,6 +40,8 @@ import PaymentPage from './features/subscribe/PaymentPage'
 import WaitingPage from './features/subscribe/WaitingPage'
 import CompaniesPage from './features/admin/CompaniesPage'
 import TicketsPage from './features/admin/TicketsPage'
+import PaymentsPage from './features/admin/PaymentsPage'
+import SubscriptionsPage from './features/admin/SubscriptionsPage'
 import AccessRequestsPage from './features/admin/AccessRequestsPage'
 import ActivityPage from './features/admin/ActivityPage'
 // The dashboard pulls in the chart library, so it loads only when opened.
@@ -311,6 +313,8 @@ function App() {
           />
           {[
             ['/admin/companies', CompaniesPage],
+            ['/admin/payments', PaymentsPage],
+            ['/admin/subscriptions', SubscriptionsPage],
             ['/admin/tickets', TicketsPage],
             ['/admin/access-requests', AccessRequestsPage],
             ['/admin/activity', ActivityPage],

@@ -184,6 +184,11 @@ class AdminPaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
             )
         return queryset.order_by('-created_at', 'id')
 
+    @action(detail=False, methods=['get'], url_path='pending-count')
+    def pending_count(self, request):
+        """The number on the sidebar badge: payments waiting for a decision."""
+        return Response({'success': True, 'data': {'count': billing_services.pending_payment_count()}})
+
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
         payment, changed = billing_services.approve_payment(self.get_object(), request.user)
@@ -197,6 +202,22 @@ class AdminPaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
         payment = self.get_queryset().get(pk=payment.pk)
         return Response({'success': True, 'data': self.get_serializer(payment).data,
                          'message': 'Payment rejected.' if changed else 'This payment was already rejected.'})
+
+
+class AdminSubscriptionViewSet(viewsets.GenericViewSet):
+    """
+    /api/v1/platform-admin/admin/subscriptions/?filter=expiring|restricted&q=
+    Every company with its plan, state, end date and days left, soonest-ending first.
+    `expiring` = 7 days or fewer and still working; `restricted` = expired or waiting for the first payment.
+    """
+    permission_classes = [IsPlatformAdmin]
+
+    def list(self, request):
+        rows = billing_services.admin_subscription_rows(
+            request.query_params.get('filter', ''), (request.query_params.get('q') or '').strip(),
+        )
+        page = self.paginate_queryset(rows)
+        return self.get_paginated_response(page)
 
 
 class AdminTicketViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):

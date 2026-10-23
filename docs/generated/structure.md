@@ -29,9 +29,9 @@ frontend/src/
   components/billing/  PaymentForm.jsx
   components/common/  ChartCard.jsx, EmptyState.jsx, MetricCard.jsx, Pagination.jsx, Person.jsx, PlanBadge.jsx, StatusPill.jsx
   components/dashboard/  StatCard.jsx
-  components/layout/  Navbar.jsx, NotificationBell.jsx, RestrictedNotice.jsx, Sidebar.jsx, SubscriptionBanner.jsx, navigation.js
+  components/layout/  Navbar.jsx, NotificationBell.jsx, RestrictedNotice.jsx, Sidebar.jsx, SubscriptionBanner.jsx, navigation.js, usePendingPayments.js
   components/roles/  PermissionPicker.jsx
-  features/admin/  AccessRequestsPage.jsx, ActivityPage.jsx, CompaniesPage.jsx, TicketsPage.jsx, format.js, shared.jsx, usePagedList.js
+  features/admin/  AccessRequestsPage.jsx, ActivityPage.jsx, CompaniesPage.jsx, PaymentsPage.jsx, SubscriptionsPage.jsx, TicketsPage.jsx, format.js, shared.jsx, subscriptionFormat.js, usePagedList.js
   features/analytics/  AnalyticsPage.jsx, analyticsFormat.js
   features/approvals/  ApprovalChainsPage.jsx, DelegationsPage.jsx, PendingApprovalsPage.jsx
   features/attendance/  AttendanceCalendar.jsx, AttendancePage.jsx, TeamAttendancePage.jsx
