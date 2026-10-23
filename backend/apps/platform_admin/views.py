@@ -127,6 +127,9 @@ class SupportDataView(APIView):
 from django.db.models import Count, Q  # noqa: E402
 from django.shortcuts import get_object_or_404  # noqa: E402
 
+from billing import services as billing_services  # noqa: E402
+from billing.models import PaymentSubmission  # noqa: E402
+from billing.serializers import AdminPaymentSerializer  # noqa: E402
 from tenants.models import Company  # noqa: E402
 from .models import PlatformActionLog, SupportTicket  # noqa: E402
 from .serializers import (  # noqa: E402
@@ -157,6 +160,43 @@ class AdminCompanyViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     @action(detail=True, methods=['post'])
     def activate(self, request, pk=None):
         return self._set(pk, True)
+
+
+class AdminPaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    /api/v1/platform-admin/admin/payments/?status=&method=&kind=&company=&q=
+    Every payment companies submit, newest first. The platform team approves or rejects here.
+    """
+    permission_classes = [IsPlatformAdmin]
+    serializer_class = AdminPaymentSerializer
+
+    def get_queryset(self):
+        params = self.request.query_params
+        queryset = PaymentSubmission.objects.select_related('company', 'plan', 'invoice', 'submitted_by__user', 'reviewed_by')
+        for field in ('status', 'method', 'kind', 'company'):
+            if params.get(field):
+                queryset = queryset.filter(**{field: params[field]})
+        if params.get('q'):
+            term = params['q'].strip()
+            queryset = queryset.filter(
+                Q(transaction_id__icontains=term) | Q(payer_name__icontains=term)
+                | Q(payer_number__icontains=term) | Q(company__name__icontains=term)
+            )
+        return queryset.order_by('-created_at', 'id')
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        payment, changed = billing_services.approve_payment(self.get_object(), request.user)
+        payment = self.get_queryset().get(pk=payment.pk)
+        return Response({'success': True, 'data': self.get_serializer(payment).data,
+                         'message': 'Payment approved.' if changed else 'This payment was already approved.'})
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        payment, changed = billing_services.reject_payment(self.get_object(), request.user, request.data.get('note'))
+        payment = self.get_queryset().get(pk=payment.pk)
+        return Response({'success': True, 'data': self.get_serializer(payment).data,
+                         'message': 'Payment rejected.' if changed else 'This payment was already rejected.'})
 
 
 class AdminTicketViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):

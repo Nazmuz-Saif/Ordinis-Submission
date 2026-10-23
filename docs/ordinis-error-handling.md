@@ -33,7 +33,8 @@ What the delivered system does for each scenario below. "Done" is backed by a te
 | Employee added beyond the plan's limit | Done | Refused with an "upgrade your plan" message (code `PLAN_LIMIT_REACHED`); nothing is created; tested at exactly full and over |
 | A plan too small for the current team | Done | A downgrade is refused while there are more employees than the plan allows |
 | Subscription ends: a grace period, then a restricted mode | Done | 3 grace days after the end date, then only Billing, profile and support work (code `SUBSCRIPTION_RESTRICTED`, 403); it is not a read-only mode and not Suspend. The check runs on every request, so it holds even when the daily job did not run (ST-145) |
-| Payment failure, webhooks | Not built | There is no payment gateway |
+| A payment submitted twice, two at once, approved twice, or with a changed amount | Done | Manual payments (ST-146): a transaction id counts once per method (code `PAYMENT_TRANSACTION_USED`), one pending submission per company (`PAYMENT_ALREADY_PENDING`), the amount is always the server's quote (`PAYMENT_AMOUNT_MISMATCH` if the client's differs), approving twice changes nothing (locked row), all backed by database constraints |
+| Payment failure, webhooks | Not built | There is no payment gateway; payments are made outside the system and approved by the platform team |
 | File too large or wrong type, storage down | Not applicable | No file upload |
 | Another company's id in the URL | Done | 404, tested for every object route |
 | Expired JWT | Done | 401, refresh flow |

@@ -67,7 +67,11 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/billing/` | APIRootView | Any logged-in employee |
 | GET | `/api/v1/billing/invoices/` | InvoiceViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/billing/invoices/{id}/` | InvoiceViewSet / retrieve | Permission `view_billing` |
+| GET | `/api/v1/billing/payments/` | PaymentViewSet / list | Permission `manage_billing` |
+| POST | `/api/v1/billing/payments/` | PaymentViewSet / create | Permission `manage_billing` |
+| GET | `/api/v1/billing/payments/{id}/` | PaymentViewSet / retrieve | Permission `manage_billing` |
 | GET | `/api/v1/billing/plans/` | PlanViewSet / list | Permission `view_billing` |
+| GET | `/api/v1/billing/quote/` | QuoteViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/billing/subscription/` | SubscriptionViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/dashboard/summary/` | DashboardSummaryView | Any logged-in employee |
 | GET | `/api/v1/notifications/` | NotificationViewSet / list | Any logged-in employee |
@@ -115,6 +119,10 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/platform-admin/admin/companies/` | AdminCompanyViewSet / list | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/companies/{id}/activate/` | AdminCompanyViewSet / activate | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/companies/{id}/suspend/` | AdminCompanyViewSet / suspend | Platform Admin |
+| GET | `/api/v1/platform-admin/admin/payments/` | AdminPaymentViewSet / list | Platform Admin |
+| GET | `/api/v1/platform-admin/admin/payments/{id}/` | AdminPaymentViewSet / retrieve | Platform Admin |
+| POST | `/api/v1/platform-admin/admin/payments/{id}/approve/` | AdminPaymentViewSet / approve | Platform Admin |
+| POST | `/api/v1/platform-admin/admin/payments/{id}/reject/` | AdminPaymentViewSet / reject | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/tickets/` | AdminTicketViewSet / list | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/tickets/{id}/` | AdminTicketViewSet / retrieve | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/tickets/{id}/reopen/` | AdminTicketViewSet / reopen | Platform Admin |
@@ -168,4 +176,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*161 endpoint methods on 110 routes.*
+*169 endpoint methods on 117 routes.*

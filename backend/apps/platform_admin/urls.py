@@ -2,7 +2,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    AdminAccessRequestViewSet, AdminActionLogViewSet, AdminCompanyViewSet, AdminTicketViewSet,
+    AdminAccessRequestViewSet, AdminActionLogViewSet, AdminCompanyViewSet, AdminPaymentViewSet, AdminTicketViewSet,
     CompanyAccessLogViewSet, CompanyAccessRequestViewSet, CompanyTicketViewSet,
     PlatformAccessRequestViewSet, SupportDataView,
 )
@@ -16,6 +16,7 @@ router.register('company/tickets', CompanyTicketViewSet, basename='company-ticke
 router.register('requests', PlatformAccessRequestViewSet, basename='platform-access-request')
 router.register('admin/companies', AdminCompanyViewSet, basename='admin-company')
 router.register('admin/tickets', AdminTicketViewSet, basename='admin-ticket')
+router.register('admin/payments', AdminPaymentViewSet, basename='admin-payment')
 router.register('admin/access-requests', AdminAccessRequestViewSet, basename='admin-access-request')
 router.register('admin/actions', AdminActionLogViewSet, basename='admin-action')
 

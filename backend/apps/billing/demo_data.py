@@ -1,7 +1,7 @@
 import datetime
 
 from billing import services
-from billing.models import Invoice
+from billing.models import Invoice, PaymentSubmission
 
 ORDER = 80
 
@@ -27,3 +27,17 @@ def seed(ctx):
         ctx.note('invoices', created)
         if index < 3 and invoice.status == Invoice.STATUS_OPEN:
             services.mark_paid(invoice, on=invoice.issued_on)
+
+    # One approved payment, so the Payments list and the payment routes have something to show.
+    price = services.price_for(subscription.plan, services.DEFAULT_MONTHS)
+    _, made = PaymentSubmission.objects.get_or_create(
+        method=PaymentSubmission.METHOD_BKASH, transaction_id='DEMO0000AB',
+        defaults={
+            'company': ctx.company, 'plan': subscription.plan, 'months': services.DEFAULT_MONTHS,
+            'amount': price['amount'], 'currency': subscription.plan.currency, 'payer_name': 'Demo Owner',
+            'payer_number': '01700000000', 'kind': PaymentSubmission.KIND_NEW, 'status': PaymentSubmission.STATUS_APPROVED,
+            'reviewed_at': subscription.created_at, 'review_note': '',
+            'period_start': subscription.current_period_start, 'period_end': subscription.current_period_end,
+        },
+    )
+    ctx.note('payments', made)

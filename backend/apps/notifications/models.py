@@ -14,11 +14,15 @@ class Notification(BaseModel):
     KIND_APPROVAL_REQUESTED = 'approval_requested'
     KIND_APPROVAL_DECIDED = 'approval_decided'
     KIND_BILLING_REMINDER = 'billing_reminder'
+    KIND_PAYMENT_APPROVED = 'payment_approved'
+    KIND_PAYMENT_REJECTED = 'payment_rejected'
     KIND_CHOICES = [
         (KIND_TASK_ASSIGNED, 'Task assigned'),
         (KIND_APPROVAL_REQUESTED, 'Approval requested'),
         (KIND_APPROVAL_DECIDED, 'Approval decided'),
         (KIND_BILLING_REMINDER, 'Billing reminder'),
+        (KIND_PAYMENT_APPROVED, 'Payment approved'),
+        (KIND_PAYMENT_REJECTED, 'Payment rejected'),
     ]
 
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='notifications')
