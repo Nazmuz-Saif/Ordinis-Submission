@@ -52,7 +52,7 @@ function RegisterPage() {
         ceo_password: form.ceo_password,
       })
       await refreshMe()
-      navigate('/dashboard')
+      navigate('/subscribe')   // a new company chooses a plan and pays before it can work
     } catch (err) {
       const data = err.response?.data?.error
       setFieldErrors(data?.field_errors || {})

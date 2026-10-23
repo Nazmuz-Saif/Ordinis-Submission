@@ -33,6 +33,11 @@ import LeaveTypesPage from './features/leave/LeaveTypesPage'
 import SupportAccessPage from './features/platformAdmin/SupportAccessPage'
 import AdminRoute from './routes/AdminRoute'
 import HomeRedirect from './routes/HomeRedirect'
+import SubscribeRoute from './routes/SubscribeRoute'
+import SubscribeGate from './features/subscribe/SubscribeGate'
+import ChoosePlanPage from './features/subscribe/ChoosePlanPage'
+import PaymentPage from './features/subscribe/PaymentPage'
+import WaitingPage from './features/subscribe/WaitingPage'
 import CompaniesPage from './features/admin/CompaniesPage'
 import TicketsPage from './features/admin/TicketsPage'
 import AccessRequestsPage from './features/admin/AccessRequestsPage'
@@ -48,6 +53,24 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           {import.meta.env.DEV && <Route path="/dev/ui-kit" element={<UiKitPage />} />}
           <Route path="/register" element={<RegisterPage />} />
+          {[
+            ['/subscribe', SubscribeGate],
+            ['/subscribe/plan', ChoosePlanPage],
+            ['/subscribe/pay', PaymentPage],
+            ['/subscribe/waiting', WaitingPage],
+          ].map(([path, Page]) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <ProtectedRoute>
+                  <SubscribeRoute>
+                    <Page />
+                  </SubscribeRoute>
+                </ProtectedRoute>
+              }
+            />
+          ))}
           <Route
             path="/dashboard"
             element={

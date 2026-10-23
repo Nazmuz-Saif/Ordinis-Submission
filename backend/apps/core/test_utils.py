@@ -5,8 +5,10 @@ from organization.models import Employee
 from rbac.models import Permission, Role
 
 
-def register_company(name, subdomain, email, full_name='Test Owner'):
-    """Registers a company through the real endpoint. Returns an APIClient logged in as its CEO."""
+def register_company(name, subdomain, email, full_name='Test Owner', activate=True):
+    """Registers a company through the real endpoint. Returns an APIClient logged in as its CEO.
+    A new company waits for its first payment (ST-147); the helper makes it active so tests can use it,
+    unless `activate=False` (the registration and payment tests themselves)."""
     client = APIClient()
     res = client.post('/api/v1/auth/register/', {
         'company_name': name,
@@ -17,6 +19,9 @@ def register_company(name, subdomain, email, full_name='Test Owner'):
     }, format='json')
     assert res.status_code == 201, res.content
     client.credentials(HTTP_AUTHORIZATION='Bearer ' + res.data['data']['access'])
+    if activate:
+        from billing.models import Subscription
+        Subscription.objects.filter(company_id=res.data['data']['company_id']).update(status=Subscription.STATUS_ACTIVE)
     client.company_id = res.data['data']['company_id']
     client.employee_id = res.data['data']['employee_id']
     return client

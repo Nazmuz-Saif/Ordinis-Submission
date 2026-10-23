@@ -66,8 +66,10 @@ class CompanyRegisterSerializer(serializers.Serializer):
             industry=validated_data.get('industry', ''),
         )
         CompanySettings.objects.create(company=company)
+        from billing.models import Subscription
         from billing.services import start_subscription
-        start_subscription(company)   # every new company starts on the Basic plan
+        # Every new company starts on the Basic plan, but only works after its first payment is approved (ST-147).
+        start_subscription(company, status=Subscription.STATUS_PENDING_PAYMENT)
 
         ceo_designation = Designation.objects.create(company=company, title="CEO")
 

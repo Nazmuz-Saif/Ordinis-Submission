@@ -90,3 +90,12 @@ class PaymentViewSet(
         )
         payment = self.get_queryset().get(pk=payment.pk)
         return Response(self.get_serializer(payment).data, status=status.HTTP_201_CREATED)
+
+
+class PaymentInstructionsViewSet(PermissionRequiredMixin, viewsets.ViewSet):
+    """GET /billing/payment-instructions/: how to pay outside the system. Comes from the server settings."""
+    permission_required = 'manage_billing'
+    allow_when_restricted = True
+
+    def list(self, request):
+        return Response({'success': True, 'data': services.payment_instructions()})

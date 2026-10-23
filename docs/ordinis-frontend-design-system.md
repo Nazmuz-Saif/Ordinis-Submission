@@ -32,6 +32,8 @@ The approved mockups are implemented for the screens marked Built. The shared pa
 | Analytics page (metric cards, line and bar charts) | Built | `AnalyticsPage`; a month without attendance shows 0 |
 | Audit Logs page | Built | `AuditLogsPage`: table, module filter, export |
 | Billing page (plan card, employee usage bar, invoice table) | Built | `BillingPage` |
+| First-payment onboarding: choose a plan and months, pay and send the details, waiting and rejected states | Built | `ChoosePlanPage`, `PaymentPage`, `WaitingPage` (ST-147). The amount shown is the server's quote; the payment form is `PaymentForm`, reused for renewals later |
+| Subscription banner and restricted-mode notice | Built | `SubscriptionBanner`, `RestrictedNotice` (ST-145) |
 | Company switcher (more than one company) | Not built | The bar shows the user's own company name |
 | Glass look on login, top bar and menus; solid data tables | Built | |
 

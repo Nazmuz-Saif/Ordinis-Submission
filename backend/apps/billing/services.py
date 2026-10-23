@@ -550,3 +550,14 @@ def reject_payment(payment, admin_user, note):
     record_payment_action(admin_user, payment, 'reject_payment', note)
     _notify_company(payment, Notification.KIND_PAYMENT_REJECTED, 'Payment rejected', f'Your payment was not accepted: {note[:300]}')
     return payment, True
+
+
+def payment_instructions():
+    """How to pay outside the system, from the server settings (the payment page shows exactly this)."""
+    from django.conf import settings
+    allowed = dict(PaymentSubmission.METHOD_CHOICES)
+    methods = [
+        {'method': item['method'], 'label': item.get('label') or allowed[item['method']], 'instructions': item.get('instructions', '')}
+        for item in getattr(settings, 'PAYMENT_INSTRUCTIONS', []) if item.get('method') in allowed
+    ]
+    return {'methods': methods, 'note': getattr(settings, 'PAYMENT_NOTE', '')}

@@ -207,3 +207,18 @@ CORS_ALLOWED_ORIGINS += [o.strip() for o in os.environ.get('CORS_EXTRA_ORIGINS',
 # Real runs (runserver, production) keep Django's default strong PBKDF2 hasher.
 if 'test' in sys.argv:
     PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+
+# How a company pays OUTSIDE the system (ST-147). Shown on the payment page; change them in the environment, not in code.
+# The values below are placeholders for development: set the real numbers in backend/.env before a real launch.
+PAYMENT_INSTRUCTIONS = [
+    {'method': 'bkash', 'label': 'bKash', 'instructions': os.environ.get(
+        'PAYMENT_BKASH', 'Send Money to the bKash number 01700-000000 (Personal). Keep the transaction id.')},
+    {'method': 'nagad', 'label': 'Nagad', 'instructions': os.environ.get(
+        'PAYMENT_NAGAD', 'Send Money to the Nagad number 01700-000001 (Personal). Keep the transaction id.')},
+    {'method': 'bank', 'label': 'Bank transfer', 'instructions': os.environ.get(
+        'PAYMENT_BANK', 'Transfer to: Nexoria, account number 0000000000000, your bank, your branch. Keep the transfer reference.')},
+    {'method': 'cash', 'label': 'Cash', 'instructions': os.environ.get(
+        'PAYMENT_CASH', 'Pay in cash at the Nexoria office and ask for a receipt. Enter the receipt number as the transaction id.')},
+]
+PAYMENT_NOTE = os.environ.get(
+    'PAYMENT_NOTE', 'Write your company name as the payment reference. The platform team checks every payment by hand before your plan starts.')

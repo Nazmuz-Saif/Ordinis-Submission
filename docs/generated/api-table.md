@@ -67,6 +67,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/billing/` | APIRootView | Any logged-in employee |
 | GET | `/api/v1/billing/invoices/` | InvoiceViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/billing/invoices/{id}/` | InvoiceViewSet / retrieve | Permission `view_billing` |
+| GET | `/api/v1/billing/payment-instructions/` | PaymentInstructionsViewSet / list | Permission `manage_billing` |
 | GET | `/api/v1/billing/payments/` | PaymentViewSet / list | Permission `manage_billing` |
 | POST | `/api/v1/billing/payments/` | PaymentViewSet / create | Permission `manage_billing` |
 | GET | `/api/v1/billing/payments/{id}/` | PaymentViewSet / retrieve | Permission `manage_billing` |
@@ -176,4 +177,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*169 endpoint methods on 117 routes.*
+*170 endpoint methods on 118 routes.*

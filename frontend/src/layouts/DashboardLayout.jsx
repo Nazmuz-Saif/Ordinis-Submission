@@ -5,7 +5,7 @@ import Sidebar from '../components/layout/Sidebar'
 import Navbar from '../components/layout/Navbar'
 import SubscriptionBanner from '../components/layout/SubscriptionBanner'
 import RestrictedNotice from '../components/layout/RestrictedNotice'
-import { isRestricted, pathOpenWhenRestricted } from '../utils/subscription'
+import { isPendingPayment, isRestricted, pathOpenWhenRestricted } from '../utils/subscription'
 
 function DashboardLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -15,6 +15,11 @@ function DashboardLayout({ children }) {
   // A temporary password must be replaced first: My Profile is the only page that opens until then.
   if (me?.must_change_password && pathname !== '/profile') {
     return <Navigate to="/profile" replace />
+  }
+
+  // A company that has not paid yet works only through the /subscribe pages (and its own profile).
+  if (isPendingPayment(me) && !pathname.startsWith('/profile')) {
+    return <Navigate to="/subscribe" replace />
   }
 
   // A restricted company (waiting for its first payment, or past its end date and grace) keeps only Billing and My Profile.

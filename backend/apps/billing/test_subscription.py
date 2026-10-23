@@ -193,7 +193,7 @@ class DailyJobTests(TestCase):
 
 class RestrictedModeTests(TestCase):
     OPEN_PREFIXES = ('/api/v1/billing/plans', '/api/v1/billing/subscription', '/api/v1/billing/invoices',
-                     '/api/v1/billing/quote', '/api/v1/billing/payments',
+                     '/api/v1/billing/quote', '/api/v1/billing/payments', '/api/v1/billing/payment-instructions',
                      '/api/v1/platform-admin/company/tickets', '/api/v1/auth/')
 
     def setUp(self):

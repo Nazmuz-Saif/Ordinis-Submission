@@ -27,6 +27,7 @@ backend/
 
 frontend/src/
     App.jsx, main.jsx
+  components/billing/  PaymentForm.jsx
   components/common/  ChartCard.jsx, EmptyState.jsx, MetricCard.jsx, Pagination.jsx, Person.jsx, PlanBadge.jsx, StatusPill.jsx
   components/dashboard/  StatCard.jsx
   components/layout/  Navbar.jsx, NotificationBell.jsx, RestrictedNotice.jsx, Sidebar.jsx, SubscriptionBanner.jsx, navigation.js
@@ -47,13 +48,14 @@ frontend/src/
   features/platformAdmin/  SupportAccessPage.jsx
   features/profile/  MyProfilePage.jsx
   features/roles/  EmployeeRolesPage.jsx, RoleDetailPage.jsx, RolesPage.jsx, roleFormat.js
+  features/subscribe/  ChoosePlanPage.jsx, PaymentPage.jsx, SubscribeGate.jsx, SubscribeShell.jsx, WaitingPage.jsx, subscribeFormat.js
   features/tasks/  KanbanPage.jsx, TaskProgressPanel.jsx, TasksPage.jsx
   hooks/  useClickOutside.js, useUnsavedChangesGuard.js
   layouts/  DashboardLayout.jsx
-  routes/  AdminRoute.jsx, HomeRedirect.jsx, ProtectedRoute.jsx
+  routes/  AdminRoute.jsx, HomeRedirect.jsx, ProtectedRoute.jsx, SubscribeRoute.jsx
   services/  adminService.js, analyticsService.js, apiClient.js, approvalsService.js, attendanceService.js, auditLogService.js, authService.js, billingService.js, dashboardService.js, leaveService.js, notificationsService.js, organizationService.js, paging.js, payrollService.js, rolesService.js, supportAccessService.js, tasksService.js
   store/  AuthContext.jsx
-  utils/  people.js, subscription.js
+  utils/  apiError.js, people.js, subscription.js
 ```
 <!-- END GENERATED:structure -->
 

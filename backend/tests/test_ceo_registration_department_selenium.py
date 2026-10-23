@@ -34,7 +34,7 @@ User = get_user_model()
 import os as _os
 import sys as _sys
 _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
-from selenium_helpers import FRONTEND_URL, land_on_organization  # noqa: E402  (one shared place: tests/selenium_helpers.py)
+from selenium_helpers import FRONTEND_URL, land_after_registration, land_on_organization  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 COMPANY_NAME = "Onnorokom Pathshala"
 SUBDOMAIN = "onnorokom"
 INDUSTRY = "Education"
@@ -122,7 +122,7 @@ class CeoRegistrationDepartmentSeleniumTest(unittest.TestCase):
 
         # [Step 3] Wait for registration to complete and redirect
         print("[Step 3] Waiting for registration to complete...")
-        land_on_organization(self.driver, self.wait)
+        land_after_registration(self.driver, self.wait, SUBDOMAIN)
         print(f"  -> Company '{COMPANY_NAME}' and CEO '{CEO_EMAIL}' successfully registered!")
         time.sleep(2)
 

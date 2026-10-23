@@ -12,6 +12,20 @@ export function pathOpenWhenRestricted(pathname) {
   return OPEN_WHEN_RESTRICTED.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 }
 
+// A company that registered but whose first payment is not approved yet works only through the /subscribe pages.
+export function isPendingPayment(me) {
+  return me?.subscription?.status === 'pending_payment'
+}
+
+export const MONTH_CHOICES = [1, 3, 6, 12]
+export const MIN_MONTHS = 1
+export const MAX_MONTHS = 36
+
+export function validMonths(value) {
+  const n = Number(value)
+  return Number.isInteger(n) && n >= MIN_MONTHS && n <= MAX_MONTHS
+}
+
 const WARN_DAYS = 7
 
 // What the banner should say, or null when there is nothing to say.
