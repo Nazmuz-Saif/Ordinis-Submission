@@ -7,6 +7,8 @@ import { AuthProvider } from './store/AuthContext'
 import DashboardLayout from './layouts/DashboardLayout'
 import DepartmentsPage from './features/organization/DepartmentsPage'
 import DesignationsPage from './features/organization/DesignationsPage'
+import DepartmentDetailPage from './features/organization/DepartmentDetailPage'
+import DesignationDetailPage from './features/organization/DesignationDetailPage'
 import EmployeesPage from './features/organization/EmployeesPage'
 import EmployeeDetailPage from './features/organization/EmployeeDetailPage'
 import RolesPage from './features/roles/RolesPage'
@@ -95,6 +97,26 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <DepartmentsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organization/departments/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <DepartmentDetailPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organization/designations/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <DesignationDetailPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { IdCard, Plus, Pencil, Check, X, Trash2 } from 'lucide-react'
 import { getDesignations, createDesignation, updateDesignation, deleteDesignation } from '../../services/organizationService'
 import { useAuth } from '../../store/AuthContext'
@@ -161,7 +162,16 @@ function DesignationsPage() {
                 </>
               ) : (
                 <>
-                  <span className="flex-1 text-sm text-[#14142B] font-medium">{d.title}</span>
+                  <Link
+                    to={`/organization/designations/${d.id}`}
+                    data-testid="designation-link"
+                    className="flex-1 min-w-0 text-sm text-[#14142B] font-medium hover:text-[#6C31D6] transition-colors truncate"
+                  >
+                    {d.title}
+                  </Link>
+                  <span className="text-xs text-[#71717A] shrink-0 w-24 text-right" data-testid="designation-count">
+                    {d.employee_count} {d.employee_count === 1 ? 'person' : 'people'}
+                  </span>
                   {canManageDesignations && (
 <div className="flex items-center gap-1">
                     <button onClick={() => startEdit(d)} className="text-[#71717A] hover:text-[#6C31D6] p-1 transition" title="Edit">

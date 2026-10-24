@@ -37,6 +37,7 @@ erDiagram
   COMPANY ||--o| SUBSCRIPTION : company
   DEPARTMENT |o--o{ EMPLOYEE : department
   DESIGNATION |o--o{ EMPLOYEE : designation
+  EMPLOYEE |o--o{ DEPARTMENT : head
   EMPLOYEE |o--o{ EMPLOYEE : reports_to
   EMPLOYEE |o--o{ PAYMENTSUBMISSION : submitted_by
   EMPLOYEE |o--o{ PAYSLIP : generated_by
@@ -232,6 +233,7 @@ erDiagram
   DEPARTMENT {
     fk company
     Char100 name
+    fk head
   }
   DESIGNATION {
     fk company

@@ -89,12 +89,14 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/organization/departments/{id}/` | DepartmentViewSet / update | Permission `manage_departments` |
 | PATCH | `/api/v1/organization/departments/{id}/` | DepartmentViewSet / partial_update | Permission `manage_departments` |
 | DELETE | `/api/v1/organization/departments/{id}/` | DepartmentViewSet / destroy | Permission `manage_departments` |
+| GET | `/api/v1/organization/departments/{id}/overview/` | DepartmentViewSet / overview | Any logged-in employee |
 | GET | `/api/v1/organization/designations/` | DesignationViewSet / list | Any logged-in employee |
 | POST | `/api/v1/organization/designations/` | DesignationViewSet / create | Permission `manage_designations` |
 | GET | `/api/v1/organization/designations/{id}/` | DesignationViewSet / retrieve | Any logged-in employee |
 | PUT | `/api/v1/organization/designations/{id}/` | DesignationViewSet / update | Permission `manage_designations` |
 | PATCH | `/api/v1/organization/designations/{id}/` | DesignationViewSet / partial_update | Permission `manage_designations` |
 | DELETE | `/api/v1/organization/designations/{id}/` | DesignationViewSet / destroy | Permission `manage_designations` |
+| GET | `/api/v1/organization/designations/{id}/overview/` | DesignationViewSet / overview | Any logged-in employee |
 | GET | `/api/v1/organization/employees/` | EmployeeViewSet / list | Any logged-in employee |
 | POST | `/api/v1/organization/employees/` | EmployeeViewSet / create | Permission `manage_employees` |
 | GET | `/api/v1/organization/employees/{id}/` | EmployeeViewSet / retrieve | Any logged-in employee |
@@ -179,4 +181,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*172 endpoint methods on 120 routes.*
+*174 endpoint methods on 122 routes.*

@@ -488,6 +488,7 @@ One message for ONE employee ("you were assigned a task", "an approval needs you
 |---|---|---|---|
 | `company` | FK to tenants.Company |  | on delete: CASCADE |
 | `name` | Char(100) |  |  |
+| `head` | FK to organization.Employee |  | can be empty (null); on delete: SET_NULL |
 
 #### Designation
 
@@ -732,7 +733,7 @@ One daily progress note on a task, written by the assignee.
 ### `organization` (Hierarchy Engine)
 
 - **Purpose:** model and query an arbitrary-depth organizational tree without hardcoded levels.
-- **Internal logic:** `services.py` has `get_all_subordinates(employee)` and `get_all_managers(employee)`, walking the `reports_to` self-FK. A save that would create a cycle is refused. An employee who still has a team, the last CEO-role holder, and yourself cannot be deleted.
+- **Internal logic:** `overview.py` builds the Department and Designation detail pages (people, task counts, running tasks); a task's title and assignee are shown only to a viewer who may see that task (the assignee, the person who assigned it, any manager above the assignee, or a holder of `create_task`), everybody else gets counts. A Department or Designation with employees cannot be deleted (`DEPARTMENT_IN_USE`, `DESIGNATION_IN_USE`). `services.py` has `get_all_subordinates(employee)` and `get_all_managers(employee)`, walking the `reports_to` self-FK. A save that would create a cycle is refused. An employee who still has a team, the last CEO-role holder, and yourself cannot be deleted.
 
 ### `rbac` (Access Control)
 
@@ -803,7 +804,7 @@ Platform Admin     SupportAccessRequest API        Company CEO
 
 **Design system in force:** "Modern Minimalist SaaS" (`ordinis-frontend-design-system.md`): navy `#14142B` and violet `#6C31D6` on an off-white background, subtle 150-300 ms animation, Tailwind CSS. The approved mockup set has been implemented for the screens below.
 
-**Screens built:** Login and Register; the first-payment steps a new company must pass before it can work (Choose your plan, Pay, Waiting for approval, with a rejected state that shows the platform team's note and a form to send the details again); role Dashboards (CEO, Manager, HR, Accountant, Employee sections chosen by Permission); Departments, Designations, Employees and Employee detail (with subordinates and roles); Roles and Employee roles; Approval Chains, Pending Approvals, Delegations; Tasks list and Kanban board with progress entries; Billing (a timeline card with days left, Renew against the renewal invoice, invoice detail with Print); Attendance (check-in/out and a monthly calendar with Present, Absent, On Leave and rate cards) and Leave (apply, balance, cancel, approval progress) and Leave Types; Action Inbox; Analytics (metric cards, attendance line chart, tasks-by-department bar chart); Payslips, My Payslips, Payslip view, Salary Structures; Support Access (company side of Break-Glass); platform Admin screens (Companies, Payments with a pending count on the sidebar, Subscriptions with days left, Tickets, Access Requests, Activity); a UI-kit showcase at `/dev/ui-kit` in development.
+**Screens built:** Login and Register; the first-payment steps a new company must pass before it can work (Choose your plan, Pay, Waiting for approval, with a rejected state that shows the platform team's note and a form to send the details again); role Dashboards (CEO, Manager, HR, Accountant, Employee sections chosen by Permission); Departments and Designations with a detail page each (people, task summary, running tasks, Department Head); Employees and Employee detail (with subordinates and roles); Roles and Employee roles; Approval Chains, Pending Approvals, Delegations; Tasks list and Kanban board with progress entries; Billing (a timeline card with days left, Renew against the renewal invoice, invoice detail with Print); Attendance (check-in/out and a monthly calendar with Present, Absent, On Leave and rate cards) and Leave (apply, balance, cancel, approval progress) and Leave Types; Action Inbox; Analytics (metric cards, attendance line chart, tasks-by-department bar chart); Payslips, My Payslips, Payslip view, Salary Structures; Support Access (company side of Break-Glass); platform Admin screens (Companies, Payments with a pending count on the sidebar, Subscriptions with days left, Tickets, Access Requests, Activity); a UI-kit showcase at `/dev/ui-kit` in development.
 
 **Shell:** a grouped, collapsible sidebar (an item is hidden when the user lacks its Permission), a top bar with page title, search, company name, notification bell and user menu, and a plan badge that shows only what the server sends.
 
@@ -908,12 +909,14 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/organization/departments/{id}/` | DepartmentViewSet / update | Permission `manage_departments` |
 | PATCH | `/api/v1/organization/departments/{id}/` | DepartmentViewSet / partial_update | Permission `manage_departments` |
 | DELETE | `/api/v1/organization/departments/{id}/` | DepartmentViewSet / destroy | Permission `manage_departments` |
+| GET | `/api/v1/organization/departments/{id}/overview/` | DepartmentViewSet / overview | Any logged-in employee |
 | GET | `/api/v1/organization/designations/` | DesignationViewSet / list | Any logged-in employee |
 | POST | `/api/v1/organization/designations/` | DesignationViewSet / create | Permission `manage_designations` |
 | GET | `/api/v1/organization/designations/{id}/` | DesignationViewSet / retrieve | Any logged-in employee |
 | PUT | `/api/v1/organization/designations/{id}/` | DesignationViewSet / update | Permission `manage_designations` |
 | PATCH | `/api/v1/organization/designations/{id}/` | DesignationViewSet / partial_update | Permission `manage_designations` |
 | DELETE | `/api/v1/organization/designations/{id}/` | DesignationViewSet / destroy | Permission `manage_designations` |
+| GET | `/api/v1/organization/designations/{id}/overview/` | DesignationViewSet / overview | Any logged-in employee |
 | GET | `/api/v1/organization/employees/` | EmployeeViewSet / list | Any logged-in employee |
 | POST | `/api/v1/organization/employees/` | EmployeeViewSet / create | Permission `manage_employees` |
 | GET | `/api/v1/organization/employees/{id}/` | EmployeeViewSet / retrieve | Any logged-in employee |
@@ -998,7 +1001,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*172 endpoint methods on 120 routes.*
+*174 endpoint methods on 122 routes.*
 <!-- END GENERATED:api-table -->
 
 ## 6.4 Hardware Interfaces

@@ -302,6 +302,7 @@ One message for ONE employee ("you were assigned a task", "an approval needs you
 |---|---|---|---|
 | `company` | FK to tenants.Company |  | on delete: CASCADE |
 | `name` | Char(100) |  |  |
+| `head` | FK to organization.Employee |  | can be empty (null); on delete: SET_NULL |
 
 ### Designation
 

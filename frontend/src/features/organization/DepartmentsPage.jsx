@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Building2, Plus, Pencil, Check, X, Trash2 } from 'lucide-react'
-import { getDepartments, createDepartment, updateDepartment, deleteDepartment } from '../../services/organizationService'
+import { getDepartments, createDepartment, updateDepartment, deleteDepartment, getEmployees } from '../../services/organizationService'
+import { personName } from '../../utils/people'
 import { useAuth } from '../../store/AuthContext'
 
 function DepartmentsPage() {
@@ -13,6 +15,8 @@ function DepartmentsPage() {
   const [error, setError] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [editValue, setEditValue] = useState('')
+  const [editHead, setEditHead] = useState('')
+  const [employees, setEmployees] = useState([])
 
   async function loadDepartments() {
     try {
@@ -29,6 +33,11 @@ function DepartmentsPage() {
     Promise.resolve().then(loadDepartments)
   }, [])
 
+  useEffect(() => {
+    if (!canManageDepartments) return
+    getEmployees().then(setEmployees).catch(() => setEmployees([]))
+  }, [canManageDepartments])
+
   async function handleCreate(e) {
     e.preventDefault()
     setError('')
@@ -44,6 +53,7 @@ function DepartmentsPage() {
   function startEdit(dept) {
     setEditingId(dept.id)
     setEditValue(dept.name)
+    setEditHead(dept.head || '')
   }
 
   function cancelEdit() {
@@ -54,7 +64,7 @@ function DepartmentsPage() {
   async function saveEdit(id) {
     setError('')
     try {
-      await updateDepartment(id, editValue)
+      await updateDepartment(id, editValue, editHead)
       setEditingId(null)
       loadDepartments()
     } catch (err) {
@@ -126,6 +136,18 @@ function DepartmentsPage() {
                     className="flex-1 border border-[#6C31D6]/40 rounded-lg px-2 py-1 text-sm outline-none focus:border-[#6C31D6]"
                     autoFocus
                   />
+                  <select
+                    value={editHead}
+                    onChange={(e) => setEditHead(e.target.value)}
+                    aria-label="Department head"
+                    data-testid="department-head-select"
+                    className="border border-[#6C31D6]/40 rounded-lg px-2 py-1 text-sm outline-none focus:border-[#6C31D6] max-w-[200px]"
+                  >
+                    <option value="">No head</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>{personName(emp.full_name, emp.user_email)}</option>
+                    ))}
+                  </select>
                   <button onClick={() => saveEdit(dept.id)} className="text-[#16A34A] hover:opacity-70 transition">
                     <Check size={18} />
                   </button>
@@ -135,7 +157,19 @@ function DepartmentsPage() {
                 </>
               ) : (
                 <>
-                  <span className="flex-1 text-sm text-[#14142B] font-medium">{dept.name}</span>
+                  <Link
+                    to={`/organization/departments/${dept.id}`}
+                    data-testid="department-link"
+                    className="flex-1 min-w-0 text-sm text-[#14142B] font-medium hover:text-[#6C31D6] transition-colors truncate"
+                  >
+                    {dept.name}
+                  </Link>
+                  <span className="hidden sm:block text-xs text-[#71717A] shrink-0" data-testid="department-head">
+                    {dept.head ? `Head: ${personName(dept.head_name, dept.head_email)}` : 'No head'}
+                  </span>
+                  <span className="text-xs text-[#71717A] shrink-0 w-24 text-right" data-testid="department-count">
+                    {dept.member_count} {dept.member_count === 1 ? 'person' : 'people'}
+                  </span>
                   {canManageDepartments && (
 <div className="flex items-center gap-1">
                     <button onClick={() => startEdit(dept)} className="text-[#71717A] hover:text-[#6C31D6] p-1 transition" title="Edit">

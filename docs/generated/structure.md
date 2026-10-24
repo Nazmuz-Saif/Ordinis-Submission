@@ -16,7 +16,7 @@ backend/
     core/  admin.py, api_matrix.py, apps.py, demo.py, doccheck.py, docgen.py, exceptions.py, mixins.py, models.py, pagination.py, permissions.py, serializer_utils.py, traceability.py, views.py, commands: check_docs, generate_docs, seed_demo_data  (+ tests)
     dashboard/  apps.py, services.py, urls.py, views.py  (+ tests)
     notifications/  apps.py, demo_data.py, models.py, serializers.py, services.py, signals.py, urls.py, views.py, migrations/ (3)  (+ tests)
-    organization/  admin.py, apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (7)  (+ tests)
+    organization/  admin.py, apps.py, demo_data.py, models.py, overview.py, serializers.py, services.py, urls.py, views.py, migrations/ (8)  (+ tests)
     payroll/  admin.py, apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (2)  (+ tests)
     platform_admin/  apps.py, demo_data.py, exceptions.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (2), commands: create_platform_admin  (+ tests)
     rbac/  admin.py, apps.py, catalog.py, decorators.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (15)  (+ tests)
@@ -42,7 +42,7 @@ frontend/src/
   features/dev/  UiKitPage.jsx
   features/inbox/  ActionInboxPage.jsx, InboxIcon.jsx, kinds.js, timeAgo.js
   features/leave/  ApprovalProgress.jsx, LeavePage.jsx, LeaveTypesPage.jsx, leaveFormat.js
-  features/organization/  DepartmentsPage.jsx, DesignationsPage.jsx, EmployeeDetailPage.jsx, EmployeesPage.jsx
+  features/organization/  DepartmentDetailPage.jsx, DepartmentsPage.jsx, DesignationDetailPage.jsx, DesignationsPage.jsx, EmployeeDetailPage.jsx, EmployeesPage.jsx, orgDetailParts.jsx
   features/payroll/  MyPayslipsPage.jsx, PayslipViewPage.jsx, PayslipsPage.jsx, SalaryStructuresPage.jsx, payslipFormat.js
   features/platformAdmin/  SupportAccessPage.jsx
   features/profile/  MyProfilePage.jsx

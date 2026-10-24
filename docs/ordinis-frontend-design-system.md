@@ -25,6 +25,7 @@ The approved mockups are implemented for the screens marked Built. The shared pa
 | Shared parts | Built | `MetricCard`, `StatusPill`, `EmptyState`, `ChartCard`, `Pagination` |
 | Role dashboards (summary cards, charts) | Built | Sections by Permission (see `ordinis-dashboard-design.md`) |
 | Departments, Designations, Employees, Roles | Built | |
+| Department and Designation detail pages (people, task summary, running tasks, Department Head) | Built | `DepartmentDetailPage`, `DesignationDetailPage` (ST-150). Task titles show only to the assignee, their managers and holders of `create_task`; everybody else sees counts |
 | Tasks: Kanban board with four columns, counts, task cards (title, priority, assignee, deadline, progress) | Built | `KanbanPage`. The category tag on a card is not built |
 | Attendance: check-in and check-out, today's record | Built | |
 | Attendance: monthly calendar and the four summary cards | Built | `AttendanceCalendar`; a day shows a dot only on a working day of the company (see SDS 5.2) |
