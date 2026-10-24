@@ -163,7 +163,7 @@ class SubmitPaymentTests(TestCase):
     def test_the_client_cannot_set_status_kind_company_or_reviewer(self):
         other = register_company('Other', 'other', 'ceo@other.com')
         res = self.submit(status='approved', kind='upgrade', company=other.company_id, review_note='x',
-                          reviewed_by='root', period_end='2099-01-01', invoice='abc')
+                          reviewed_by='root', period_end='2099-01-01')
         self.assertEqual(res.status_code, 201, res.content)
         payment = PaymentSubmission.objects.get()
         self.assertEqual((payment.status, payment.kind, str(payment.company_id), payment.review_note), ('pending', 'new', self.ceo_company_id(), ''))

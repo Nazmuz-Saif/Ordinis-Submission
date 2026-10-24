@@ -372,7 +372,7 @@ One row for one sensitive action: who did what, to which record, in which compan
 
 #### Invoice
 
-A monthly bill. It keeps the amount of that day: a later plan change never alters an old invoice.
+A bill. It keeps the amount of that day: a later plan change never alters an old invoice.
 
 | Field | Type | Default | Notes |
 |---|---|---|---|
@@ -390,6 +390,8 @@ A monthly bill. It keeps the amount of that day: a later plan change never alter
 | `paid_on` | Date |  | can be empty (null) |
 | `payment_method` | Char(10) |  |  |
 | `transaction_id` | Char(64) |  |  |
+| `kind` | Char(10) | 'monthly' | one of: monthly, renewal, payment |
+| `months` | PositiveSmallInteger | 1 |  |
 
 Rule: `one_invoice_per_period` (unique)
 
@@ -418,11 +420,13 @@ A payment the company made OUTSIDE the system (bKash, Nagad, bank, cash) and rep
 | `review_note` | Char(500) |  |  |
 | `period_start` | Date |  | can be empty (null) |
 | `period_end` | Date |  | can be empty (null) |
-| `invoice` | FK to billing.Invoice |  | unique; can be empty (null); on delete: SET_NULL |
+| `invoice` | FK to billing.Invoice |  | can be empty (null); on delete: SET_NULL |
 
 Rule: `one_live_payment_per_transaction_id` (unique)
 
 Rule: `one_pending_payment_per_company` (unique)
+
+Rule: `one_live_payment_per_invoice` (unique)
 
 Rule: `payment_amount_positive` (check)
 
@@ -799,7 +803,7 @@ Platform Admin     SupportAccessRequest API        Company CEO
 
 **Design system in force:** "Modern Minimalist SaaS" (`ordinis-frontend-design-system.md`): navy `#14142B` and violet `#6C31D6` on an off-white background, subtle 150-300 ms animation, Tailwind CSS. The approved mockup set has been implemented for the screens below.
 
-**Screens built:** Login and Register; the first-payment steps a new company must pass before it can work (Choose your plan, Pay, Waiting for approval, with a rejected state that shows the platform team's note and a form to send the details again); role Dashboards (CEO, Manager, HR, Accountant, Employee sections chosen by Permission); Departments, Designations, Employees and Employee detail (with subordinates and roles); Roles and Employee roles; Approval Chains, Pending Approvals, Delegations; Tasks list and Kanban board with progress entries; Attendance (check-in/out and a monthly calendar with Present, Absent, On Leave and rate cards) and Leave (apply, balance, cancel, approval progress) and Leave Types; Action Inbox; Analytics (metric cards, attendance line chart, tasks-by-department bar chart); Payslips, My Payslips, Payslip view, Salary Structures; Support Access (company side of Break-Glass); platform Admin screens (Companies, Payments with a pending count on the sidebar, Subscriptions with days left, Tickets, Access Requests, Activity); a UI-kit showcase at `/dev/ui-kit` in development.
+**Screens built:** Login and Register; the first-payment steps a new company must pass before it can work (Choose your plan, Pay, Waiting for approval, with a rejected state that shows the platform team's note and a form to send the details again); role Dashboards (CEO, Manager, HR, Accountant, Employee sections chosen by Permission); Departments, Designations, Employees and Employee detail (with subordinates and roles); Roles and Employee roles; Approval Chains, Pending Approvals, Delegations; Tasks list and Kanban board with progress entries; Billing (a timeline card with days left, Renew against the renewal invoice, invoice detail with Print); Attendance (check-in/out and a monthly calendar with Present, Absent, On Leave and rate cards) and Leave (apply, balance, cancel, approval progress) and Leave Types; Action Inbox; Analytics (metric cards, attendance line chart, tasks-by-department bar chart); Payslips, My Payslips, Payslip view, Salary Structures; Support Access (company side of Break-Glass); platform Admin screens (Companies, Payments with a pending count on the sidebar, Subscriptions with days left, Tickets, Access Requests, Activity); a UI-kit showcase at `/dev/ui-kit` in development.
 
 **Shell:** a grouped, collapsible sidebar (an item is hidden when the user lacks its Permission), a top bar with page title, search, company name, notification bell and user menu, and a plan badge that shows only what the server sends.
 

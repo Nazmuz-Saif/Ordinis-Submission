@@ -55,7 +55,15 @@ class Subscription(BaseModel):
 
 
 class Invoice(BaseModel):
-    """A monthly bill. It keeps the amount of that day: a later plan change never alters an old invoice."""
+    """
+    A bill. It keeps the amount of that day: a later plan change never alters an old invoice.
+    kind: `monthly` (the old monthly generator), `renewal` (issued by the daily job 7 days before the end, open until
+    it is paid), `payment` (written when an approved payment had no bill to settle).
+    """
+    KIND_MONTHLY = 'monthly'
+    KIND_RENEWAL = 'renewal'
+    KIND_PAYMENT = 'payment'
+    KIND_CHOICES = [(KIND_MONTHLY, 'Monthly'), (KIND_RENEWAL, 'Renewal'), (KIND_PAYMENT, 'Payment')]
     STATUS_OPEN = 'open'
     STATUS_PAID = 'paid'
     STATUS_VOID = 'void'
@@ -75,6 +83,8 @@ class Invoice(BaseModel):
     paid_on = models.DateField(null=True, blank=True)
     payment_method = models.CharField(max_length=10, blank=True)
     transaction_id = models.CharField(max_length=64, blank=True)
+    kind = models.CharField(max_length=10, choices=KIND_CHOICES, default=KIND_MONTHLY)
+    months = models.PositiveSmallIntegerField(default=1)
 
     class Meta:
         ordering = ['-period_start', '-created_at']
@@ -130,7 +140,8 @@ class PaymentSubmission(BaseModel):
     review_note = models.CharField(max_length=500, blank=True)
     period_start = models.DateField(null=True, blank=True)
     period_end = models.DateField(null=True, blank=True)
-    invoice = models.OneToOneField(Invoice, on_delete=models.SET_NULL, null=True, blank=True, related_name='payment')
+    # The bill this payment settles (a renewal invoice), or the invoice written when it was approved.
+    invoice = models.ForeignKey(Invoice, on_delete=models.SET_NULL, null=True, blank=True, related_name='payments')
 
     class Meta:
         ordering = ['-created_at', 'id']
@@ -143,6 +154,11 @@ class PaymentSubmission(BaseModel):
             ),
             models.UniqueConstraint(
                 fields=['company'], condition=models.Q(status='pending'), name='one_pending_payment_per_company',
+            ),
+            # A bill is paid once: a rejected submission lets the company pay the same invoice again.
+            models.UniqueConstraint(
+                fields=['invoice'], condition=models.Q(invoice__isnull=False) & ~models.Q(status='rejected'),
+                name='one_live_payment_per_invoice',
             ),
             models.CheckConstraint(condition=models.Q(amount__gt=0), name='payment_amount_positive'),
             models.CheckConstraint(condition=models.Q(months__gte=1, months__lte=36), name='payment_months_1_to_36'),

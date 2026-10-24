@@ -36,7 +36,7 @@ function DashboardLayout({ children }) {
       >
         <Navbar onMenuClick={() => setMenuOpen(true)} />
         <SubscriptionBanner />
-        <main className="p-4 md:p-6">{blocked ? <RestrictedNotice /> : children}</main>
+        <main className="p-4 md:p-6 print:p-0">{blocked ? <RestrictedNotice /> : children}</main>
       </div>
     </div>
   )

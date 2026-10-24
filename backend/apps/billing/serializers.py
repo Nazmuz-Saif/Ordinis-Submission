@@ -17,12 +17,19 @@ class PlanSerializer(serializers.ModelSerializer):
 
 class InvoiceSerializer(serializers.ModelSerializer):
     status_label = serializers.CharField(source='get_status_display', read_only=True)
+    kind_label = serializers.CharField(source='get_kind_display', read_only=True)
+    company_name = serializers.CharField(source='company.name', read_only=True)
+    payment_method_label = serializers.SerializerMethodField()
 
     class Meta:
         model = Invoice
-        fields = ['id', 'number', 'plan_name', 'period_start', 'period_end', 'amount', 'currency', 'status',
-                  'status_label', 'issued_on', 'due_on', 'paid_on', 'payment_method', 'transaction_id']
+        fields = ['id', 'number', 'company_name', 'plan_name', 'months', 'period_start', 'period_end', 'amount', 'currency',
+                  'status', 'status_label', 'kind', 'kind_label', 'issued_on', 'due_on', 'paid_on', 'payment_method',
+                  'payment_method_label', 'transaction_id']
         read_only_fields = fields
+
+    def get_payment_method_label(self, obj):
+        return dict(PaymentSubmission.METHOD_CHOICES).get(obj.payment_method, '')
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -64,8 +71,9 @@ class AdminPaymentSerializer(PaymentSerializer):
 class PaymentSubmitSerializer(serializers.Serializer):
     """What a company sends. The amount is NOT an input: it is the server's quote. `amount` is only the price the
     person saw, so a price that changed in between is refused instead of being charged silently."""
-    plan = serializers.CharField()
-    months = serializers.CharField()
+    plan = serializers.CharField(required=False, allow_blank=True)       # not needed when `invoice` says what is paid
+    months = serializers.CharField(required=False, allow_blank=True)
+    invoice = serializers.CharField(required=False, allow_blank=True)
     method = serializers.CharField()
     payer_name = serializers.CharField(allow_blank=True)
     payer_number = serializers.CharField(allow_blank=True)

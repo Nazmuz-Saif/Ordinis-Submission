@@ -27,6 +27,10 @@ class SubscriptionViewSet(PermissionRequiredMixin, viewsets.ViewSet):
     def list(self, request):
         company = request.user.company
         subscription = services.get_subscription(company)
+        renewal = services.open_renewal_invoice(subscription)
+        pending = PaymentSubmission.objects.filter(
+            company=company, status=PaymentSubmission.STATUS_PENDING,
+        ).select_related('plan', 'invoice', 'submitted_by__user').first()
         return Response({
             'success': True,
             'data': {
@@ -35,6 +39,9 @@ class SubscriptionViewSet(PermissionRequiredMixin, viewsets.ViewSet):
                 'started_on': subscription.started_on,
                 'timeline': services.subscription_summary(company),
                 'usage': services.usage(company),
+                # what the Billing page needs to offer Renew: the bill to pay, and a payment already waiting
+                'renewal_invoice': InvoiceSerializer(renewal).data if renewal else None,
+                'pending_payment': PaymentSerializer(pending).data if pending else None,
             },
         })
 
@@ -46,7 +53,7 @@ class InvoiceViewSet(PermissionRequiredMixin, viewsets.ReadOnlyModelViewSet):
     allow_when_restricted = True
 
     def get_queryset(self):
-        queryset = Invoice.objects.filter(company=self.request.user.company)
+        queryset = Invoice.objects.filter(company=self.request.user.company).select_related('company')
         status = self.request.query_params.get('status')
         return queryset.filter(status=status) if status else queryset
 
@@ -85,8 +92,9 @@ class PaymentViewSet(
         form.is_valid(raise_exception=True)
         d = form.validated_data
         payment = services.submit_payment(
-            request.user.employee, plan=d['plan'], months=d['months'], method=d['method'], payer_name=d['payer_name'],
+            request.user.employee, plan=d.get('plan'), months=d.get('months'), method=d['method'], payer_name=d['payer_name'],
             payer_number=d['payer_number'], transaction_id=d['transaction_id'], expected_amount=d.get('amount'),
+            invoice_id=d.get('invoice') or None,
         )
         payment = self.get_queryset().get(pk=payment.pk)
         return Response(self.get_serializer(payment).data, status=status.HTTP_201_CREATED)

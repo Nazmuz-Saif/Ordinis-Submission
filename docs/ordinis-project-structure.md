@@ -13,7 +13,7 @@ backend/
     approvals/  admin.py, apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (4), commands: start_demo_approval  (+ tests)
     attendance/  admin.py, apps.py, demo_data.py, leave_models.py, leave_serializers.py, leave_services.py, leave_views.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (2)  (+ tests)
     audit_log/  apps.py, context.py, middleware.py, models.py, serializers.py, services.py, signals.py, urls.py, views.py, migrations/ (1)  (+ tests)
-    billing/  apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (4), commands: generate_invoices, process_subscriptions, set_company_plan  (+ tests)
+    billing/  apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (5), commands: generate_invoices, process_subscriptions, set_company_plan  (+ tests)
     core/  admin.py, api_matrix.py, apps.py, demo.py, doccheck.py, docgen.py, exceptions.py, mixins.py, models.py, pagination.py, permissions.py, serializer_utils.py, traceability.py, views.py, commands: check_docs, generate_docs, seed_demo_data  (+ tests)
     dashboard/  apps.py, services.py, urls.py, views.py  (+ tests)
     notifications/  apps.py, demo_data.py, models.py, serializers.py, services.py, signals.py, urls.py, views.py, migrations/ (3)  (+ tests)
@@ -38,7 +38,7 @@ frontend/src/
   features/attendance/  AttendanceCalendar.jsx, AttendancePage.jsx, TeamAttendancePage.jsx
   features/audit/  AuditLogsPage.jsx, auditFormat.js
   features/auth/  LoginPage.jsx, RegisterPage.jsx
-  features/billing/  BillingPage.jsx
+  features/billing/  BillingPage.jsx, InvoiceDetailPage.jsx, RenewPage.jsx, TimelineCard.jsx, timelineFormat.js
   features/dashboard/  DashboardPage.jsx, charts.jsx
   features/dev/  UiKitPage.jsx
   features/inbox/  ActionInboxPage.jsx, InboxIcon.jsx, kinds.js, timeAgo.js

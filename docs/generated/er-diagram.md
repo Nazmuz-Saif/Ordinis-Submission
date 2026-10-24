@@ -55,7 +55,7 @@ erDiagram
   EMPLOYEE ||--o{ TASK : assigned_to
   EMPLOYEE ||--o{ TASKPROGRESSLOG : employee
   EMPLOYEE ||--o| SALARYSTRUCTURE : employee
-  INVOICE ||--o| PAYMENTSUBMISSION : invoice
+  INVOICE |o--o{ PAYMENTSUBMISSION : invoice
   LEAVETYPE ||--o{ LEAVEREQUEST : leave_type
   ROLE ||--o{ APPROVALSTEP : approver_role
   ROLE ||--o{ EMPLOYEEROLE : role
@@ -179,6 +179,8 @@ erDiagram
     Date paid_on
     Char10 payment_method
     Char64 transaction_id
+    Char10 kind
+    PositiveSmallInteger months
   }
   PAYMENTSUBMISSION {
     fk company

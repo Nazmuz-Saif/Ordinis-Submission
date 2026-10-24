@@ -25,6 +25,8 @@ import PayslipsPage from './features/payroll/PayslipsPage'
 import AnalyticsPage from './features/analytics/AnalyticsPage'
 import AuditLogsPage from './features/audit/AuditLogsPage'
 import BillingPage from './features/billing/BillingPage'
+import RenewPage from './features/billing/RenewPage'
+import InvoiceDetailPage from './features/billing/InvoiceDetailPage'
 import MyPayslipsPage from './features/payroll/MyPayslipsPage'
 import PayslipViewPage from './features/payroll/PayslipViewPage'
 import AttendancePage from './features/attendance/AttendancePage'
@@ -237,6 +239,26 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <BillingPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/billing/renew"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <RenewPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/billing/invoices/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <InvoiceDetailPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

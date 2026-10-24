@@ -186,7 +186,7 @@ One row for one sensitive action: who did what, to which record, in which compan
 
 ### Invoice
 
-A monthly bill. It keeps the amount of that day: a later plan change never alters an old invoice.
+A bill. It keeps the amount of that day: a later plan change never alters an old invoice.
 
 | Field | Type | Default | Notes |
 |---|---|---|---|
@@ -204,6 +204,8 @@ A monthly bill. It keeps the amount of that day: a later plan change never alter
 | `paid_on` | Date |  | can be empty (null) |
 | `payment_method` | Char(10) |  |  |
 | `transaction_id` | Char(64) |  |  |
+| `kind` | Char(10) | 'monthly' | one of: monthly, renewal, payment |
+| `months` | PositiveSmallInteger | 1 |  |
 
 Rule: `one_invoice_per_period` (unique)
 
@@ -232,11 +234,13 @@ A payment the company made OUTSIDE the system (bKash, Nagad, bank, cash) and rep
 | `review_note` | Char(500) |  |  |
 | `period_start` | Date |  | can be empty (null) |
 | `period_end` | Date |  | can be empty (null) |
-| `invoice` | FK to billing.Invoice |  | unique; can be empty (null); on delete: SET_NULL |
+| `invoice` | FK to billing.Invoice |  | can be empty (null); on delete: SET_NULL |
 
 Rule: `one_live_payment_per_transaction_id` (unique)
 
 Rule: `one_pending_payment_per_company` (unique)
+
+Rule: `one_live_payment_per_invoice` (unique)
 
 Rule: `payment_amount_positive` (check)
 

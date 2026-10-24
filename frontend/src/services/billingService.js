@@ -6,6 +6,11 @@ export async function getSubscription() {
   return res.data.data
 }
 
+export async function getInvoice(id) {
+  const res = await apiClient.get(`/billing/invoices/${id}/`)
+  return res.data
+}
+
 export async function getInvoicesPage(page = 1) {
   const res = await apiClient.get('/billing/invoices/', { params: { page, page_size: 20 } })
   const body = res.data

@@ -24,6 +24,7 @@ STARTING_PLAN = 'Basic'
 # ---- Subscription period rules. One place to change them. ----
 GRACE_DAYS = 3                 # days after the end date the company still works (with a warning banner)
 REMINDER_DAYS = (7, 3, 1)      # in-app reminders this many days before the end
+RENEWAL_INVOICE_DAYS = 7       # the renewal invoice is issued this many days before the end
 MIN_MONTHS, MAX_MONTHS = 1, 36  # how many months one payment can buy
 FREE_MONTHS_PER_YEAR = 2        # every full 12 months costs 10: 12 months = price of 10, 24 = 20, 36 = 30
 DEFAULT_MONTHS = 12            # length of the period a company gets when it is started without a payment (registration, demo)
@@ -168,12 +169,14 @@ def send_reminder(subscription, left):
     from notifications.services import notify
     noun = 'day' if left == 1 else 'days'
     when = 'ends today' if left == 0 else f'ends in {left} {noun}'
+    invoice = open_renewal_invoice(subscription)
+    bill = f' Invoice {invoice.number} for {invoice.amount} {invoice.currency} is ready.' if invoice else ''
     sent = 0
     for employee in _billing_recipients(subscription.company):
         notify(
             employee, Notification.KIND_BILLING_REMINDER, f'Your subscription {when}',
             f'The {subscription.plan.name} plan {when} (on {subscription.current_period_end}). '
-            'Renew to keep using Ordinis.', '/settings/billing',
+            f'Renew to keep using Ordinis.{bill}', '/settings/billing',
         )
         sent += 1
     return sent
@@ -181,31 +184,32 @@ def send_reminder(subscription, left):
 
 def process_subscription(subscription, today=None):
     """One company's daily work. Running it twice in a row changes nothing more.
-    Returns (reminder_sent, expired)."""
+    Returns (reminder_sent, expired, invoice_issued)."""
     company = subscription.company
     today = today or _today(company)
     left = days_left(subscription, today)
     if left < -GRACE_DAYS:
         subscription.status = Subscription.STATUS_EXPIRED
         subscription.save(update_fields=['status', 'updated_at'])
-        return False, True
+        return False, True, False
+    invoiced = ensure_renewal_invoice(subscription, left, today) if left <= RENEWAL_INVOICE_DAYS else False
     if left < 0 or not company.is_active:
-        return False, False          # in grace (banner only), or suspended: nobody to remind
+        return False, False, invoiced          # in grace (banner only), or suspended: nobody to remind
     # A reminder is due for every threshold we have reached. A missed day is not a lost reminder:
     # the first run after the threshold sends ONE message and marks every reached threshold as sent.
     reached = [t for t in REMINDER_DAYS if left <= t]
     sent = list(subscription.reminders_sent or [])
     if not reached or all(t in sent for t in reached):
-        return False, False
+        return False, False, invoiced
     send_reminder(subscription, left)
     subscription.reminders_sent = sorted(set(sent) | set(reached))
     subscription.save(update_fields=['reminders_sent', 'updated_at'])
-    return True, False
+    return True, False, invoiced
 
 
 def process_subscriptions():
     """The daily job for every active subscription. One company's error never stops the others."""
-    result = {'checked': 0, 'reminded': 0, 'expired': 0, 'errors': 0}
+    result = {'checked': 0, 'reminded': 0, 'expired': 0, 'invoiced': 0, 'errors': 0}
     for subscription in Subscription.objects.filter(status=Subscription.STATUS_ACTIVE).select_related('company', 'plan'):
         result['checked'] += 1
         try:
@@ -213,7 +217,7 @@ def process_subscriptions():
                 subscription = Subscription.objects.select_for_update().select_related('company', 'plan').get(pk=subscription.pk)
                 if subscription.status != Subscription.STATUS_ACTIVE:
                     continue
-                reminded, expired = process_subscription(subscription)
+                reminded, expired, invoiced = process_subscription(subscription)
         except Exception:      # noqa: BLE001  one bad company must not stop the rest
             import logging
             logging.getLogger(__name__).exception('process_subscriptions failed for %s', subscription.company_id)
@@ -221,6 +225,7 @@ def process_subscriptions():
             continue
         result['reminded'] += reminded
         result['expired'] += expired
+        result['invoiced'] += invoiced
     return result
 
 
@@ -315,6 +320,40 @@ def mark_paid(invoice, on=None):
     invoice.paid_on = on or datetime.date.today()
     invoice.save(update_fields=['status', 'paid_on', 'updated_at'])
     return invoice
+
+
+def open_renewal_invoice(subscription):
+    """The renewal invoice waiting to be paid, if there is one."""
+    return Invoice.objects.filter(
+        subscription=subscription, kind=Invoice.KIND_RENEWAL, status=Invoice.STATUS_OPEN,
+    ).order_by('-period_start').first()
+
+
+def ensure_renewal_invoice(subscription, left, today):
+    """Issue the renewal invoice once, RENEWAL_INVOICE_DAYS before the end (or later, if the job missed those days).
+    It bills the next period of the same plan and the same length as the last payment, due on the end date.
+    Nothing is issued while a payment is already waiting for approval. Returns True when an invoice was issued."""
+    start = subscription.current_period_end + datetime.timedelta(days=1)
+    if Invoice.objects.filter(subscription=subscription, kind=Invoice.KIND_RENEWAL, period_start=start).exists():
+        return False
+    if PaymentSubmission.objects.filter(company=subscription.company, status=PaymentSubmission.STATUS_PENDING).exists():
+        return False
+    months = min(max(subscription.billing_months or DEFAULT_MONTHS, MIN_MONTHS), MAX_MONTHS)
+    plan = subscription.plan
+    for _ in range(5):
+        try:
+            with transaction.atomic():
+                Invoice.objects.create(
+                    company=subscription.company, subscription=subscription, number=next_invoice_number(today),
+                    plan_name=plan.name, period_start=start, period_end=period_end_for(start, months),
+                    amount=price_for(plan, months)['amount'], currency=plan.currency, status=Invoice.STATUS_OPEN,
+                    issued_on=today, due_on=subscription.current_period_end, kind=Invoice.KIND_RENEWAL, months=months,
+                )
+            return True
+        except IntegrityError:
+            if Invoice.objects.filter(subscription=subscription, period_start=start).exists():
+                return False      # another run issued it at the same moment
+    return False
 
 
 # ---------- Price, quote and payments (ST-146) ----------
@@ -421,9 +460,10 @@ def _clean_payer(name, number):
     return name, number
 
 
-def submit_payment(employee, *, plan, months, method, payer_name, payer_number, transaction_id, expected_amount=None):
+def submit_payment(employee, *, plan, months, method, payer_name, payer_number, transaction_id, expected_amount=None, invoice_id=None):
     """The company reports a payment it made outside the system. One pending submission per company, and a
-    transaction id counts once per method. The amount saved is the server's quote."""
+    transaction id counts once per method. The amount saved is the server's quote, or the amount of the renewal
+    invoice when `invoice_id` says which bill is being paid (then the plan and length are the invoice's)."""
     if method not in dict(PaymentSubmission.METHOD_CHOICES):
         raise BillingError('Choose how you paid: bKash, Nagad, bank transfer or cash.', code='PAYMENT_METHOD_INVALID', field_errors={'method': ['Choose a valid method.']})
     transaction_id = _clean_transaction_id(transaction_id)
@@ -432,7 +472,19 @@ def submit_payment(employee, *, plan, months, method, payer_name, payer_number, 
     try:
         with transaction.atomic():
             subscription = Subscription.objects.select_for_update().get(pk=get_subscription(company).pk)
+            invoice = None
+            if invoice_id:
+                invoice = _payable_invoice(subscription, invoice_id)
+                if plan and str(plan).strip().lower() not in (subscription.plan.name.lower(), str(subscription.plan_id)):
+                    raise BillingError('A renewal keeps your current plan. To change the plan, use Change plan.', code='PLAN_CHANGE_NOT_VIA_RENEWAL')
+                if months not in (None, '') and parse_months(months) != invoice.months:
+                    raise BillingError(f'This invoice is for {invoice.months} months.', code='INVOICE_MONTHS_MISMATCH')
+                plan, months = subscription.plan.name, invoice.months
             offer = quote(company, plan, months)
+            if invoice:
+                if offer['kind'] != PaymentSubmission.KIND_RENEWAL:
+                    raise BillingError('This invoice cannot be paid now.', code='INVOICE_NOT_PAYABLE')
+                offer['amount'] = invoice.amount            # the bill stands as it was issued
             if expected_amount is not None and Decimal(str(expected_amount)) != offer['amount']:
                 raise BillingError(
                     f'The amount changed. It is now {offer["amount"]} {offer["currency"]}. Reload the price and try again.',
@@ -448,7 +500,7 @@ def submit_payment(employee, *, plan, months, method, payer_name, payer_number, 
             return PaymentSubmission.objects.create(
                 company=company, plan_id=offer['plan']['id'], months=offer['months'], amount=offer['amount'],
                 currency=offer['currency'], method=method, payer_name=payer_name, payer_number=payer_number,
-                transaction_id=transaction_id, kind=offer['kind'], submitted_by=employee,
+                transaction_id=transaction_id, kind=offer['kind'], submitted_by=employee, invoice=invoice,
             )
     except IntegrityError:
         # Two requests raced past the checks above; the database constraints decided.
@@ -458,6 +510,22 @@ def submit_payment(employee, *, plan, months, method, payer_name, payer_number, 
             'This transaction id was already submitted for this payment method.', code='PAYMENT_TRANSACTION_USED',
             field_errors={'transaction_id': ['This transaction id was already used.']},
         ) from None
+
+
+def _payable_invoice(subscription, invoice_id):
+    """The company's own open renewal invoice that no live payment is tied to yet, else INVOICE_NOT_PAYABLE."""
+    try:
+        wanted = uuid.UUID(str(invoice_id))
+    except ValueError:
+        wanted = None
+    invoice = Invoice.objects.select_for_update().filter(
+        pk=wanted, subscription=subscription, kind=Invoice.KIND_RENEWAL, status=Invoice.STATUS_OPEN,
+    ).first() if wanted else None
+    if invoice is None:
+        raise BillingError('This invoice is not open, or it is not your company\'s.', code='INVOICE_NOT_PAYABLE')
+    if PaymentSubmission.objects.filter(invoice=invoice).exclude(status=PaymentSubmission.STATUS_REJECTED).exists():
+        raise BillingError('A payment is already waiting for this invoice.', code='PAYMENT_ALREADY_PENDING')
+    return invoice
 
 
 def next_invoice_number(on):
@@ -476,6 +544,7 @@ def _create_paid_invoice(subscription, payment, plan, start, end, today):
                     plan_name=plan.name, period_start=start, period_end=end, amount=payment.amount,
                     currency=payment.currency, status=Invoice.STATUS_PAID, issued_on=today, due_on=today, paid_on=today,
                     payment_method=payment.method, transaction_id=payment.transaction_id,
+                    kind=Invoice.KIND_PAYMENT, months=payment.months,
                 )
         except IntegrityError:
             continue          # the number was taken by another approval at the same moment: take the next one
@@ -508,7 +577,18 @@ def approve_payment(payment, admin_user):
     # The same rule as the quote, but for today: an old end date that has since been passed starts the new period today.
     kind, start = payment_context(subscription, plan, today)
     end = period_end_for(start, payment.months)
-    invoice = _create_paid_invoice(subscription, payment, plan, start, end, today)
+    if payment.invoice_id:
+        # The payment settles a bill issued earlier: that same invoice becomes Paid, with the real period.
+        invoice = Invoice.objects.select_for_update().get(pk=payment.invoice_id)
+        if invoice.status != Invoice.STATUS_OPEN:
+            raise BillingError('The invoice of this payment is no longer open.', code='INVOICE_NOT_OPEN')
+        invoice.plan_name, invoice.period_start, invoice.period_end = plan.name, start, end
+        invoice.months, invoice.amount, invoice.currency = payment.months, payment.amount, payment.currency
+        invoice.status, invoice.paid_on = Invoice.STATUS_PAID, today
+        invoice.payment_method, invoice.transaction_id = payment.method, payment.transaction_id
+        invoice.save()
+    else:
+        invoice = _create_paid_invoice(subscription, payment, plan, start, end, today)
     if kind == PaymentSubmission.KIND_RENEWAL and effective_state(subscription, today) in (STATE_ACTIVE, STATE_GRACE):
         subscription.current_period_end = end                       # extend: the running period keeps its start
     else:
@@ -519,6 +599,13 @@ def approve_payment(payment, admin_user):
     subscription.billing_months = payment.months
     subscription.reminders_sent = []
     subscription.save()
+    # A renewal invoice that this payment already covers (for example one issued after an early renewal) is void.
+    for stale in Invoice.objects.filter(
+        subscription=subscription, kind=Invoice.KIND_RENEWAL, status=Invoice.STATUS_OPEN,
+        period_start__lte=subscription.current_period_end,
+    ).exclude(pk=invoice.pk):
+        stale.status = Invoice.STATUS_VOID
+        stale.save(update_fields=['status', 'updated_at'])
     payment.status = PaymentSubmission.STATUS_APPROVED
     payment.reviewed_by, payment.reviewed_at = admin_user, timezone.now()
     payment.period_start, payment.period_end, payment.invoice = start, end, invoice
