@@ -388,10 +388,45 @@ A monthly bill. It keeps the amount of that day: a later plan change never alter
 | `issued_on` | Date |  |  |
 | `due_on` | Date |  |  |
 | `paid_on` | Date |  | can be empty (null) |
+| `payment_method` | Char(10) |  |  |
+| `transaction_id` | Char(64) |  |  |
 
 Rule: `one_invoice_per_period` (unique)
 
 Rule: `invoice_amount_not_negative` (check)
+
+#### PaymentSubmission
+
+A payment the company made OUTSIDE the system (bKash, Nagad, bank, cash) and reported here. The platform team
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `company` | FK to tenants.Company |  | on delete: CASCADE |
+| `plan` | FK to billing.SubscriptionPlan |  | on delete: PROTECT |
+| `months` | PositiveSmallInteger |  |  |
+| `amount` | Decimal(10,2) |  |  |
+| `currency` | Char(10) | 'BDT' |  |
+| `method` | Char(10) |  | one of: bkash, nagad, bank, cash |
+| `payer_name` | Char(100) |  |  |
+| `payer_number` | Char(30) |  |  |
+| `transaction_id` | Char(64) |  |  |
+| `kind` | Char(10) |  | one of: new, renewal, upgrade |
+| `status` | Char(10) | 'pending' | one of: pending, approved, rejected |
+| `submitted_by` | FK to organization.Employee |  | can be empty (null); on delete: SET_NULL |
+| `reviewed_by` | FK to accounts.User |  | can be empty (null); on delete: SET_NULL |
+| `reviewed_at` | DateTime |  | can be empty (null) |
+| `review_note` | Char(500) |  |  |
+| `period_start` | Date |  | can be empty (null) |
+| `period_end` | Date |  | can be empty (null) |
+| `invoice` | FK to billing.Invoice |  | unique; can be empty (null); on delete: SET_NULL |
+
+Rule: `one_live_payment_per_transaction_id` (unique)
+
+Rule: `one_pending_payment_per_company` (unique)
+
+Rule: `payment_amount_positive` (check)
+
+Rule: `payment_months_1_to_36` (check)
 
 #### Subscription
 
@@ -401,8 +436,14 @@ The plan a company is on now. One per company.
 |---|---|---|---|
 | `company` | FK to tenants.Company |  | unique; on delete: CASCADE |
 | `plan` | FK to billing.SubscriptionPlan |  | on delete: PROTECT |
-| `status` | Char(20) | 'active' | one of: active, cancelled |
+| `status` | Char(20) | 'active' | one of: pending_payment, active, expired, cancelled |
 | `started_on` | Date |  |  |
+| `current_period_start` | Date |  |  |
+| `current_period_end` | Date |  |  |
+| `billing_months` | PositiveSmallInteger | 12 |  |
+| `reminders_sent` | JSON | list() |  |
+
+Rule: `subscription_period_end_not_before_start` (check)
 
 #### SubscriptionPlan
 
@@ -428,7 +469,7 @@ One message for ONE employee ("you were assigned a task", "an approval needs you
 |---|---|---|---|
 | `company` | FK to tenants.Company |  | on delete: CASCADE |
 | `recipient` | FK to organization.Employee |  | on delete: CASCADE |
-| `kind` | Char(30) |  | one of: task_assigned, approval_requested, approval_decided |
+| `kind` | Char(30) |  | one of: task_assigned, approval_requested, approval_decided, billing_reminder, payment_approved, payment_rejected |
 | `title` | Char(200) |  |  |
 | `message` | Char(500) |  |  |
 | `link` | Char(200) |  |  |
@@ -651,7 +692,7 @@ One daily progress note on a task, written by the assignee.
 | `fiscal_year_start` | Char(10) | '01-01' |  |
 | `default_language` | Char(10) | 'en' |  |
 
-*31 models.*
+*32 models.*
 <!-- END GENERATED:data-dictionary -->
 
 ## 4.4 Data Storage & Retention
@@ -758,7 +799,7 @@ Platform Admin     SupportAccessRequest API        Company CEO
 
 **Design system in force:** "Modern Minimalist SaaS" (`ordinis-frontend-design-system.md`): navy `#14142B` and violet `#6C31D6` on an off-white background, subtle 150-300 ms animation, Tailwind CSS. The approved mockup set has been implemented for the screens below.
 
-**Screens built:** Login and Register; role Dashboards (CEO, Manager, HR, Accountant, Employee sections chosen by Permission); Departments, Designations, Employees and Employee detail (with subordinates and roles); Roles and Employee roles; Approval Chains, Pending Approvals, Delegations; Tasks list and Kanban board with progress entries; Attendance (check-in/out and a monthly calendar with Present, Absent, On Leave and rate cards) and Leave (apply, balance, cancel, approval progress) and Leave Types; Action Inbox; Analytics (metric cards, attendance line chart, tasks-by-department bar chart); Payslips, My Payslips, Payslip view, Salary Structures; Support Access (company side of Break-Glass); platform Admin screens (Companies, Tickets, Access Requests, Activity); a UI-kit showcase at `/dev/ui-kit` in development.
+**Screens built:** Login and Register; the first-payment steps a new company must pass before it can work (Choose your plan, Pay, Waiting for approval, with a rejected state that shows the platform team's note and a form to send the details again); role Dashboards (CEO, Manager, HR, Accountant, Employee sections chosen by Permission); Departments, Designations, Employees and Employee detail (with subordinates and roles); Roles and Employee roles; Approval Chains, Pending Approvals, Delegations; Tasks list and Kanban board with progress entries; Attendance (check-in/out and a monthly calendar with Present, Absent, On Leave and rate cards) and Leave (apply, balance, cancel, approval progress) and Leave Types; Action Inbox; Analytics (metric cards, attendance line chart, tasks-by-department bar chart); Payslips, My Payslips, Payslip view, Salary Structures; Support Access (company side of Break-Glass); platform Admin screens (Companies, Payments with a pending count on the sidebar, Subscriptions with days left, Tickets, Access Requests, Activity); a UI-kit showcase at `/dev/ui-kit` in development.
 
 **Shell:** a grouped, collapsible sidebar (an item is hidden when the user lacks its Permission), a top bar with page title, search, company name, notification bell and user menu, and a plan badge that shows only what the server sends.
 
@@ -841,7 +882,12 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/billing/` | APIRootView | Any logged-in employee |
 | GET | `/api/v1/billing/invoices/` | InvoiceViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/billing/invoices/{id}/` | InvoiceViewSet / retrieve | Permission `view_billing` |
+| GET | `/api/v1/billing/payment-instructions/` | PaymentInstructionsViewSet / list | Permission `manage_billing` |
+| GET | `/api/v1/billing/payments/` | PaymentViewSet / list | Permission `manage_billing` |
+| POST | `/api/v1/billing/payments/` | PaymentViewSet / create | Permission `manage_billing` |
+| GET | `/api/v1/billing/payments/{id}/` | PaymentViewSet / retrieve | Permission `manage_billing` |
 | GET | `/api/v1/billing/plans/` | PlanViewSet / list | Permission `view_billing` |
+| GET | `/api/v1/billing/quote/` | QuoteViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/billing/subscription/` | SubscriptionViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/dashboard/summary/` | DashboardSummaryView | Any logged-in employee |
 | GET | `/api/v1/notifications/` | NotificationViewSet / list | Any logged-in employee |
@@ -889,6 +935,12 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/platform-admin/admin/companies/` | AdminCompanyViewSet / list | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/companies/{id}/activate/` | AdminCompanyViewSet / activate | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/companies/{id}/suspend/` | AdminCompanyViewSet / suspend | Platform Admin |
+| GET | `/api/v1/platform-admin/admin/payments/` | AdminPaymentViewSet / list | Platform Admin |
+| GET | `/api/v1/platform-admin/admin/payments/pending-count/` | AdminPaymentViewSet / pending_count | Platform Admin |
+| GET | `/api/v1/platform-admin/admin/payments/{id}/` | AdminPaymentViewSet / retrieve | Platform Admin |
+| POST | `/api/v1/platform-admin/admin/payments/{id}/approve/` | AdminPaymentViewSet / approve | Platform Admin |
+| POST | `/api/v1/platform-admin/admin/payments/{id}/reject/` | AdminPaymentViewSet / reject | Platform Admin |
+| GET | `/api/v1/platform-admin/admin/subscriptions/` | AdminSubscriptionViewSet / list | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/tickets/` | AdminTicketViewSet / list | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/tickets/{id}/` | AdminTicketViewSet / retrieve | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/tickets/{id}/reopen/` | AdminTicketViewSet / reopen | Platform Admin |
@@ -942,7 +994,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*161 endpoint methods on 110 routes.*
+*172 endpoint methods on 120 routes.*
 <!-- END GENERATED:api-table -->
 
 ## 6.4 Hardware Interfaces

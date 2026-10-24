@@ -143,6 +143,8 @@ class TC60CEOBlockedFromAdminSeleniumTest(unittest.TestCase):
 
         admin_links_to_check = [
             ("Companies", "[data-testid='sidebar-link-Companies']"),
+            ("Payments", "[data-testid='sidebar-link-Payments']"),
+            ("Subscriptions", "[data-testid='sidebar-link-Subscriptions']"),
             ("Support Tickets", "[data-testid='sidebar-link-Support Tickets']"),
             ("Access Requests", "[data-testid='sidebar-link-Access Requests']"),
             ("Activity", "[data-testid='sidebar-link-Activity']"),

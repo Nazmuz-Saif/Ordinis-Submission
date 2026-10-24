@@ -26,6 +26,7 @@ erDiagram
   COMPANY ||--o{ LEAVEREQUEST : company
   COMPANY ||--o{ LEAVETYPE : company
   COMPANY ||--o{ NOTIFICATION : company
+  COMPANY ||--o{ PAYMENTSUBMISSION : company
   COMPANY ||--o{ PAYSLIP : company
   COMPANY ||--o{ ROLE : company
   COMPANY ||--o{ SALARYSTRUCTURE : company
@@ -37,6 +38,7 @@ erDiagram
   DEPARTMENT |o--o{ EMPLOYEE : department
   DESIGNATION |o--o{ EMPLOYEE : designation
   EMPLOYEE |o--o{ EMPLOYEE : reports_to
+  EMPLOYEE |o--o{ PAYMENTSUBMISSION : submitted_by
   EMPLOYEE |o--o{ PAYSLIP : generated_by
   EMPLOYEE |o--o{ SUPPORTACCESSREQUEST : decided_by
   EMPLOYEE |o--o{ SUPPORTTICKET : created_by
@@ -53,15 +55,18 @@ erDiagram
   EMPLOYEE ||--o{ TASK : assigned_to
   EMPLOYEE ||--o{ TASKPROGRESSLOG : employee
   EMPLOYEE ||--o| SALARYSTRUCTURE : employee
+  INVOICE ||--o| PAYMENTSUBMISSION : invoice
   LEAVETYPE ||--o{ LEAVEREQUEST : leave_type
   ROLE ||--o{ APPROVALSTEP : approver_role
   ROLE ||--o{ EMPLOYEEROLE : role
   ROLE }o--o{ PERMISSION : permissions
   SUBSCRIPTION ||--o{ INVOICE : subscription
+  SUBSCRIPTIONPLAN ||--o{ PAYMENTSUBMISSION : plan
   SUBSCRIPTIONPLAN ||--o{ SUBSCRIPTION : plan
   SUPPORTACCESSREQUEST ||--o{ IMPERSONATIONLOG : access_request
   TASK ||--o{ TASKPROGRESSLOG : task
   USER |o--o{ AUDITLOG : actor
+  USER |o--o{ PAYMENTSUBMISSION : reviewed_by
   USER ||--o{ IMPERSONATIONLOG : actor
   USER ||--o{ PLATFORMACTIONLOG : actor
   USER ||--o{ SUPPORTACCESSREQUEST : requested_by
@@ -172,12 +177,38 @@ erDiagram
     Date issued_on
     Date due_on
     Date paid_on
+    Char10 payment_method
+    Char64 transaction_id
+  }
+  PAYMENTSUBMISSION {
+    fk company
+    fk plan
+    PositiveSmallInteger months
+    Decimal10_2 amount
+    Char10 currency
+    Char10 method
+    Char100 payer_name
+    Char30 payer_number
+    Char64 transaction_id
+    Char10 kind
+    Char10 status
+    fk submitted_by
+    fk reviewed_by
+    DateTime reviewed_at
+    Char500 review_note
+    Date period_start
+    Date period_end
+    fk invoice
   }
   SUBSCRIPTION {
     fk company
     fk plan
     Char20 status
     Date started_on
+    Date current_period_start
+    Date current_period_end
+    PositiveSmallInteger billing_months
+    JSON reminders_sent
   }
   SUBSCRIPTIONPLAN {
     Char50 name

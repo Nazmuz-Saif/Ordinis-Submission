@@ -11,9 +11,10 @@ class OrdinisException(Exception):
     message = "Something went wrong."
     status_code = 400
 
-    def __init__(self, message=None, code=None):
+    def __init__(self, message=None, code=None, field_errors=None):
         self.message = message or self.message
         self.code = code or self.code
+        self.field_errors = field_errors or {}
         super().__init__(self.message)
 
 
@@ -32,7 +33,7 @@ def custom_exception_handler(exc, context):
                 "error": {
                     "code": exc.code,
                     "message": exc.message,
-                    "field_errors": {},
+                    "field_errors": getattr(exc, 'field_errors', None) or {},
                 },
             },
             status=exc.status_code,

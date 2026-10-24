@@ -13,10 +13,10 @@ backend/
     approvals/  admin.py, apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (4), commands: start_demo_approval  (+ tests)
     attendance/  admin.py, apps.py, demo_data.py, leave_models.py, leave_serializers.py, leave_services.py, leave_views.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (2)  (+ tests)
     audit_log/  apps.py, context.py, middleware.py, models.py, serializers.py, services.py, signals.py, urls.py, views.py, migrations/ (1)  (+ tests)
-    billing/  apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (2), commands: generate_invoices, set_company_plan  (+ tests)
+    billing/  apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (4), commands: generate_invoices, process_subscriptions, set_company_plan  (+ tests)
     core/  admin.py, api_matrix.py, apps.py, demo.py, doccheck.py, docgen.py, exceptions.py, mixins.py, models.py, pagination.py, permissions.py, serializer_utils.py, traceability.py, views.py, commands: check_docs, generate_docs, seed_demo_data  (+ tests)
     dashboard/  apps.py, services.py, urls.py, views.py  (+ tests)
-    notifications/  apps.py, demo_data.py, models.py, serializers.py, services.py, signals.py, urls.py, views.py, migrations/ (1)  (+ tests)
+    notifications/  apps.py, demo_data.py, models.py, serializers.py, services.py, signals.py, urls.py, views.py, migrations/ (3)  (+ tests)
     organization/  admin.py, apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (7)  (+ tests)
     payroll/  admin.py, apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (2)  (+ tests)
     platform_admin/  apps.py, demo_data.py, exceptions.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (2), commands: create_platform_admin  (+ tests)
@@ -27,11 +27,12 @@ backend/
 
 frontend/src/
     App.jsx, main.jsx
+  components/billing/  PaymentForm.jsx
   components/common/  ChartCard.jsx, EmptyState.jsx, MetricCard.jsx, Pagination.jsx, Person.jsx, PlanBadge.jsx, StatusPill.jsx
   components/dashboard/  StatCard.jsx
-  components/layout/  Navbar.jsx, NotificationBell.jsx, Sidebar.jsx, navigation.js
+  components/layout/  Navbar.jsx, NotificationBell.jsx, RestrictedNotice.jsx, Sidebar.jsx, SubscriptionBanner.jsx, navigation.js, usePendingPayments.js
   components/roles/  PermissionPicker.jsx
-  features/admin/  AccessRequestsPage.jsx, ActivityPage.jsx, CompaniesPage.jsx, TicketsPage.jsx, format.js, shared.jsx, usePagedList.js
+  features/admin/  AccessRequestsPage.jsx, ActivityPage.jsx, CompaniesPage.jsx, PaymentsPage.jsx, SubscriptionsPage.jsx, TicketsPage.jsx, format.js, shared.jsx, subscriptionFormat.js, usePagedList.js
   features/analytics/  AnalyticsPage.jsx, analyticsFormat.js
   features/approvals/  ApprovalChainsPage.jsx, DelegationsPage.jsx, PendingApprovalsPage.jsx
   features/attendance/  AttendanceCalendar.jsx, AttendancePage.jsx, TeamAttendancePage.jsx
@@ -47,13 +48,14 @@ frontend/src/
   features/platformAdmin/  SupportAccessPage.jsx
   features/profile/  MyProfilePage.jsx
   features/roles/  EmployeeRolesPage.jsx, RoleDetailPage.jsx, RolesPage.jsx, roleFormat.js
+  features/subscribe/  ChoosePlanPage.jsx, PaymentPage.jsx, SubscribeGate.jsx, SubscribeShell.jsx, WaitingPage.jsx, subscribeFormat.js
   features/tasks/  KanbanPage.jsx, TaskProgressPanel.jsx, TasksPage.jsx
   hooks/  useClickOutside.js, useUnsavedChangesGuard.js
   layouts/  DashboardLayout.jsx
-  routes/  AdminRoute.jsx, HomeRedirect.jsx, ProtectedRoute.jsx
+  routes/  AdminRoute.jsx, HomeRedirect.jsx, ProtectedRoute.jsx, SubscribeRoute.jsx
   services/  adminService.js, analyticsService.js, apiClient.js, approvalsService.js, attendanceService.js, auditLogService.js, authService.js, billingService.js, dashboardService.js, leaveService.js, notificationsService.js, organizationService.js, paging.js, payrollService.js, rolesService.js, supportAccessService.js, tasksService.js
   store/  AuthContext.jsx
-  utils/  people.js
+  utils/  apiError.js, people.js, subscription.js
 ```
 <!-- END GENERATED:structure -->
 

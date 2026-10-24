@@ -60,6 +60,13 @@ class MeView(APIView):
         from billing.services import get_subscription
         return get_subscription(company).plan.name
 
+    @staticmethod
+    def _subscription(company):
+        if company is None:
+            return None
+        from billing.services import subscription_summary
+        return subscription_summary(company)
+
     def get(self, request):
         user = request.user
         company = user.company
@@ -73,6 +80,7 @@ class MeView(APIView):
             "company_id": str(company.id) if company else None,
             "company_name": company.name if company else None,
             "plan_name": self._plan_name(company),
+            "subscription": self._subscription(company),
             "permissions": [],
             "is_platform_admin": user.is_platform_admin,
         }
@@ -101,6 +109,7 @@ class ProfileView(APIView):
     """
     permission_classes = [IsAuthenticated, IsCompanyUserOrPlatformAdmin]
     allow_when_password_change_required = True
+    allow_when_restricted = True
 
     @staticmethod
     def payload(user):
@@ -162,6 +171,7 @@ class ChangePasswordView(APIView):
     """
     permission_classes = [IsAuthenticated, IsCompanyUserOrPlatformAdmin]
     allow_when_password_change_required = True
+    allow_when_restricted = True
 
     @transaction.atomic
     def post(self, request):

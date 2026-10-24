@@ -83,6 +83,16 @@ def land_on_organization(driver, wait):
     open_organization(driver, wait)
 
 
+def land_after_registration(driver, wait, subdomain):
+    """A new company now lands on the Choose a plan page (ST-147) and its owner cannot work until a first payment is
+    approved. These older tests are about something else, so they activate the company directly in the database
+    and carry on. (The payment flow itself has its own tests: TC-110 and TC-111.)"""
+    wait.until(lambda d: '/subscribe' in d.current_url)
+    from billing.models import Subscription
+    Subscription.objects.filter(company__subdomain=subdomain).update(status=Subscription.STATUS_ACTIVE)
+    land_on_organization(driver, wait)
+
+
 def clear_session(driver):
     driver.execute_script('window.localStorage.clear();')
     driver.delete_all_cookies()

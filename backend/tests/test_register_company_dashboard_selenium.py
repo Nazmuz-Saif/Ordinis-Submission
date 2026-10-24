@@ -33,7 +33,7 @@ User = get_user_model()
 import os as _os
 import sys as _sys
 _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
-from selenium_helpers import FRONTEND_URL, land_on_organization  # noqa: E402  (one shared place: tests/selenium_helpers.py)
+from selenium_helpers import FRONTEND_URL, land_after_registration, land_on_organization  # noqa: E402  (one shared place: tests/selenium_helpers.py)
 COMPANY_NAME = "Onnorokom Pathshala"
 SUBDOMAIN = "onnorokom"
 INDUSTRY = "Education"
@@ -121,10 +121,17 @@ class RegisterCompanyDashboardSeleniumTest(unittest.TestCase):
         print("  -> Submitting registration form...")
         register_btn.click()
 
-        # [Step 3] Expect redirect to dashboard (/organization)
-        print("[Step 3] Waiting for automatic redirect to dashboard...")
-        land_on_organization(self.driver, self.wait)
-        print("  -> Redirected to dashboard (/organization) successfully!")
+        # [Step 3] A new company waits for its first payment: it lands on "Choose your plan" and cannot open the dashboard yet
+        print("[Step 3] Waiting for the redirect to the plan page...")
+        self.wait.until(lambda d: '/subscribe/plan' in d.current_url)
+        self.assertIn("Choose your plan", self.driver.find_element(By.TAG_NAME, "h1").text)
+        self.driver.get(f"{FRONTEND_URL}/organization")
+        self.wait.until(lambda d: '/subscribe' in d.current_url)
+        print("  -> Plan page shown; the dashboard stays closed until the first payment is approved.")
+
+        # The payment flow has its own tests; here the company is activated directly, then the dashboard is checked.
+        land_after_registration(self.driver, self.wait, SUBDOMAIN)
+        print("  -> Company activated; dashboard (/organization) opened successfully!")
 
         # Wait for dashboard content to load
         self.wait.until(

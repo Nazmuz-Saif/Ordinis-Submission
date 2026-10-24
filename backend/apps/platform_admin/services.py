@@ -129,6 +129,11 @@ def _record(admin_user, company, action, note=''):
     )
 
 
+def record_payment_action(admin_user, payment, action, note=''):
+    """One PlatformActionLog row for a payment decision. The Audit Log rows come from the model signals."""
+    return _record(admin_user, payment.company, action, f'{payment.transaction_id}: {note}')
+
+
 @transaction.atomic
 def set_company_active(admin_user, company, active):
     """Suspend or activate a company. Repeating the same call changes nothing and logs nothing."""

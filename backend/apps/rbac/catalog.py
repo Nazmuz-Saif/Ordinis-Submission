@@ -48,6 +48,8 @@ PERMISSION_CATALOG = [
     # billing
     {"codename": "view_billing", "name": "View Billing", "module": "billing",
      "description": "See the company's plan, employee usage and invoices."},
+    {"codename": "manage_billing", "name": "Manage Billing", "module": "billing",
+     "description": "Choose a plan and a number of months, pay outside the system, submit the payment details, and read the company's own payments."},
     # platform_admin
     {"codename": "approve_support_access", "name": "Approve Support Access", "module": "platform_admin",
      "description": "Approve, deny or revoke the Ordinis team's time-limited, read-only access to the company, and read the access log."},

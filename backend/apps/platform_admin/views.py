@@ -127,6 +127,9 @@ class SupportDataView(APIView):
 from django.db.models import Count, Q  # noqa: E402
 from django.shortcuts import get_object_or_404  # noqa: E402
 
+from billing import services as billing_services  # noqa: E402
+from billing.models import PaymentSubmission  # noqa: E402
+from billing.serializers import AdminPaymentSerializer  # noqa: E402
 from tenants.models import Company  # noqa: E402
 from .models import PlatformActionLog, SupportTicket  # noqa: E402
 from .serializers import (  # noqa: E402
@@ -157,6 +160,64 @@ class AdminCompanyViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     @action(detail=True, methods=['post'])
     def activate(self, request, pk=None):
         return self._set(pk, True)
+
+
+class AdminPaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    /api/v1/platform-admin/admin/payments/?status=&method=&kind=&company=&q=
+    Every payment companies submit, newest first. The platform team approves or rejects here.
+    """
+    permission_classes = [IsPlatformAdmin]
+    serializer_class = AdminPaymentSerializer
+
+    def get_queryset(self):
+        params = self.request.query_params
+        queryset = PaymentSubmission.objects.select_related('company', 'plan', 'invoice', 'submitted_by__user', 'reviewed_by')
+        for field in ('status', 'method', 'kind', 'company'):
+            if params.get(field):
+                queryset = queryset.filter(**{field: params[field]})
+        if params.get('q'):
+            term = params['q'].strip()
+            queryset = queryset.filter(
+                Q(transaction_id__icontains=term) | Q(payer_name__icontains=term)
+                | Q(payer_number__icontains=term) | Q(company__name__icontains=term)
+            )
+        return queryset.order_by('-created_at', 'id')
+
+    @action(detail=False, methods=['get'], url_path='pending-count')
+    def pending_count(self, request):
+        """The number on the sidebar badge: payments waiting for a decision."""
+        return Response({'success': True, 'data': {'count': billing_services.pending_payment_count()}})
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        payment, changed = billing_services.approve_payment(self.get_object(), request.user)
+        payment = self.get_queryset().get(pk=payment.pk)
+        return Response({'success': True, 'data': self.get_serializer(payment).data,
+                         'message': 'Payment approved.' if changed else 'This payment was already approved.'})
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        payment, changed = billing_services.reject_payment(self.get_object(), request.user, request.data.get('note'))
+        payment = self.get_queryset().get(pk=payment.pk)
+        return Response({'success': True, 'data': self.get_serializer(payment).data,
+                         'message': 'Payment rejected.' if changed else 'This payment was already rejected.'})
+
+
+class AdminSubscriptionViewSet(viewsets.GenericViewSet):
+    """
+    /api/v1/platform-admin/admin/subscriptions/?filter=expiring|restricted&q=
+    Every company with its plan, state, end date and days left, soonest-ending first.
+    `expiring` = 7 days or fewer and still working; `restricted` = expired or waiting for the first payment.
+    """
+    permission_classes = [IsPlatformAdmin]
+
+    def list(self, request):
+        rows = billing_services.admin_subscription_rows(
+            request.query_params.get('filter', ''), (request.query_params.get('q') or '').strip(),
+        )
+        page = self.paginate_queryset(rows)
+        return self.get_paginated_response(page)
 
 
 class AdminTicketViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -215,6 +276,7 @@ class CompanyTicketViewSet(
     Any employee can raise a ticket and sees their own. Someone with approve_support_access sees the company's.
     """
     serializer_class = TicketSerializer
+    allow_when_restricted = True      # a restricted company must still be able to ask for help
 
     def get_queryset(self):
         user = self.request.user
