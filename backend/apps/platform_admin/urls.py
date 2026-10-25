@@ -2,7 +2,8 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    AdminAccessRequestViewSet, AdminActionLogViewSet, AdminCompanyViewSet, AdminPaymentViewSet, AdminSubscriptionViewSet, AdminTicketViewSet,
+    AdminAccessRequestViewSet, AdminActionLogViewSet, AdminCompanyViewSet, AdminPaymentViewSet, AdminSubscriptionViewSet, AdminSummaryViewSet,
+    AdminTicketViewSet,
     CompanyAccessLogViewSet, CompanyAccessRequestViewSet, CompanyTicketViewSet,
     PlatformAccessRequestViewSet, SupportDataView,
 )
@@ -15,6 +16,7 @@ router.register('company/tickets', CompanyTicketViewSet, basename='company-ticke
 # a Platform Admin's side
 router.register('requests', PlatformAccessRequestViewSet, basename='platform-access-request')
 router.register('admin/companies', AdminCompanyViewSet, basename='admin-company')
+router.register('admin/summary', AdminSummaryViewSet, basename='admin-summary')
 router.register('admin/tickets', AdminTicketViewSet, basename='admin-ticket')
 router.register('admin/payments', AdminPaymentViewSet, basename='admin-payment')
 router.register('admin/subscriptions', AdminSubscriptionViewSet, basename='admin-subscription')

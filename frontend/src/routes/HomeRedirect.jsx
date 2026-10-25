@@ -5,7 +5,7 @@ import { useAuth } from '../store/AuthContext'
 function HomeRedirect({ children }) {
   const { me, loading } = useAuth()
   if (loading) return null
-  if (me?.is_platform_admin) return <Navigate to="/admin/companies" replace />
+  if (me?.is_platform_admin) return <Navigate to="/admin/dashboard" replace />
   return children
 }
 

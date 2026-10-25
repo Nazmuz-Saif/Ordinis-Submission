@@ -10,7 +10,7 @@ One endpoint, `GET /api/v1/dashboard/summary/`, returns sections chosen by the u
 
 | Role in this document | Status | What the delivered system does |
 |---|---|---|
-| Super Admin | Built | Companies list with counts, suspend and activate, support tickets, Break-Glass access requests, activity log. Revenue and billing overview, platform announcements, sign-up trend: not built (ST-136, future) |
+| Super Admin | Built | Dashboard home (companies by state, revenue this month and all time, dues, subscriptions ending, pending payments, open tickets, revenue per month, a Needs attention list: ST-153), Companies list and detail page, suspend and activate with a note, Payments, Subscriptions, support tickets, Break-Glass access requests, activity log. Platform announcements and a sign-up trend: not built, future |
 | CEO / Company Owner | Built | All sections, approvals waiting, Support Access approve, deny and revoke. Budget and expense snapshot, department comparison, company health score, activity feed: not built |
 | CTO, GM, AGM | No separate dashboard | They get the sections their Permissions give (for example the Manager section); no role-specific screen |
 | HR | Built | `people` section (headcount, joiners). Document verification list, holiday calendar, attendance policy: not built |

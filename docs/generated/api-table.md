@@ -132,6 +132,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | POST | `/api/v1/platform-admin/admin/payments/{id}/approve/` | AdminPaymentViewSet / approve | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/payments/{id}/reject/` | AdminPaymentViewSet / reject | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/subscriptions/` | AdminSubscriptionViewSet / list | Platform Admin |
+| GET | `/api/v1/platform-admin/admin/summary/` | AdminSummaryViewSet / list | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/tickets/` | AdminTicketViewSet / list | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/tickets/{id}/` | AdminTicketViewSet / retrieve | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/tickets/{id}/reopen/` | AdminTicketViewSet / reopen | Platform Admin |
@@ -185,4 +186,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*178 endpoint methods on 126 routes.*
+*179 endpoint methods on 127 routes.*

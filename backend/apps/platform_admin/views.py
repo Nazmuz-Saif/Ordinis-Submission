@@ -13,6 +13,7 @@ from tasks.serializers import TaskSerializer
 from . import services
 from .models import ImpersonationLog, SupportAccessRequest
 from .company_detail import company_detail
+from .summary import platform_summary
 from .serializers import AccessRequestCreateSerializer, AccessRequestSerializer, ImpersonationLogSerializer
 
 
@@ -226,6 +227,15 @@ class AdminSubscriptionViewSet(viewsets.GenericViewSet):
         )
         page = self.paginate_queryset(rows)
         return self.get_paginated_response(page)
+
+
+class AdminSummaryViewSet(viewsets.GenericViewSet):
+    """GET /api/v1/platform-admin/admin/summary/ : the Platform Admin home (companies by state, revenue, dues, attention)."""
+    permission_classes = [IsPlatformAdmin]
+    pagination_class = None
+
+    def list(self, request):
+        return Response(platform_summary())
 
 
 class AdminTicketViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):

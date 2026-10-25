@@ -7,7 +7,7 @@ import { isPendingPayment } from '../utils/subscription'
 function SubscribeRoute({ children }) {
   const { me, loading } = useAuth()
   if (loading || !me) return null
-  if (me.is_platform_admin) return <Navigate to="/admin/companies" replace />
+  if (me.is_platform_admin) return <Navigate to="/admin/dashboard" replace />
   if (!isPendingPayment(me)) return <Navigate to="/dashboard" replace />
   return children
 }

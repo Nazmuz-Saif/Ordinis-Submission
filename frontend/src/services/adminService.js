@@ -17,6 +17,12 @@ async function post(url, body) {
 export const suspendCompany = (id, note = '') => post(`${BASE}/companies/${id}/suspend/`, { note })
 export const activateCompany = (id, note = '') => post(`${BASE}/companies/${id}/activate/`, { note })
 
+// ST-153: the Platform Admin home, one call.
+export async function getSummary() {
+  const res = await apiClient.get(`${BASE}/summary/`)
+  return res.data
+}
+
 // ST-152: one company's detail page. Contacts and counts only, never employee, task or salary data.
 export async function getCompany(id) {
   const res = await apiClient.get(`${BASE}/companies/${id}/`)
