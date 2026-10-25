@@ -95,7 +95,18 @@ function BillingPage() {
             <p data-testid="billing-plan-limit" className="text-sm text-[#71717A] mt-1">
               {subscription.plan.unlimited ? 'No employee limit' : `Up to ${subscription.plan.max_employees} employees`}
             </p>
-            <p className="text-xs text-[#71717A] mt-3">To change your plan, contact the Ordinis team.</p>
+            {subscription.next_plan && (
+              <p data-testid="billing-next-plan" className="text-sm text-[#14142B] mt-3 rounded-lg bg-[#F1EEFB] px-3 py-2">
+                {subscription.next_plan_from
+                  ? `Changes to ${subscription.next_plan.name} on ${formatDate(subscription.next_plan_from)}.`
+                  : `Changes to ${subscription.next_plan.name} at your next renewal.`}
+              </p>
+            )}
+            {hasPermission('manage_billing') && (
+              <Link to="/settings/billing/change-plan" data-testid="change-plan-link" className="inline-block mt-3 text-sm text-[#6C31D6] font-medium hover:underline">
+                Change plan
+              </Link>
+            )}
           </div>
 
           <div data-testid="billing-usage-card" className="bg-white rounded-xl shadow-sm border border-[#EEEEF2] p-5">
@@ -107,7 +118,15 @@ function BillingPage() {
                   <div data-testid="billing-usage-bar" className={`h-full rounded-full transition-all duration-300 ${barColor}`} style={{ width: `${usage.percent}%` }} />
                 </div>
                 <p data-testid="billing-usage-note" className="text-sm mt-2 text-[#14142B]">
-                  {usage.is_full ? 'Your plan is full. Upgrade your plan to add more employees.' : `${usage.remaining} seat${usage.remaining === 1 ? '' : 's'} left.`}
+                  {usage.is_full ? (
+                    <>
+                      Your plan is full.{' '}
+                      {hasPermission('manage_billing')
+                        ? <Link to="/settings/billing/change-plan" data-testid="upgrade-link" className="text-[#6C31D6] font-medium hover:underline">Upgrade your plan</Link>
+                        : 'Upgrade your plan'}{' '}
+                      to add more employees.
+                    </>
+                  ) : `${usage.remaining} seat${usage.remaining === 1 ? '' : 's'} left.`}
                 </p>
               </>
             )}

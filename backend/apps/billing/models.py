@@ -41,6 +41,12 @@ class Subscription(BaseModel):
     billing_months = models.PositiveSmallIntegerField(default=12)
     # Which reminder thresholds (7, 3, 1 days) were already sent in this period; emptied when the period changes.
     reminders_sent = models.JSONField(default=list, blank=True)
+    # A lower plan chosen by the company. It never starts before the next renewal: `next_plan_from` is the first day of
+    # the period it starts in (empty until that renewal is paid).
+    next_plan = models.ForeignKey(
+        SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name='scheduled_subscriptions',
+    )
+    next_plan_from = models.DateField(null=True, blank=True)
 
     class Meta:
         constraints = [
@@ -58,12 +64,16 @@ class Invoice(BaseModel):
     """
     A bill. It keeps the amount of that day: a later plan change never alters an old invoice.
     kind: `monthly` (the old monthly generator), `renewal` (issued by the daily job 7 days before the end, open until
-    it is paid), `payment` (written when an approved payment had no bill to settle).
+    it is paid), `payment` (written when an approved payment had no bill to settle), `upgrade` (written when a plan
+    upgrade is approved: the extra amount for the days left of the running period).
     """
     KIND_MONTHLY = 'monthly'
     KIND_RENEWAL = 'renewal'
     KIND_PAYMENT = 'payment'
-    KIND_CHOICES = [(KIND_MONTHLY, 'Monthly'), (KIND_RENEWAL, 'Renewal'), (KIND_PAYMENT, 'Payment')]
+    KIND_UPGRADE = 'upgrade'
+    KIND_CHOICES = [
+        (KIND_MONTHLY, 'Monthly'), (KIND_RENEWAL, 'Renewal'), (KIND_PAYMENT, 'Payment'), (KIND_UPGRADE, 'Upgrade'),
+    ]
     STATUS_OPEN = 'open'
     STATUS_PAID = 'paid'
     STATUS_VOID = 'void'

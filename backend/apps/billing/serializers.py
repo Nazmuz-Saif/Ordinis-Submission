@@ -75,6 +75,7 @@ class PaymentSubmitSerializer(serializers.Serializer):
     months = serializers.CharField(required=False, allow_blank=True)
     invoice = serializers.CharField(required=False, allow_blank=True)
     method = serializers.CharField()
+    kind = serializers.CharField(required=False, allow_blank=True)      # only `upgrade` is accepted here
     payer_name = serializers.CharField(allow_blank=True)
     payer_number = serializers.CharField(allow_blank=True)
     transaction_id = serializers.CharField(allow_blank=True)

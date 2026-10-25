@@ -65,6 +65,7 @@ erDiagram
   ROLE ||--o{ EMPLOYEEROLE : role
   ROLE }o--o{ PERMISSION : permissions
   SUBSCRIPTION ||--o{ INVOICE : subscription
+  SUBSCRIPTIONPLAN |o--o{ SUBSCRIPTION : next_plan
   SUBSCRIPTIONPLAN ||--o{ PAYMENTSUBMISSION : plan
   SUBSCRIPTIONPLAN ||--o{ SUBSCRIPTION : plan
   SUPPORTACCESSREQUEST ||--o{ IMPERSONATIONLOG : access_request
@@ -215,6 +216,8 @@ erDiagram
     Date current_period_end
     PositiveSmallInteger billing_months
     JSON reminders_sent
+    fk next_plan
+    Date next_plan_from
   }
   SUBSCRIPTIONPLAN {
     Char50 name

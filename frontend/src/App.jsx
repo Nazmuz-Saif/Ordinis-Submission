@@ -27,6 +27,7 @@ import PayslipsPage from './features/payroll/PayslipsPage'
 import AnalyticsPage from './features/analytics/AnalyticsPage'
 import AuditLogsPage from './features/audit/AuditLogsPage'
 import BillingPage from './features/billing/BillingPage'
+import ChangePlanPage from './features/billing/ChangePlanPage'
 import RenewPage from './features/billing/RenewPage'
 import InvoiceDetailPage from './features/billing/InvoiceDetailPage'
 import MyPayslipsPage from './features/payroll/MyPayslipsPage'
@@ -261,6 +262,16 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <BillingPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/billing/change-plan"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ChangePlanPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

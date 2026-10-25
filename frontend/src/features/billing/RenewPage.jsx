@@ -154,7 +154,7 @@ function RenewPage() {
           <p className="text-sm text-[#71717A] mb-4">
             Your renewal invoice is issued 7 days before the end. You can also renew early: the new time is added after your current end date.
           </p>
-          <EarlyRenewal planName={data.plan.name} instructions={instructions} onSubmitted={done} />
+          <EarlyRenewal planName={(data.next_plan || data.plan).name} instructions={instructions} onSubmitted={done} />
         </div>
       )}
     </div>

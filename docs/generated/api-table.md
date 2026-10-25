@@ -65,6 +65,8 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | POST | `/api/v1/auth/refresh/` | TokenRefreshView | Public |
 | POST | `/api/v1/auth/register/` | CompanyRegisterView | Public |
 | GET | `/api/v1/billing/` | APIRootView | Any logged-in employee |
+| POST | `/api/v1/billing/downgrade/` | DowngradeViewSet / create | Permission `manage_billing` |
+| POST | `/api/v1/billing/downgrade/cancel/` | DowngradeViewSet / cancel | Permission `manage_billing` |
 | GET | `/api/v1/billing/invoices/` | InvoiceViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/billing/invoices/{id}/` | InvoiceViewSet / retrieve | Permission `view_billing` |
 | GET | `/api/v1/billing/payment-instructions/` | PaymentInstructionsViewSet / list | Permission `manage_billing` |
@@ -74,6 +76,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/billing/plans/` | PlanViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/billing/quote/` | QuoteViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/billing/subscription/` | SubscriptionViewSet / list | Permission `view_billing` |
+| GET | `/api/v1/billing/upgrade-quote/` | UpgradeQuoteViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/dashboard/summary/` | DashboardSummaryView | Any logged-in employee |
 | GET | `/api/v1/notifications/` | NotificationViewSet / list | Any logged-in employee |
 | GET | `/api/v1/notifications/` | APIRootView | Any logged-in employee |
@@ -181,4 +184,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*174 endpoint methods on 122 routes.*
+*177 endpoint methods on 125 routes.*

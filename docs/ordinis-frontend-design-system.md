@@ -35,6 +35,7 @@ The approved mockups are implemented for the screens marked Built. The shared pa
 | Billing page (plan card, employee usage bar, invoice table) | Built | `BillingPage` |
 | First-payment onboarding: choose a plan and months, pay and send the details, waiting and rejected states | Built | `ChoosePlanPage`, `PaymentPage`, `WaitingPage` (ST-147). The amount shown is the server's quote; the payment form is `PaymentForm`, reused for renewals later |
 | Subscription banner and restricted-mode notice | Built | `SubscriptionBanner`, `RestrictedNotice` (ST-145) |
+| Change plan page (plans with limits, upgrade quote with the extra amount and the unchanged end date, the payment form, a lower plan at the next renewal) | Built | `ChangePlanPage` (ST-151); the Billing page links to it |
 | Billing timeline card (plan, dates, progress bar, days left, Active / Expiring soon / Restricted), Renew with the renewal invoice, pending banner, and an invoice detail page with Print | Built | `TimelineCard`, `RenewPage`, `InvoiceDetailPage` (ST-149) |
 | Platform Admin: Payments review (filters, detail panel, approve with confirm, reject with a required note) and Subscriptions (days left, amber 7 days or fewer, red expired) | Built | `PaymentsPage`, `SubscriptionsPage`; the sidebar shows the count of pending payments (ST-148) |
 | Company switcher (more than one company) | Not built | The bar shows the user's own company name |

@@ -23,6 +23,23 @@ export async function getInvoicesPage(page = 1) {
   }
 }
 
+// ---- Changing the plan (ST-151). A higher plan is paid now for the days left; a lower plan starts at the next renewal. ----
+
+export async function getUpgradeQuote(plan) {
+  const res = await apiClient.get('/billing/upgrade-quote/', { params: { plan } })
+  return res.data.data
+}
+
+export async function scheduleDowngrade(plan) {
+  const res = await apiClient.post('/billing/downgrade/', { plan })
+  return res.data.data
+}
+
+export async function cancelDowngrade() {
+  const res = await apiClient.post('/billing/downgrade/cancel/')
+  return res.data.data
+}
+
 // ---- Choosing and paying for a plan (ST-147). The amount is always the server's quote. ----
 
 export async function getPlans() {

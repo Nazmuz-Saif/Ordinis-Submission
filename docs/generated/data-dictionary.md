@@ -204,7 +204,7 @@ A bill. It keeps the amount of that day: a later plan change never alters an old
 | `paid_on` | Date |  | can be empty (null) |
 | `payment_method` | Char(10) |  |  |
 | `transaction_id` | Char(64) |  |  |
-| `kind` | Char(10) | 'monthly' | one of: monthly, renewal, payment |
+| `kind` | Char(10) | 'monthly' | one of: monthly, renewal, payment, upgrade |
 | `months` | PositiveSmallInteger | 1 |  |
 
 Rule: `one_invoice_per_period` (unique)
@@ -260,6 +260,8 @@ The plan a company is on now. One per company.
 | `current_period_end` | Date |  |  |
 | `billing_months` | PositiveSmallInteger | 12 |  |
 | `reminders_sent` | JSON | list() |  |
+| `next_plan` | FK to billing.SubscriptionPlan |  | can be empty (null); on delete: SET_NULL |
+| `next_plan_from` | Date |  | can be empty (null) |
 
 Rule: `subscription_period_end_not_before_start` (check)
 

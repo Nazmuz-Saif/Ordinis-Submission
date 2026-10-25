@@ -85,7 +85,7 @@ function InvoiceDetailPage() {
           <Row label="Company" value={invoice.company_name} testId="invoice-detail-company" />
           <Row label="Plan" value={invoice.plan_name} testId="invoice-detail-plan" />
           <Row label="Period" value={`${formatDate(invoice.period_start)} to ${formatDate(invoice.period_end)}`} testId="invoice-detail-period" />
-          <Row label="Length" value={monthsText(invoice.months)} testId="invoice-detail-months" />
+          {invoice.kind !== 'upgrade' && <Row label="Length" value={monthsText(invoice.months)} testId="invoice-detail-months" />}
           <Row label="Currency" value={invoice.currency} testId="invoice-detail-currency" />
           <Row label="Issued on" value={formatDate(invoice.issued_on)} testId="invoice-detail-issued" />
           <Row label="Due on" value={formatDate(invoice.due_on)} testId="invoice-detail-due" />
