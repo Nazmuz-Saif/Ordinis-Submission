@@ -12,6 +12,7 @@ from tasks.models import Task
 from tasks.serializers import TaskSerializer
 from . import services
 from .models import ImpersonationLog, SupportAccessRequest
+from .company_detail import company_detail
 from .serializers import AccessRequestCreateSerializer, AccessRequestSerializer, ImpersonationLogSerializer
 
 
@@ -138,7 +139,10 @@ from .serializers import (  # noqa: E402
 
 
 class AdminCompanyViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    """/api/v1/platform-admin/admin/companies/ : every company, with suspend / activate."""
+    """
+    /api/v1/platform-admin/admin/companies/ : every company, with suspend / activate (each takes an optional `note`).
+    /api/v1/platform-admin/admin/companies/{id}/ : the company's detail page: contacts and counts, never employee data.
+    """
     permission_classes = [IsPlatformAdmin]
     serializer_class = CompanyAdminSerializer
 
@@ -148,9 +152,13 @@ class AdminCompanyViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             pending_requests=Count('access_requests', filter=Q(access_requests__status='pending'), distinct=True),
         ).order_by('name', 'id')
 
+    def retrieve(self, request, pk=None):
+        return Response(company_detail(get_object_or_404(self.get_queryset(), pk=pk)))
+
     def _set(self, pk, active):
         company = get_object_or_404(self.get_queryset(), pk=pk)
-        services.set_company_active(self.request.user, company, active)
+        note = str(self.request.data.get('note') or '')[:255]
+        services.set_company_active(self.request.user, company, active, note)
         return Response(self.get_serializer(get_object_or_404(self.get_queryset(), pk=pk)).data)
 
     @action(detail=True, methods=['post'])

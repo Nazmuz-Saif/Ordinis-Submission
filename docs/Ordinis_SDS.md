@@ -806,7 +806,7 @@ Platform Admin     SupportAccessRequest API        Company CEO
 
 **Design system in force:** "Modern Minimalist SaaS" (`ordinis-frontend-design-system.md`): navy `#14142B` and violet `#6C31D6` on an off-white background, subtle 150-300 ms animation, Tailwind CSS. The approved mockup set has been implemented for the screens below.
 
-**Screens built:** Login and Register; the first-payment steps a new company must pass before it can work (Choose your plan, Pay, Waiting for approval, with a rejected state that shows the platform team's note and a form to send the details again); role Dashboards (CEO, Manager, HR, Accountant, Employee sections chosen by Permission); Departments and Designations with a detail page each (people, task summary, running tasks, Department Head); Employees and Employee detail (with subordinates and roles); Roles and Employee roles; Approval Chains, Pending Approvals, Delegations; Tasks list and Kanban board with progress entries; Billing (a timeline card with days left, Renew against the renewal invoice, invoice detail with Print) and Change plan (an upgrade quote and payment, a lower plan at the next renewal); Attendance (check-in/out and a monthly calendar with Present, Absent, On Leave and rate cards) and Leave (apply, balance, cancel, approval progress) and Leave Types; Action Inbox; Analytics (metric cards, attendance line chart, tasks-by-department bar chart); Payslips, My Payslips, Payslip view, Salary Structures; Support Access (company side of Break-Glass); platform Admin screens (Companies, Payments with a pending count on the sidebar, Subscriptions with days left, Tickets, Access Requests, Activity); a UI-kit showcase at `/dev/ui-kit` in development.
+**Screens built:** Login and Register; the first-payment steps a new company must pass before it can work (Choose your plan, Pay, Waiting for approval, with a rejected state that shows the platform team's note and a form to send the details again); role Dashboards (CEO, Manager, HR, Accountant, Employee sections chosen by Permission); Departments and Designations with a detail page each (people, task summary, running tasks, Department Head); Employees and Employee detail (with subordinates and roles); Roles and Employee roles; Approval Chains, Pending Approvals, Delegations; Tasks list and Kanban board with progress entries; Billing (a timeline card with days left, Renew against the renewal invoice, invoice detail with Print) and Change plan (an upgrade quote and payment, a lower plan at the next renewal); Attendance (check-in/out and a monthly calendar with Present, Absent, On Leave and rate cards) and Leave (apply, balance, cancel, approval progress) and Leave Types; Action Inbox; Analytics (metric cards, attendance line chart, tasks-by-department bar chart); Payslips, My Payslips, Payslip view, Salary Structures; Support Access (company side of Break-Glass); platform Admin screens (Companies with a detail page for each, Payments with a pending count on the sidebar, Subscriptions with days left, Tickets, Access Requests, Activity); a UI-kit showcase at `/dev/ui-kit` in development.
 
 **Shell:** a grouped, collapsible sidebar (an item is hidden when the user lacks its Permission), a top bar with page title, search, company name, notification bell and user menu, and a plan badge that shows only what the server sends.
 
@@ -945,6 +945,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/platform-admin/admin/access-requests/` | AdminAccessRequestViewSet / list | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/actions/` | AdminActionLogViewSet / list | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/companies/` | AdminCompanyViewSet / list | Platform Admin |
+| GET | `/api/v1/platform-admin/admin/companies/{id}/` | AdminCompanyViewSet / retrieve | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/companies/{id}/activate/` | AdminCompanyViewSet / activate | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/companies/{id}/suspend/` | AdminCompanyViewSet / suspend | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/payments/` | AdminPaymentViewSet / list | Platform Admin |
@@ -1006,7 +1007,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*177 endpoint methods on 125 routes.*
+*178 endpoint methods on 126 routes.*
 <!-- END GENERATED:api-table -->
 
 ## 6.4 Hardware Interfaces

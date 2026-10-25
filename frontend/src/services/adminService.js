@@ -9,12 +9,25 @@ export const getTicketsPage = (page = 1, status = '') => getPage(`${BASE}/ticket
 export const getAccessRequestsPage = (page = 1) => getPage(`${BASE}/access-requests/`, { page })
 export const getActionsPage = (page = 1) => getPage(`${BASE}/actions/`, { page })
 
-async function post(url) {
-  const res = await apiClient.post(url)
+async function post(url, body) {
+  const res = await apiClient.post(url, body)
   return res.data
 }
-export const suspendCompany = (id) => post(`${BASE}/companies/${id}/suspend/`)
-export const activateCompany = (id) => post(`${BASE}/companies/${id}/activate/`)
+// `note` is optional and goes into the platform action log.
+export const suspendCompany = (id, note = '') => post(`${BASE}/companies/${id}/suspend/`, { note })
+export const activateCompany = (id, note = '') => post(`${BASE}/companies/${id}/activate/`, { note })
+
+// ST-152: one company's detail page. Contacts and counts only, never employee, task or salary data.
+export async function getCompany(id) {
+  const res = await apiClient.get(`${BASE}/companies/${id}/`)
+  return res.data
+}
+
+// A Break-Glass request for one company; the company's CEO decides.
+export async function createAccessRequest(company, reason) {
+  const res = await apiClient.post('/platform-admin/requests/', { company, reason })
+  return res.data
+}
 export const resolveTicket = (id) => post(`${BASE}/tickets/${id}/resolve/`)
 export const reopenTicket = (id) => post(`${BASE}/tickets/${id}/reopen/`)
 

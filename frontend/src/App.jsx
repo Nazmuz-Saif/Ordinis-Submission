@@ -28,6 +28,7 @@ import AnalyticsPage from './features/analytics/AnalyticsPage'
 import AuditLogsPage from './features/audit/AuditLogsPage'
 import BillingPage from './features/billing/BillingPage'
 import ChangePlanPage from './features/billing/ChangePlanPage'
+import CompanyDetailPage from './features/admin/CompanyDetailPage'
 import RenewPage from './features/billing/RenewPage'
 import InvoiceDetailPage from './features/billing/InvoiceDetailPage'
 import MyPayslipsPage from './features/payroll/MyPayslipsPage'
@@ -368,6 +369,7 @@ function App() {
           />
           {[
             ['/admin/companies', CompaniesPage],
+            ['/admin/companies/:id', CompanyDetailPage],
             ['/admin/payments', PaymentsPage],
             ['/admin/subscriptions', SubscriptionsPage],
             ['/admin/tickets', TicketsPage],

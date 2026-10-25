@@ -123,6 +123,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/platform-admin/admin/access-requests/` | AdminAccessRequestViewSet / list | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/actions/` | AdminActionLogViewSet / list | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/companies/` | AdminCompanyViewSet / list | Platform Admin |
+| GET | `/api/v1/platform-admin/admin/companies/{id}/` | AdminCompanyViewSet / retrieve | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/companies/{id}/activate/` | AdminCompanyViewSet / activate | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/companies/{id}/suspend/` | AdminCompanyViewSet / suspend | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/payments/` | AdminPaymentViewSet / list | Platform Admin |
@@ -184,4 +185,4 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*177 endpoint methods on 125 routes.*
+*178 endpoint methods on 126 routes.*

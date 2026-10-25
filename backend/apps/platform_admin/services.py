@@ -135,13 +135,14 @@ def record_payment_action(admin_user, payment, action, note=''):
 
 
 @transaction.atomic
-def set_company_active(admin_user, company, active):
-    """Suspend or activate a company. Repeating the same call changes nothing and logs nothing."""
+def set_company_active(admin_user, company, active, note=''):
+    """Suspend or activate a company, with an optional note for the action log.
+    Repeating the same call changes nothing and logs nothing."""
     if company.is_active == active:
         return company
     company.is_active = active
     company.save()
-    _record(admin_user, company, 'activate' if active else 'suspend')
+    _record(admin_user, company, 'activate' if active else 'suspend', (note or '').strip())
     return company
 
 
