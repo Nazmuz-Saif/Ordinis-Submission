@@ -16,7 +16,7 @@
 | FR-10 | Company Roles as named bundles of Permissions | High | **Done** | ST-108 |  |
 | FR-11 | Roles assigned to any Employee, independent of Designation | High | **Done** | ST-109 |  |
 | FR-12 | A specific Permission codename is checked before every protected action | High | **Done** | ST-110, ST-111 |  |
-| FR-13 | Operational data visible only to the employee, the manager chain and company-wide permission holders | High | **Partly** | ST-107, ST-111, ST-116 | Tasks, leave requests and payslips are limited to the owner, assignee, approver or a permission holder. A manager cannot yet list a team member's attendance. |
+| FR-13 | Operational data visible only to the employee, the manager chain and company-wide permission holders | High | **Done** | ST-107, ST-111, ST-116, ST-144 |  |
 | FR-14 | Approval Chain of ordered steps, each tied to a Role | Medium | **Done** | ST-112 |  |
 | FR-15 | Every approve or reject recorded with actor and comment | Medium | **Done** | ST-113 |  |
 | FR-16 | Delegation of approval authority for a date range | Medium | **Done** | ST-117 |  |
@@ -40,6 +40,21 @@
 | FR-34 | Platform Admin must send a Support Access Request with a reason | Medium | **Done** | ST-123 |  |
 | FR-35 | The company approves; access is time-limited and expires by itself | Medium | **Done** | ST-123 |  |
 | FR-36 | Every Break-Glass access recorded where the company can read it | Medium | **Done** | ST-123, ST-124 |  |
+| FR-37 | Every Permission has a name, a plain-language description and a module, kept in one place in the code | High | **Done** | ST-138 |  |
+| FR-38 | Roles page with Permissions in sections, a detail page that explains each Permission, and editing a Role | High | **Done** | ST-139 |  |
+| FR-39 | Full name and profile details stored; every user sees and edits their own My Profile | High | **Done** | ST-140, ST-141 |  |
+| FR-40 | Change password with the current password; a temporary password for a new employee that must be changed at first login | High | **Done** | ST-142 |  |
+| FR-41 | Employee detail page with the full profile and the Permissions the person really has | Medium | **Done** | ST-143 |  |
+| FR-42 | A CEO or a manager picks an employee and sees the month of attendance with check-in and check-out times | Medium | **Done** | ST-144 |  |
+| FR-43 | A subscription has a start and end date, days left, reminders, a grace period and then a restricted mode | High | **Done** | ST-145, ST-149 |  |
+| FR-44 | A company chooses a plan and months, pays outside the system and sends the payment details; it starts only after approval | High | **Done** | ST-146, ST-147 |  |
+| FR-45 | The Platform Admin reviews each manual payment and approves it, or rejects it with a note | High | **Done** | ST-148 |  |
+| FR-46 | Billing timeline with days left, Renew against a renewal invoice, and a detail page for every invoice | Medium | **Done** | ST-149 |  |
+| FR-47 | A detail page for each Department (with its head) and each Designation: who is in it and what work is running | Medium | **Done** | ST-150 |  |
+| FR-48 | A higher plan is paid for the days left and starts when approved; a lower plan starts at the next renewal | Medium | **Done** | ST-151 |  |
+| FR-49 | The Platform Admin opens a company detail page (owner, plan, size, counts) that never shows employee data | Medium | **Done** | ST-152 |  |
+| FR-50 | A Platform Admin dashboard with companies by state, revenue, dues and what needs attention | Medium | **Done** | ST-153 |  |
+| FR-51 | Every suspend, activate and ticket resolution carries a written note; a company reads its own tickets and the answer | Medium | **Done** | ST-154 |  |
 | NFR-1 | Passwords stored with a one-way hash (PBKDF2) | High | **Done** | ST-101, ST-102 | Django default hasher. A fast hasher is used only while the tests run (settings/base.py). |
 | NFR-2 | Tenant isolation: another company's object is a 404, not a 403 | High | **Done** | ST-111, ST-131 |  |
 | NFR-3 | Short-lived access token, rotating refresh token, blacklist on logout | High | **Done** | ST-102 |  |
@@ -56,4 +71,4 @@
 | NFR-14 | Versioned REST API under /api/v1/ | Low | **Done** | ST-102 |  |
 | NFR-15 | Every sensitive action attributable to an actor and a time | High | **Done** | ST-123, ST-135 |  |
 
-*51 requirements: 43 Done, 6 Partly, 2 Not built. Status is read from the code by `python manage.py generate_docs`.*
+*66 requirements: 59 Done, 5 Partly, 2 Not built. Status is read from the code by `python manage.py generate_docs`.*
