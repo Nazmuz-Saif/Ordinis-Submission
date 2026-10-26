@@ -30,6 +30,7 @@ import BillingPage from './features/billing/BillingPage'
 import ChangePlanPage from './features/billing/ChangePlanPage'
 import AdminDashboardPage from './features/admin/AdminDashboardPage'
 import CompanyDetailPage from './features/admin/CompanyDetailPage'
+import HelpSupportPage from './features/help/HelpSupportPage'
 import RenewPage from './features/billing/RenewPage'
 import InvoiceDetailPage from './features/billing/InvoiceDetailPage'
 import MyPayslipsPage from './features/payroll/MyPayslipsPage'
@@ -274,6 +275,16 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <ChangePlanPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/help"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <HelpSupportPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

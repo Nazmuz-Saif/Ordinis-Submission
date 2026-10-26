@@ -123,6 +123,29 @@ def log_access(grant, admin_user, method, endpoint, detail=''):
 from .models import PlatformActionLog, SupportTicket  # noqa: E402
 
 
+NOTE_MIN = 10
+NOTE_MAX = 255            # the length of PlatformActionLog.note
+NOTE_MAX_TICKET = 500     # the length of SupportTicket.resolution_note
+
+
+def clean_note(note, what='the note', minimum=NOTE_MIN, maximum=NOTE_MAX):
+    """The trimmed note, or a clear 400 when it is missing, too short or too long."""
+    note = (note or '').strip() if isinstance(note, str) or note is None else str(note).strip()
+    if not note:
+        raise SupportAccessError(f'Write {what} (at least {minimum} characters).', code='NOTE_REQUIRED', field_errors={'note': ['This field is required.']})
+    if len(note) < minimum:
+        raise SupportAccessError(
+            f'{what[0].upper()}{what[1:]} is too short: write at least {minimum} characters.', code='NOTE_TOO_SHORT',
+            field_errors={'note': [f'At least {minimum} characters.']},
+        )
+    if len(note) > maximum:
+        raise SupportAccessError(
+            f'{what[0].upper()}{what[1:]} is too long: {maximum} characters at most.', code='NOTE_TOO_LONG',
+            field_errors={'note': [f'At most {maximum} characters.']},
+        )
+    return note
+
+
 def _record(admin_user, company, action, note=''):
     return PlatformActionLog.objects.create(
         actor=admin_user, company=company, company_name=company.name, action=action, note=note[:255],
@@ -136,13 +159,14 @@ def record_payment_action(admin_user, payment, action, note=''):
 
 @transaction.atomic
 def set_company_active(admin_user, company, active, note=''):
-    """Suspend or activate a company, with an optional note for the action log.
+    """Suspend or activate a company. A note of at least 10 characters is required: every action is explained.
     Repeating the same call changes nothing and logs nothing."""
+    note = clean_note(note, 'the reason')
     if company.is_active == active:
         return company
     company.is_active = active
     company.save()
-    _record(admin_user, company, 'activate' if active else 'suspend', (note or '').strip())
+    _record(admin_user, company, 'activate' if active else 'suspend', note)
     return company
 
 
@@ -156,12 +180,16 @@ def create_ticket(employee, subject, description=''):
 
 
 @transaction.atomic
-def set_ticket_resolved(admin_user, ticket, resolved):
+def set_ticket_resolved(admin_user, ticket, resolved, note=''):
+    """Resolving needs a resolution note of at least 10 characters (the company reads it); reopening needs none."""
+    if resolved:
+        note = clean_note(note, 'the resolution note', maximum=NOTE_MAX_TICKET)
     wanted = SupportTicket.STATUS_RESOLVED if resolved else SupportTicket.STATUS_OPEN
     if ticket.status == wanted:
         return ticket
     ticket.status = wanted
     ticket.resolved_at = _now() if resolved else None
+    ticket.resolution_note = note if resolved else ''
     ticket.save()
-    _record(admin_user, ticket.company, 'resolve_ticket' if resolved else 'reopen_ticket', ticket.subject)
+    _record(admin_user, ticket.company, 'resolve_ticket' if resolved else 'reopen_ticket', f'{ticket.subject}: {note}' if resolved else ticket.subject)
     return ticket

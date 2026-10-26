@@ -78,15 +78,15 @@ class CompanyDetailTests(PanelBase):
         self.assertEqual(data['last_status_action']['action'], 'suspend')
         self.assertEqual(data['last_status_action']['note'], 'Payment overdue')
         self.assertEqual(data['recent_actions'][0]['note'], 'Payment overdue')
-        self.admin.post(f'{self.url()}activate/', {'note': 'Paid'}, format='json')
+        self.admin.post(f'{self.url()}activate/', {'note': 'Paid in full today'}, format='json')
         data = self.detail()
         self.assertTrue(data['is_active'])
-        self.assertEqual((data['last_status_action']['action'], data['last_status_action']['note']), ('activate', 'Paid'))
+        self.assertEqual((data['last_status_action']['action'], data['last_status_action']['note']), ('activate', 'Paid in full today'))
 
-    def test_the_note_is_optional_and_capped(self):
-        self.assertEqual(self.admin.post(f'{self.url()}suspend/').status_code, 200)
-        self.admin.post(f'{self.url()}activate/', {'note': 'x' * 400}, format='json')
-        self.assertEqual(len(PlatformActionLog.objects.filter(action='activate').first().note), 255)
+    def test_the_note_is_required_and_capped(self):
+        self.assertEqual(self.admin.post(f'{self.url()}suspend/', {'note': 'x' * 255}, format='json').status_code, 200)
+        self.assertEqual(self.admin.post(f'{self.url()}activate/', {'note': 'x' * 256}, format='json').status_code, 400)
+        self.assertEqual(len(PlatformActionLog.objects.filter(action='suspend').first().note), 255)
 
     def test_recent_actions_are_the_last_ten_of_this_company_only(self):
         for i in range(12):

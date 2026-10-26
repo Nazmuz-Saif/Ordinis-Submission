@@ -176,6 +176,9 @@ class TC59CompanySuspendActivateSeleniumTest(unittest.TestCase):
         suspend_btn.click()
         time.sleep(1.5)
 
+        # The reason is required (10 characters or more)
+        wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "[data-testid='company-note']"))).send_keys('Suspended by the TC-59 test')
+
         # Confirm in modal
         confirm_btn = wait.until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-testid='confirm-btn']"))
@@ -238,6 +241,7 @@ class TC59CompanySuspendActivateSeleniumTest(unittest.TestCase):
         activate_btn.click()
         time.sleep(1.5)
 
+        wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "[data-testid='company-note']"))).send_keys('Activated by the TC-59 test')
         confirm_btn = wait.until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-testid='confirm-btn']"))
         )

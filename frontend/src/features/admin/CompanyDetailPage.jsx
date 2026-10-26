@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, KeyRound, Power, PowerOff } from 'lucide-react'
-import { createAccessRequest, getCompany } from '../../services/adminService'
+import { getCompany } from '../../services/adminService'
 import StatusPill from '../../components/common/StatusPill'
 import { formatMoney } from '../payroll/payslipFormat'
 import { formatDate as formatDay } from '../subscribe/subscribeFormat'
-import { ConfirmDialog, Notice } from './shared'
+import { Notice } from './shared'
 import { formatDate } from './format'
 import { daysLeftCell } from './subscriptionFormat'
 import CompanyStatusDialog from './CompanyStatusDialog'
+import RequestAccessDialog from './RequestAccessDialog'
 
 const ACTION_LABELS = {
   suspend: 'Suspended', activate: 'Activated', resolve_ticket: 'Ticket resolved', reopen_ticket: 'Ticket reopened',
@@ -45,35 +46,12 @@ function CompanyDetailPage() {
   const [error, setError] = useState('')
   const [dialog, setDialog] = useState(null)            // 'suspend' | 'activate' | 'access'
   const [message, setMessage] = useState('')
-  const [reason, setReason] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [dialogError, setDialogError] = useState('')
 
   const load = useCallback(
     () => getCompany(id).then(setCompany).catch((err) => setError(err.response?.status === 404 ? 'This company was not found.' : 'Could not load the company.')),
     [id],
   )
   useEffect(() => { load() }, [load])
-
-  async function sendRequest() {
-    if (!reason.trim()) {
-      setDialogError('Give a reason for the access request.')
-      return
-    }
-    setBusy(true)
-    setDialogError('')
-    try {
-      await createAccessRequest(company.id, reason.trim())
-      setMessage(`Access request sent to ${company.name}. Its CEO decides.`)
-      setDialog(null)
-      setReason('')
-      load()
-    } catch (err) {
-      setDialogError(err.response?.data?.error?.message || 'Could not send the request.')
-    } finally {
-      setBusy(false)
-    }
-  }
 
   const back = (
     <Link to="/admin/companies" className="inline-flex items-center gap-1 text-sm text-[#71717A] hover:text-[#6C31D6]">
@@ -111,7 +89,7 @@ function CompanyDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <button
-            type="button" data-testid="request-access-btn" onClick={() => { setDialog('access'); setDialogError('') }}
+            type="button" data-testid="request-access-btn" onClick={() => setDialog('access')}
             className="inline-flex items-center gap-1.5 border border-[#EEEEF2] hover:border-[#A78BFA] rounded-lg px-3 py-2 text-sm font-medium text-[#14142B]"
           >
             <KeyRound size={15} /> Request access
@@ -227,17 +205,10 @@ function CompanyDetailPage() {
         />
       )}
       {dialog === 'access' && (
-        <ConfirmDialog
-          title={`Request access to ${company.name}?`} confirmLabel="Send request" busy={busy} error={dialogError}
-          onCancel={() => setDialog(null)} onConfirm={sendRequest}
-        >
-          <p>The company's CEO decides. If approved, you can read a short list of its records for a limited time and every read is logged.</p>
-          <label htmlFor="access-reason" className="block text-[#14142B] font-medium pt-1">Reason</label>
-          <textarea
-            id="access-reason" data-testid="access-reason" rows={3} value={reason} onChange={(e) => setReason(e.target.value)}
-            className="w-full border border-[#EEEEF2] rounded-lg px-3 py-2 text-sm text-[#14142B] outline-none focus:border-[#6C31D6]"
-          />
-        </ConfirmDialog>
+        <RequestAccessDialog
+          company={company} onCancel={() => setDialog(null)}
+          onDone={() => { setMessage(`Access request sent to ${company.name}. Its CEO decides.`); setDialog(null); load() }}
+        />
       )}
     </div>
   )

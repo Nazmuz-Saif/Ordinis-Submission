@@ -34,7 +34,7 @@ export async function createAccessRequest(company, reason) {
   const res = await apiClient.post('/platform-admin/requests/', { company, reason })
   return res.data
 }
-export const resolveTicket = (id) => post(`${BASE}/tickets/${id}/resolve/`)
+export const resolveTicket = (id, note) => post(`${BASE}/tickets/${id}/resolve/`, { note })
 export const reopenTicket = (id) => post(`${BASE}/tickets/${id}/reopen/`)
 
 // ---- Payments and subscriptions (ST-148) ----

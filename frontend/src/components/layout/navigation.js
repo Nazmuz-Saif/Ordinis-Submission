@@ -4,7 +4,7 @@ import {
 
 // Single source of truth for the sidebar and the page title.
 // - permission: item is hidden unless the user has this Permission codename
-// - soon:       the module is not built yet; shown muted, not clickable
+// - soon:       the module is not built yet; shown muted, not clickable (no item uses it now: unfinished items are not listed)
 export const NAV = [
   { type: 'link', label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { type: 'link', label: 'Action Inbox', path: '/inbox', icon: Inbox },
@@ -28,7 +28,6 @@ export const NAV = [
   {
     type: 'group', key: 'tasks', label: 'Tasks', icon: CheckSquare,
     items: [
-      { label: 'Projects', path: '/tasks/projects', soon: true },
       { label: 'My Tasks', path: '/tasks' },
       { label: 'Board', path: '/tasks/board' },
     ],
@@ -48,8 +47,6 @@ export const NAV = [
       { label: 'Salary Structures', path: '/payroll/salary-structures', permission: 'manage_finance' },
       { label: 'Payslips', path: '/payroll/payslips', permission: 'manage_finance' },
       { label: 'My Payslips', path: '/payroll/my-payslips' },
-      { label: 'Payroll', path: '/payroll', soon: true },
-      { label: 'Expenses', path: '/payroll/expenses', soon: true },
     ],
   },
   { type: 'link', label: 'Analytics', path: '/analytics', icon: BarChart3, permission: 'view_analytics' },
@@ -59,6 +56,7 @@ export const NAV = [
     items: [
       { label: 'Support Access', path: '/settings/support-access', permission: 'approve_support_access' },
       { label: 'Billing', path: '/settings/billing', permission: 'view_billing', openWhenRestricted: true },
+      { label: 'Help & Support', path: '/settings/help', openWhenRestricted: true },
     ],
   },
 ]

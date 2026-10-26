@@ -13,6 +13,7 @@ What the delivered system does for each scenario below. "Done" is backed by a te
 | Employee with a team is removed | Partly | Deletion is blocked; there is no "reassign the team" prompt |
 | Role deleted while employees hold it | Done | Refused with code `ROLE_IN_USE` (409) and the number of holders; the Role stays (ST-139). The system CEO role and a Role used by a chain step are also protected |
 | A Department or Designation deleted while employees still use it | Done | Refused with code `DEPARTMENT_IN_USE` or `DESIGNATION_IN_USE` (409) and a message that names who is in it (ST-150); nothing is cleared silently |
+| A suspend, activate or ticket resolution without a note | Done | Refused with `NOTE_REQUIRED`, `NOTE_TOO_SHORT` (under 10 characters) or `NOTE_TOO_LONG` (over 255, 500 for a resolution) and nothing changes; the note is saved in the action log, and a ticket's resolution note is shown to the person who raised it (ST-154) |
 | Setup order (Department before Employee) | Not enforced | Employees can be created without a department |
 | Approval chain with no steps | Done | Leave uses the CEO fallback; other starts are refused |
 | Approver left the company or nobody holds the role | Done for leave | The CEO fallback chain is used (ST-129) |

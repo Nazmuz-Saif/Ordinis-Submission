@@ -45,7 +45,7 @@ def seed(ctx):
             ticket = create_ticket(ctx.emp('hr'), subject, description)
             ctx.note('support tickets', True)
         if resolved:
-            set_ticket_resolved(admin, ticket, True)
+            set_ticket_resolved(admin, ticket, True, 'Checked the report settings and fixed them for the whole company.')
 
     # Oldest first. The last one stays pending, waiting for the CEO.
     _access_request(ctx, admin, 'Check why the leave balance page is slow', 'revoked')

@@ -141,7 +141,7 @@ from .serializers import (  # noqa: E402
 
 class AdminCompanyViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
-    /api/v1/platform-admin/admin/companies/ : every company, with suspend / activate (each takes an optional `note`).
+    /api/v1/platform-admin/admin/companies/ : every company, with suspend / activate (each needs a `note`, 10 to 255 characters).
     /api/v1/platform-admin/admin/companies/{id}/ : the company's detail page: contacts and counts, never employee data.
     """
     permission_classes = [IsPlatformAdmin]
@@ -158,8 +158,7 @@ class AdminCompanyViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     def _set(self, pk, active):
         company = get_object_or_404(self.get_queryset(), pk=pk)
-        note = str(self.request.data.get('note') or '')[:255]
-        services.set_company_active(self.request.user, company, active, note)
+        services.set_company_active(self.request.user, company, active, self.request.data.get('note'))
         return Response(self.get_serializer(get_object_or_404(self.get_queryset(), pk=pk)).data)
 
     @action(detail=True, methods=['post'])
@@ -252,7 +251,7 @@ class AdminTicketViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, views
 
     @action(detail=True, methods=['post'])
     def resolve(self, request, pk=None):
-        ticket = services.set_ticket_resolved(request.user, self.get_object(), True)
+        ticket = services.set_ticket_resolved(request.user, self.get_object(), True, request.data.get('note'))
         return Response(self.get_serializer(ticket).data)
 
     @action(detail=True, methods=['post'])

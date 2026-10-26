@@ -307,6 +307,7 @@ erDiagram
     Text description
     Char20 status
     DateTime resolved_at
+    Char500 resolution_note
   }
   EMPLOYEEROLE {
     fk employee

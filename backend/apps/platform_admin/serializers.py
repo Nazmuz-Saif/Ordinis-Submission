@@ -62,8 +62,8 @@ class TicketSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SupportTicket
-        fields = ['id', 'company', 'company_name', 'created_by_email', 'created_by_name', 'subject', 'description', 'status', 'created_at', 'resolved_at']
-        read_only_fields = ['id', 'company', 'company_name', 'created_by_email', 'created_by_name', 'status', 'created_at', 'resolved_at']
+        fields = ['id', 'company', 'company_name', 'created_by_email', 'created_by_name', 'subject', 'description', 'status', 'created_at', 'resolved_at', 'resolution_note']
+        read_only_fields = ['id', 'company', 'company_name', 'created_by_email', 'created_by_name', 'status', 'created_at', 'resolved_at', 'resolution_note']
 
     def get_created_by_email(self, obj):
         return obj.created_by.user.email if obj.created_by else None

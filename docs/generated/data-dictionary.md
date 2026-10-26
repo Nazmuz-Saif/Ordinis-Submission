@@ -422,6 +422,7 @@ A problem report a company's employee sends to Ordinis support.
 | `description` | Text |  |  |
 | `status` | Char(20) | 'open' | one of: open, resolved |
 | `resolved_at` | DateTime |  | can be empty (null) |
+| `resolution_note` | Char(500) | '' |  |
 
 ## App `rbac`
 

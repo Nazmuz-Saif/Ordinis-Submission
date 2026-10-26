@@ -18,7 +18,7 @@ backend/
     notifications/  apps.py, demo_data.py, models.py, serializers.py, services.py, signals.py, urls.py, views.py, migrations/ (3)  (+ tests)
     organization/  admin.py, apps.py, demo_data.py, models.py, overview.py, serializers.py, services.py, urls.py, views.py, migrations/ (8)  (+ tests)
     payroll/  admin.py, apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (2)  (+ tests)
-    platform_admin/  apps.py, company_detail.py, demo_data.py, exceptions.py, models.py, serializers.py, services.py, summary.py, urls.py, views.py, migrations/ (2), commands: create_platform_admin  (+ tests)
+    platform_admin/  apps.py, company_detail.py, demo_data.py, exceptions.py, models.py, serializers.py, services.py, summary.py, urls.py, views.py, migrations/ (3), commands: create_platform_admin  (+ tests)
     rbac/  admin.py, apps.py, catalog.py, decorators.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (15)  (+ tests)
     tasks/  admin.py, apps.py, demo_data.py, models.py, serializers.py, services.py, urls.py, views.py, migrations/ (2)  (+ tests)
     tenants/  admin.py, apps.py, middleware.py, models.py, serializers.py, urls.py, views.py, migrations/ (1)  (+ tests)
@@ -31,7 +31,7 @@ frontend/src/
   components/dashboard/  StatCard.jsx
   components/layout/  Navbar.jsx, NotificationBell.jsx, RestrictedNotice.jsx, Sidebar.jsx, SubscriptionBanner.jsx, navigation.js, usePendingPayments.js
   components/roles/  PermissionPicker.jsx
-  features/admin/  AccessRequestsPage.jsx, ActivityPage.jsx, AdminDashboardPage.jsx, CompaniesPage.jsx, CompanyDetailPage.jsx, CompanyStatusDialog.jsx, PaymentsPage.jsx, SubscriptionsPage.jsx, TicketsPage.jsx, format.js, shared.jsx, subscriptionFormat.js, usePagedList.js
+  features/admin/  AccessRequestsPage.jsx, ActivityPage.jsx, AdminDashboardPage.jsx, CompaniesPage.jsx, CompanyDetailPage.jsx, CompanyStatusDialog.jsx, NoteDialog.jsx, PaymentsPage.jsx, RequestAccessDialog.jsx, SubscriptionsPage.jsx, TicketsPage.jsx, format.js, shared.jsx, subscriptionFormat.js, usePagedList.js
   features/analytics/  AnalyticsPage.jsx, analyticsFormat.js
   features/approvals/  ApprovalChainsPage.jsx, DelegationsPage.jsx, PendingApprovalsPage.jsx
   features/attendance/  AttendanceCalendar.jsx, AttendancePage.jsx, TeamAttendancePage.jsx
@@ -40,6 +40,7 @@ frontend/src/
   features/billing/  BillingPage.jsx, ChangePlanPage.jsx, InvoiceDetailPage.jsx, RenewPage.jsx, TimelineCard.jsx, timelineFormat.js
   features/dashboard/  DashboardPage.jsx, charts.jsx
   features/dev/  UiKitPage.jsx
+  features/help/  HelpSupportPage.jsx
   features/inbox/  ActionInboxPage.jsx, InboxIcon.jsx, kinds.js, timeAgo.js
   features/leave/  ApprovalProgress.jsx, LeavePage.jsx, LeaveTypesPage.jsx, leaveFormat.js
   features/organization/  DepartmentDetailPage.jsx, DepartmentsPage.jsx, DesignationDetailPage.jsx, DesignationsPage.jsx, EmployeeDetailPage.jsx, EmployeesPage.jsx, orgDetailParts.jsx
@@ -52,7 +53,7 @@ frontend/src/
   hooks/  useClickOutside.js, useUnsavedChangesGuard.js
   layouts/  DashboardLayout.jsx
   routes/  AdminRoute.jsx, HomeRedirect.jsx, ProtectedRoute.jsx, SubscribeRoute.jsx
-  services/  adminService.js, analyticsService.js, apiClient.js, approvalsService.js, attendanceService.js, auditLogService.js, authService.js, billingService.js, dashboardService.js, leaveService.js, notificationsService.js, organizationService.js, paging.js, payrollService.js, rolesService.js, supportAccessService.js, tasksService.js
+  services/  adminService.js, analyticsService.js, apiClient.js, approvalsService.js, attendanceService.js, auditLogService.js, authService.js, billingService.js, dashboardService.js, helpService.js, leaveService.js, notificationsService.js, organizationService.js, paging.js, payrollService.js, rolesService.js, supportAccessService.js, tasksService.js
   store/  AuthContext.jsx
   utils/  apiError.js, people.js, subscription.js
 ```
