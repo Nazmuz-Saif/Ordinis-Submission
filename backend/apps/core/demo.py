@@ -58,6 +58,10 @@ def name(local):
 
 
 DEPARTMENTS = ['Management', 'Engineering', 'Sales', 'Human Resources', 'Finance']
+# The person who leads each Department (a key of PEOPLE).
+DEPARTMENT_HEADS = {
+    'Management': 'ceo', 'Engineering': 'manager', 'Sales': 'sales_head', 'Human Resources': 'hr', 'Finance': 'accountant',
+}
 
 # The Platform Admin (company-less). It is not part of the demo company, so --reset and --delete keep it.
 PLATFORM_LOGIN = ('Platform Admin', 'platform')

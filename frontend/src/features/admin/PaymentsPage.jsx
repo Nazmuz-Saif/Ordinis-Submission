@@ -49,7 +49,7 @@ function DetailPanel({ payment, onClose, onApprove, onReject }) {
         <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm mt-5">
           <Field label="Company">{payment.company_name} ({payment.company_subdomain})</Field>
           <Field label="Kind" testId="detail-kind">{payment.kind_label}</Field>
-          <Field label="Plan" testId="detail-plan">{payment.plan_name} for {monthsText(payment.months)}</Field>
+          <Field label="Plan" testId="detail-plan">{payment.plan_name}{payment.kind === 'upgrade' ? ' (upgrade for the days left)' : ` for ${monthsText(payment.months)}`}</Field>
           <Field label="Amount" testId="detail-amount">{formatMoney(payment.amount, payment.currency)}</Field>
           <Field label="Paid with" testId="detail-method">{payment.method_label}</Field>
           <Field label="Payer" testId="detail-payer">{payment.payer_name}</Field>
@@ -131,7 +131,7 @@ function PaymentsPage() {
 
   const columns = [
     { key: 'company', label: 'Company', render: (p) => <span className="font-medium whitespace-nowrap">{p.company_name}</span> },
-    { key: 'plan', label: 'Plan', render: (p) => <span className="whitespace-nowrap">{p.plan_name}, {monthsText(p.months)}</span> },
+    { key: 'plan', label: 'Plan', render: (p) => <span className="whitespace-nowrap">{p.plan_name}{p.kind === 'upgrade' ? ', upgrade' : `, ${monthsText(p.months)}`}</span> },
     { key: 'amount', label: 'Amount', render: (p) => <span className="whitespace-nowrap font-medium">{formatMoney(p.amount, p.currency)}</span> },
     { key: 'method', label: 'Method', render: (p) => p.method_label },
     { key: 'payer', label: 'Payer', render: (p) => (<><p>{p.payer_name}</p><p className="text-xs text-[#71717A]">{p.payer_number}</p></>) },
@@ -193,7 +193,11 @@ function PaymentsPage() {
             Confirm that you received <strong>{formatMoney(detail.amount, detail.currency)}</strong> from <strong>{detail.company_name}</strong> by{' '}
             {detail.method_label} (transaction <span className="font-mono">{detail.transaction_id}</span>).
           </p>
-          <p>Approving starts or extends the {detail.plan_name} plan for {monthsText(detail.months)} and writes a paid invoice.</p>
+          <p>
+            {detail.kind === 'upgrade'
+              ? `Approving moves the company to the ${detail.plan_name} plan now, keeps its end date and writes a paid invoice for the extra amount.`
+              : `Approving starts or extends the ${detail.plan_name} plan for ${monthsText(detail.months)} and writes a paid invoice.`}
+          </p>
         </ConfirmDialog>
       )}
       {detail && dialog === 'reject' && (

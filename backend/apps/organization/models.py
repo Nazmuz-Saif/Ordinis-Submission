@@ -8,6 +8,11 @@ class Department(BaseModel):
         Company, on_delete=models.CASCADE, related_name="departments"
     )
     name = models.CharField(max_length=100)
+    # The person who leads the Department. Optional; need not be a member of it (same company, checked in the serializer).
+    head = models.ForeignKey(
+        "organization.Employee", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="headed_departments",
+    )
 
     def __str__(self):
         return f"{self.name} ({self.company.name})"

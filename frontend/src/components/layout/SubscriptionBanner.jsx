@@ -20,7 +20,7 @@ function SubscriptionBanner() {
     <div
       data-testid="subscription-banner"
       data-state={me.subscription.status}
-      className={`mx-4 md:mx-6 mt-4 p-3 border rounded-lg text-sm flex items-center gap-2 ${TONES[banner.tone]}`}
+      className={`print:hidden mx-4 md:mx-6 mt-4 p-3 border rounded-lg text-sm flex items-center gap-2 ${TONES[banner.tone]}`}
     >
       <Icon size={16} className="shrink-0" aria-hidden="true" />
       <span>{banner.text}</span>

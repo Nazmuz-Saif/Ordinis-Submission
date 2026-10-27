@@ -25,7 +25,7 @@ function Navbar({ onMenuClick }) {
   }
 
   return (
-    <header className="sticky top-0 z-20 h-16 bg-white/70 backdrop-blur-xl border-b border-white/30 flex items-center gap-4 px-4 md:px-6">
+    <header className="print:hidden sticky top-0 z-20 h-16 bg-white/70 backdrop-blur-xl border-b border-white/30 flex items-center gap-4 px-4 md:px-6">
       <button onClick={onMenuClick} aria-label="Open menu" className="md:hidden p-2 -ml-2 text-[#14142B]">
         <Menu size={20} />
       </button>

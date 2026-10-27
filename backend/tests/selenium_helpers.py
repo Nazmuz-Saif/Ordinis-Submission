@@ -38,6 +38,14 @@ def make_driver():
     from selenium import webdriver
     from selenium.webdriver.support.ui import WebDriverWait
     options = webdriver.ChromeOptions()
+    options.add_experimental_option(
+        "prefs",
+        {
+            "credentials_enable_service": False,
+            "profile.password_manager_enabled": False,
+            "profile.password_manager_leak_detection": False,
+        },
+    )
     if os.environ.get('HEADLESS') == '1':
         options.add_argument('--headless=new')
         options.add_argument('--window-size=1440,900')

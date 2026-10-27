@@ -5,6 +5,7 @@ import { DataTable, Notice, PageHeader } from './shared'
 import { formatDate } from './format'
 import { usePagedList } from './usePagedList'
 import { personName } from '../../utils/people'
+import NoteDialog from './NoteDialog'
 
 const FILTERS = [
   { key: '', label: 'All' },
@@ -17,22 +18,29 @@ function TicketsPage() {
   const load = useCallback((page) => getTicketsPage(page, filter), [filter])
   const list = usePagedList(load, filter)
   const [error, setError] = useState('')
+  const [resolving, setResolving] = useState(null)     // the ticket the resolution note is being written for
 
-  async function change(ticket, fn) {
+  async function reopen(ticket) {
     setError('')
     try {
-      await fn(ticket.id)
+      await reopenTicket(ticket.id)
       list.reload()
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Could not update the ticket.')
     }
   }
 
+  async function resolve(note) {
+    await resolveTicket(resolving.id, note)
+    setResolving(null)
+    list.reload()
+  }
+
   const columns = [
     { key: 'company', label: 'Company', render: (t) => <span className="font-medium whitespace-nowrap">{t.company_name}</span> },
     {
       key: 'subject', label: 'Ticket',
-      render: (t) => (<><p className="font-medium">{t.subject}</p>{t.description && <p className="text-xs text-[#71717A] mt-0.5 max-w-md">{t.description}</p>}</>),
+      render: (t) => (<><p className="font-medium">{t.subject}</p>{t.description && <p className="text-xs text-[#71717A] mt-0.5 max-w-md">{t.description}</p>}{t.resolution_note && <p data-testid="ticket-resolution" className="text-xs text-[#15803D] mt-1 max-w-md">Resolution: {t.resolution_note}</p>}</>),
     },
     { key: 'by', label: 'Raised by', render: (t) => <span className="whitespace-nowrap">{t.created_by_email ? personName(t.created_by_name, t.created_by_email) : '-'}</span> },
     {
@@ -44,14 +52,14 @@ function TicketsPage() {
       key: 'action', label: 'Action', align: 'right',
       render: (t) => t.status === 'open' ? (
         <button
-          type="button" data-testid="resolve-btn" onClick={() => change(t, resolveTicket)}
+          type="button" data-testid="resolve-btn" onClick={() => setResolving(t)}
           className="bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg px-3 py-1.5 text-sm font-medium"
         >
           Mark resolved
         </button>
       ) : (
         <button
-          type="button" data-testid="reopen-btn" onClick={() => change(t, reopenTicket)}
+          type="button" data-testid="reopen-btn" onClick={() => reopen(t)}
           className="border border-[#EEEEF2] text-[#14142B] hover:bg-[#FAFAFA] rounded-lg px-3 py-1.5 text-sm font-medium"
         >
           Reopen
@@ -80,6 +88,15 @@ function TicketsPage() {
         testId="tickets-table" rowTestId="ticket-row" columns={columns} rows={list.data?.items ?? []}
         list={list} page={list.page} onPage={list.setPage} emptyTitle="No tickets" emptyText="Nothing to show for this filter."
       />
+      {resolving && (
+        <NoteDialog
+          title="Mark this ticket resolved?" confirmLabel="Mark resolved" label="Resolution note" maxLength={500} testId="resolution-note"
+          onCancel={() => setResolving(null)} onConfirm={resolve}
+        >
+          <p>{resolving.company_name}: {resolving.subject}</p>
+          <p>The person who raised it can read this note. Say what was done.</p>
+        </NoteDialog>
+      )}
     </div>
   )
 }

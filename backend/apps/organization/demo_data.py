@@ -49,3 +49,10 @@ def seed(ctx):
             if employee.reports_to_id != ctx.emp(boss).id:
                 employee.reports_to = ctx.emp(boss)
                 employee.save(update_fields=['reports_to', 'updated_at'])
+
+    # Each Department's head (ST-150), so the list and the detail page have something to show.
+    for department, key in demo.DEPARTMENT_HEADS.items():
+        row = departments[department]
+        if row.head_id != ctx.emp(key).id:
+            row.head = ctx.emp(key)
+            row.save(update_fields=['head', 'updated_at'])

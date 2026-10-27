@@ -25,6 +25,7 @@ The approved mockups are implemented for the screens marked Built. The shared pa
 | Shared parts | Built | `MetricCard`, `StatusPill`, `EmptyState`, `ChartCard`, `Pagination` |
 | Role dashboards (summary cards, charts) | Built | Sections by Permission (see `ordinis-dashboard-design.md`) |
 | Departments, Designations, Employees, Roles | Built | |
+| Department and Designation detail pages (people, task summary, running tasks, Department Head) | Built | `DepartmentDetailPage`, `DesignationDetailPage` (ST-150). Task titles show only to the assignee, their managers and holders of `create_task`; everybody else sees counts |
 | Tasks: Kanban board with four columns, counts, task cards (title, priority, assignee, deadline, progress) | Built | `KanbanPage`. The category tag on a card is not built |
 | Attendance: check-in and check-out, today's record | Built | |
 | Attendance: monthly calendar and the four summary cards | Built | `AttendanceCalendar`; a day shows a dot only on a working day of the company (see SDS 5.2) |
@@ -34,6 +35,11 @@ The approved mockups are implemented for the screens marked Built. The shared pa
 | Billing page (plan card, employee usage bar, invoice table) | Built | `BillingPage` |
 | First-payment onboarding: choose a plan and months, pay and send the details, waiting and rejected states | Built | `ChoosePlanPage`, `PaymentPage`, `WaitingPage` (ST-147). The amount shown is the server's quote; the payment form is `PaymentForm`, reused for renewals later |
 | Subscription banner and restricted-mode notice | Built | `SubscriptionBanner`, `RestrictedNotice` (ST-145) |
+| Change plan page (plans with limits, upgrade quote with the extra amount and the unchanged end date, the payment form, a lower plan at the next renewal) | Built | `ChangePlanPage` (ST-151); the Billing page links to it |
+| Platform Admin company detail page (owner contact, plan and timeline, size, invoice and payment counts, tickets and access requests, last 10 platform actions; Suspend or Activate with a note and Request access) | Built | `CompanyDetailPage`, `CompanyStatusDialog` (ST-152). Counts and contacts only, never employee, task or salary data |
+| Platform Admin dashboard at `/admin/dashboard`, the Platform Admin home (company-state, revenue, due, ending, pending-payment and ticket cards; revenue-per-month bars; companies-by-state donut; a Needs attention list that links to each page) | Built | `AdminDashboardPage` (ST-153), one call to `GET /platform-admin/admin/summary/` |
+| Help & Support page (send a ticket, see own tickets with Open or Resolved and the resolution note); note dialogs for suspend, activate and resolve; Request access on the Companies page | Built | `HelpSupportPage`, `NoteDialog`, `RequestAccessDialog` (ST-154). The sidebar lists only finished items: Projects, Payroll and Expenses are not shown |
+| Billing timeline card (plan, dates, progress bar, days left, Active / Expiring soon / Restricted), Renew with the renewal invoice, pending banner, and an invoice detail page with Print | Built | `TimelineCard`, `RenewPage`, `InvoiceDetailPage` (ST-149) |
 | Platform Admin: Payments review (filters, detail panel, approve with confirm, reject with a required note) and Subscriptions (days left, amber 7 days or fewer, red expired) | Built | `PaymentsPage`, `SubscriptionsPage`; the sidebar shows the count of pending payments (ST-148) |
 | Company switcher (more than one company) | Not built | The bar shows the user's own company name |
 | Glass look on login, top bar and menus; solid data tables | Built | |

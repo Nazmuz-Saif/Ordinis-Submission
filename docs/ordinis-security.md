@@ -22,7 +22,7 @@ This checklist is the full target. The table says what the delivered system actu
 | Permission check on every protected endpoint | Done | `PermissionRequiredMixin`; the matrix test checks 403 without it and success with exactly it |
 | Closed by default (a forgotten permission is safe) | Done | `DEFAULT_PERMISSION_CLASSES` (found and fixed by the matrix test) |
 | Least privilege: a new employee has no Permission | Done | Roles are assigned explicitly |
-| Super Admin has no default access to client data (Break-Glass) | Done | Request, company approval, time limit, read-only, no salary data, access log |
+| Super Admin has no default access to client data (Break-Glass) | Done | Request, company approval, time limit, read-only, no salary data, access log. The company detail page shows the owner's contact and counts only: no employee name, task, attendance or salary (ST-152, tested) |
 | HTTPS / TLS | Not built | Production is not deployed |
 | Field-level encryption (salary, NID) | Not built | Future work |
 | Data export for an employee | Not built | Future work |

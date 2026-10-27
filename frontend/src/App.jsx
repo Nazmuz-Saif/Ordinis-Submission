@@ -7,6 +7,8 @@ import { AuthProvider } from './store/AuthContext'
 import DashboardLayout from './layouts/DashboardLayout'
 import DepartmentsPage from './features/organization/DepartmentsPage'
 import DesignationsPage from './features/organization/DesignationsPage'
+import DepartmentDetailPage from './features/organization/DepartmentDetailPage'
+import DesignationDetailPage from './features/organization/DesignationDetailPage'
 import EmployeesPage from './features/organization/EmployeesPage'
 import EmployeeDetailPage from './features/organization/EmployeeDetailPage'
 import RolesPage from './features/roles/RolesPage'
@@ -25,6 +27,12 @@ import PayslipsPage from './features/payroll/PayslipsPage'
 import AnalyticsPage from './features/analytics/AnalyticsPage'
 import AuditLogsPage from './features/audit/AuditLogsPage'
 import BillingPage from './features/billing/BillingPage'
+import ChangePlanPage from './features/billing/ChangePlanPage'
+import AdminDashboardPage from './features/admin/AdminDashboardPage'
+import CompanyDetailPage from './features/admin/CompanyDetailPage'
+import HelpSupportPage from './features/help/HelpSupportPage'
+import RenewPage from './features/billing/RenewPage'
+import InvoiceDetailPage from './features/billing/InvoiceDetailPage'
 import MyPayslipsPage from './features/payroll/MyPayslipsPage'
 import PayslipViewPage from './features/payroll/PayslipViewPage'
 import AttendancePage from './features/attendance/AttendancePage'
@@ -93,6 +101,26 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <DepartmentsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organization/departments/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <DepartmentDetailPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organization/designations/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <DesignationDetailPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -242,6 +270,46 @@ function App() {
             }
           />
           <Route
+            path="/settings/billing/change-plan"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ChangePlanPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/help"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <HelpSupportPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/billing/renew"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <RenewPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/billing/invoices/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <InvoiceDetailPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/analytics"
             element={
               <ProtectedRoute>
@@ -312,7 +380,9 @@ function App() {
             }
           />
           {[
+            ['/admin/dashboard', AdminDashboardPage],
             ['/admin/companies', CompaniesPage],
+            ['/admin/companies/:id', CompanyDetailPage],
             ['/admin/payments', PaymentsPage],
             ['/admin/subscriptions', SubscriptionsPage],
             ['/admin/tickets', TicketsPage],

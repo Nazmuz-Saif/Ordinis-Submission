@@ -66,6 +66,8 @@ class SupportTicket(BaseModel):
     description = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_OPEN)
     resolved_at = models.DateTimeField(null=True, blank=True)
+    # What was done about it; written by the Platform Admin who resolves the ticket, cleared if it is reopened.
+    resolution_note = models.CharField(max_length=500, blank=True, default='')
 
     class Meta:
         ordering = ['-created_at']

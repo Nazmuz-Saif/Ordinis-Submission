@@ -45,6 +45,9 @@
     - [3.1.9 Audit Log & Analytics](#319-audit-log--analytics)
     - [3.1.10 Billing & Subscription](#3110-billing--subscription)
     - [3.1.11 Platform Administration (Break-Glass Access)](#3111-platform-administration-break-glass-access)
+    - [3.1.12 Profile, Permission Catalog and Role Detail](#3112-profile-permission-catalog-and-role-detail)
+    - [3.1.13 Subscription Period, Payments and Plan Change](#3113-subscription-period-payments-and-plan-change)
+    - [3.1.14 Platform Administration Pages and Support](#3114-platform-administration-pages-and-support)
   - [3.2 Non-Functional Requirements](#32-non-functional-requirements)
     - [3.2.1 Security Requirements](#321-security-requirements)
     - [3.2.2 Performance Requirements](#322-performance-requirements)
@@ -71,6 +74,7 @@
 | Version | Date | Authors | Change Log | Approved By |
 |---|---|---|---|---|
 | V1.0 |  | Saif | Initial version — full FR/NFR set, interview elicitation, and analysis |  |
+| V1.1 |  | Saif | Sprint 6: requirements FR-37 to FR-51 added (profile and password, Permission catalog and Role detail, team attendance, subscription period, manual payments, plan change, detail pages, Platform Admin dashboard, notes and Help & Support); FR-13 now Done |  |
 
 ---
 
@@ -97,7 +101,9 @@ Ordinis is a web-based, multi-tenant SaaS platform that lets any client company 
 - Subscription/Billing: plans, the employee-count limit, invoices
 - Platform-level Super Admin operations under a privacy-respecting "Break-Glass" access pattern
 
-**What is delivered (read this with Section 7.2).** Section 7.2 lists every requirement as Done, Partly or Not built, read from the code. These parts of the list above are *not built* and are future work: Projects (Tasks stand alone), Task comments and attachment links, the Holiday Calendar, and Expense and Reimbursement. The company-health Analytics page and the Company Health Snapshot (ST-134), the append-only Audit Log (ST-135) and the Billing plans, employee limit and invoices (ST-136) are built. Paying an invoice online is not built: there is no payment gateway, so a plan is changed by the platform team (`python manage.py set_company_plan`).
+**What is delivered (read this with Section 7.2).** Section 7.2 lists every requirement as Done, Partly or Not built, read from the code. These parts of the list above are *not built* and are future work: Projects (Tasks stand alone), Task comments and attachment links, the Holiday Calendar, and Expense and Reimbursement. The company-health Analytics page and the Company Health Snapshot (ST-134), the append-only Audit Log (ST-135) and the Billing plans, employee limit and invoices (ST-136) are built. A payment gateway is not built: a company pays outside the system (bKash, Nagad, bank transfer) and sends the details, and the platform team approves it (Sprint 6, ST-146 to ST-151); `python manage.py set_company_plan` remains for the platform team.
+
+**Sprint 6 additions.** FR-37 to FR-51 (Sections 3.1.12 to 3.1.14) came from the product backlog after the first demo, not from the interviews: real names and a safe password, a clear Permission catalog and Role detail, team attendance for managers, a subscription with a period and a restricted mode, payments made outside the system and approved by the platform team, plan changes, detail pages for Departments, Designations and companies, a Platform Admin dashboard, and written notes on platform actions.
 
 Out of scope for this SRS (documented separately as future roadmap, not built or required in the current course-project scope): Layer-3 extension modules such as Meetings, Internal Ticketing, Asset Management, Document Management, Knowledge Base, Performance Reviews, Surveys, Visitor Management, Dynamic Form Builder, mobile app, multi-language switcher, third-party/ERP data import-export, and public API/webhooks. These recurred as stakeholder wishes during elicitation (see Appendix B analysis) but are consciously deferred so the current release stays focused and buildable within the course timeline.
 
@@ -279,6 +285,31 @@ At a high level, Ordinis lets a company:
 - **FR-35** (Medium) — The system shall require the target company (its CEO or an authorized approver) to explicitly approve a Support Access Request before any access is granted, and shall only grant access for a fixed, time-limited window that expires automatically.
 - **FR-36** (Medium) — The system shall record every Break-Glass access session (start time, end time, target employee/data, and reason) in an Impersonation Log that the company can review afterward.
 
+
+#### 3.1.12 Profile, Permission Catalog and Role Detail
+
+- **FR-37** (High) — The system shall keep, in one place in the code, a name, a plain-language description and a module for every Permission, and the Roles page shall offer only those Permissions.
+- **FR-38** (High) — The system shall show Permissions in sections on the Roles page, a detail page for each Role that explains what every Permission lets people do, and shall let an authorized user edit a Role; a Role that people still hold cannot be deleted.
+- **FR-39** (High) — The system shall store each person's full name and profile details (phone, address, emergency contact) and let every user, including the Platform Admin, see and edit their own details on a My Profile page.
+- **FR-40** (High) — The system shall let a user change their password only with the current password, shall end the other sessions when it changes, and shall give a new employee a temporary password that must be changed at the first login.
+- **FR-41** (Medium) — The system shall show an Employee detail page with the full profile and the Permissions the person really has.
+- **FR-42** (Medium) — The system shall let a CEO, or a manager with the Permission, pick an employee from a list and see that person's attendance for a month with the check-in and check-out times; another company's employee is a 404.
+
+#### 3.1.13 Subscription Period, Payments and Plan Change
+
+- **FR-43** (High) — The system shall give each subscription a start and end date, show the days left, send reminders before the end, allow three grace days after it, and then work in a restricted mode in which only Billing, the profile and support are open.
+- **FR-44** (High) — The system shall let a new or existing company choose a plan and a number of months, pay by bKash, Nagad or bank transfer outside the system, and send the payment details; the amount is always the server's quote and the plan starts only after approval.
+- **FR-45** (High) — The system shall let the Platform Admin review each submitted payment and approve it, or reject it with a note; approving twice changes nothing.
+- **FR-46** (Medium) — The system shall show a Billing timeline with the days left, issue a renewal invoice before the period ends, let the CEO pay it with the Renew button, and show a detail page for every invoice.
+- **FR-47** (Medium) — The system shall show a detail page for each Department (with its head) and each Designation, with its people, task counts and running tasks; task titles are shown only to those who may see the task.
+- **FR-48** (Medium) — The system shall let a CEO move to a higher plan by paying (new monthly price minus current monthly price) x days left / 30, shall start the plan when the Platform Admin approves, shall keep the end date, and shall start a lower plan only at the next renewal and only if the team fits in it.
+
+#### 3.1.14 Platform Administration Pages and Support
+
+- **FR-49** (Medium) — The system shall show the Platform Admin a detail page for each company (owner contact, plan and timeline, size, invoice and payment counts, tickets, access requests, the last platform actions) that never contains an employee name, task, attendance or salary.
+- **FR-50** (Medium) — The system shall show the Platform Admin a dashboard with the companies by state (active, restricted, suspended), revenue, dues, subscriptions about to end and a list of what needs attention.
+- **FR-51** (Medium) — The system shall require a written note of at least 10 characters for every suspend, activate and ticket resolution, shall let a company's users send a support ticket and read its status and resolution note, and shall let the Platform Admin request access to a company from the Companies page.
+
 ---
 
 ### 3.2 Non-Functional Requirements
@@ -396,6 +427,21 @@ The following models, maintained as separate project artifacts, define Ordinis's
 | FR-32 | Company Health Snapshot | CEO Interview Q10 | Low | Snapshot value reflects real attendance+task data |
 | FR-33 | Plan employee-limit enforcement | Business model (project-proposal.md, Section 6) | Medium | Employee creation blocked at plan limit |
 | FR-34–FR-36 | Break-Glass Support Access | CEO Interview Q13, Q20 (security concerns) | Medium | Access requires approval, expires on time, is logged |
+| FR-37 | Permission catalog | Sprint 6 backlog PB-41/PB-42; CEO Interview Q6 (Roles must be easy to design) | High | Every Permission has a name, description and module; the Roles page offers no unknown Permission |
+| FR-38 | Role detail and editing | Sprint 6 backlog PB-42; CEO Interview Q6 | High | Role detail explains each Permission; an edited Role keeps its Permissions; a Role in use cannot be deleted |
+| FR-39 | Real names and My Profile | Sprint 6 backlog PB-43, PB-44 | High | Names show everywhere; a user edits only their own details |
+| FR-40 | Safe password change and temporary password | Sprint 6 backlog PB-45; Security reference | High | Wrong current password refused; other sessions end; a temporary password forces a change |
+| FR-41 | Employee detail with real Permissions | Sprint 6 backlog PB-46; HR Interview Q8 | Medium | Detail shows the profile and the Permissions the person holds |
+| FR-42 | Team attendance for a month | Sprint 6 backlog PB-47; Dept Head Interview Q2 | Medium | A manager sees only their team; the CEO sees everyone; another company is a 404 |
+| FR-43 | Subscription period and restricted mode | Sprint 6 backlog PB-48; business model | High | Days left and the grace days are shown; after them only Billing, profile and support work |
+| FR-44 | Plan and months chosen, manual payment, approval | Sprint 6 backlog PB-49, PB-50 | High | The amount is the server's quote; one pending payment per company; the plan starts after approval |
+| FR-45 | Platform Admin approves or rejects payments | Sprint 6 backlog PB-51 | High | Approve starts the plan once; reject needs a note |
+| FR-46 | Billing timeline, renewal invoice, invoice detail | Sprint 6 backlog PB-52 | Medium | The renewal invoice is issued once, 7 days before the end, and paying it renews the plan |
+| FR-47 | Department and Designation detail | Sprint 6 backlog PB-53; Dept Head Interview Q2 | Medium | People, counts and running tasks shown; task titles hidden from people who may not see them |
+| FR-48 | Plan change with extra amount | Sprint 6 backlog PB-54 | Medium | Extra amount follows the formula; end date unchanged; a lower plan starts at the next renewal |
+| FR-49 | Company detail page for the Platform Admin | Sprint 6 backlog PB-55; CEO Interview Q13 (privacy) | Medium | Owner, plan, counts shown; no employee data anywhere |
+| FR-50 | Platform Admin dashboard | Sprint 6 backlog PB-56 | Medium | Cards and charts equal the records; the attention list links to each page |
+| FR-51 | Required notes, Help & Support, Request access | Sprint 6 backlog PB-57; near-universal audit-trail answer | Medium | A note under 10 characters is refused; a company reads its ticket's resolution note |
 | NFR-1–NFR-4 | Security (hashing, tenant isolation, JWT, permission checks) | All interviews, Q13/Q17/Q20-type security questions | High | Verified via manual cross-tenant/permission test cases |
 | NFR-5–NFR-6 | Pagination, response time | Non-functional/course constraint | Medium/Low | Manual timing check under demo load |
 | NFR-7–NFR-9 | Usability, minimal training | All interviews' "training-free" question | Medium | New user completes core task without written help |
@@ -425,7 +471,7 @@ Each requirement is Done, Partly or Not built. **The status is read from the cod
 | FR-10 | Company Roles as named bundles of Permissions | High | **Done** | ST-108 |  |
 | FR-11 | Roles assigned to any Employee, independent of Designation | High | **Done** | ST-109 |  |
 | FR-12 | A specific Permission codename is checked before every protected action | High | **Done** | ST-110, ST-111 |  |
-| FR-13 | Operational data visible only to the employee, the manager chain and company-wide permission holders | High | **Partly** | ST-107, ST-111, ST-116 | Tasks, leave requests and payslips are limited to the owner, assignee, approver or a permission holder. A manager cannot yet list a team member's attendance. |
+| FR-13 | Operational data visible only to the employee, the manager chain and company-wide permission holders | High | **Done** | ST-107, ST-111, ST-116, ST-144 |  |
 | FR-14 | Approval Chain of ordered steps, each tied to a Role | Medium | **Done** | ST-112 |  |
 | FR-15 | Every approve or reject recorded with actor and comment | Medium | **Done** | ST-113 |  |
 | FR-16 | Delegation of approval authority for a date range | Medium | **Done** | ST-117 |  |
@@ -449,6 +495,21 @@ Each requirement is Done, Partly or Not built. **The status is read from the cod
 | FR-34 | Platform Admin must send a Support Access Request with a reason | Medium | **Done** | ST-123 |  |
 | FR-35 | The company approves; access is time-limited and expires by itself | Medium | **Done** | ST-123 |  |
 | FR-36 | Every Break-Glass access recorded where the company can read it | Medium | **Done** | ST-123, ST-124 |  |
+| FR-37 | Every Permission has a name, a plain-language description and a module, kept in one place in the code | High | **Done** | ST-138 |  |
+| FR-38 | Roles page with Permissions in sections, a detail page that explains each Permission, and editing a Role | High | **Done** | ST-139 |  |
+| FR-39 | Full name and profile details stored; every user sees and edits their own My Profile | High | **Done** | ST-140, ST-141 |  |
+| FR-40 | Change password with the current password; a temporary password for a new employee that must be changed at first login | High | **Done** | ST-142 |  |
+| FR-41 | Employee detail page with the full profile and the Permissions the person really has | Medium | **Done** | ST-143 |  |
+| FR-42 | A CEO or a manager picks an employee and sees the month of attendance with check-in and check-out times | Medium | **Done** | ST-144 |  |
+| FR-43 | A subscription has a start and end date, days left, reminders, a grace period and then a restricted mode | High | **Done** | ST-145, ST-149 |  |
+| FR-44 | A company chooses a plan and months, pays outside the system and sends the payment details; it starts only after approval | High | **Done** | ST-146, ST-147 |  |
+| FR-45 | The Platform Admin reviews each manual payment and approves it, or rejects it with a note | High | **Done** | ST-148 |  |
+| FR-46 | Billing timeline with days left, Renew against a renewal invoice, and a detail page for every invoice | Medium | **Done** | ST-149 |  |
+| FR-47 | A detail page for each Department (with its head) and each Designation: who is in it and what work is running | Medium | **Done** | ST-150 |  |
+| FR-48 | A higher plan is paid for the days left and starts when approved; a lower plan starts at the next renewal | Medium | **Done** | ST-151 |  |
+| FR-49 | The Platform Admin opens a company detail page (owner, plan, size, counts) that never shows employee data | Medium | **Done** | ST-152 |  |
+| FR-50 | A Platform Admin dashboard with companies by state, revenue, dues and what needs attention | Medium | **Done** | ST-153 |  |
+| FR-51 | Every suspend, activate and ticket resolution carries a written note; a company reads its own tickets and the answer | Medium | **Done** | ST-154 |  |
 | NFR-1 | Passwords stored with a one-way hash (PBKDF2) | High | **Done** | ST-101, ST-102 | Django default hasher. A fast hasher is used only while the tests run (settings/base.py). |
 | NFR-2 | Tenant isolation: another company's object is a 404, not a 403 | High | **Done** | ST-111, ST-131 |  |
 | NFR-3 | Short-lived access token, rotating refresh token, blacklist on logout | High | **Done** | ST-102 |  |
@@ -465,7 +526,7 @@ Each requirement is Done, Partly or Not built. **The status is read from the cod
 | NFR-14 | Versioned REST API under /api/v1/ | Low | **Done** | ST-102 |  |
 | NFR-15 | Every sensitive action attributable to an actor and a time | High | **Done** | ST-123, ST-135 |  |
 
-*51 requirements: 43 Done, 6 Partly, 2 Not built. Status is read from the code by `python manage.py generate_docs`.*
+*66 requirements: 59 Done, 5 Partly, 2 Not built. Status is read from the code by `python manage.py generate_docs`.*
 <!-- END GENERATED:traceability -->
 
 ---
@@ -565,4 +626,4 @@ Several CEOs and the Accountant raised concern about bringing in old Excel/Whats
 
 ### B.4 Summary of Requirement Yield
 
-Of the 10 interviews, cross-referencing every question against the existing Ordinis design produced: **31 questions that directly validated an already-planned feature**, **9 that surfaced a refinement to a planned feature** (e.g., Delegation, finance-only visibility strictness), and **6 recurring themes redirected to the future-roadmap backlog** rather than expanding current scope. This triage is what keeps Section 3's 36 FRs and 15 NFRs grounded in real stakeholder evidence while staying inside the buildable, current-course scope defined in Section 1.2.
+Of the 10 interviews, cross-referencing every question against the existing Ordinis design produced: **31 questions that directly validated an already-planned feature**, **9 that surfaced a refinement to a planned feature** (e.g., Delegation, finance-only visibility strictness), and **6 recurring themes redirected to the future-roadmap backlog** rather than expanding current scope. This triage is what keeps the 36 FRs of Sections 3.1.1 to 3.1.11 and the 15 NFRs grounded in real stakeholder evidence while staying inside the buildable, current-course scope defined in Section 1.2. FR-37 to FR-51 (Sprint 6) come from the product backlog and the first demo review, as Section 1.2 says.

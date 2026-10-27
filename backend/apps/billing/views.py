@@ -6,6 +6,7 @@ from . import services
 from .models import Invoice, SubscriptionPlan
 from .models import PaymentSubmission
 from .serializers import InvoiceSerializer, PaymentSerializer, PaymentSubmitSerializer, PlanSerializer
+from rest_framework.decorators import action
 
 
 class PlanViewSet(PermissionRequiredMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -27,14 +28,24 @@ class SubscriptionViewSet(PermissionRequiredMixin, viewsets.ViewSet):
     def list(self, request):
         company = request.user.company
         subscription = services.get_subscription(company)
+        renewal = services.open_renewal_invoice(subscription)
+        pending = PaymentSubmission.objects.filter(
+            company=company, status=PaymentSubmission.STATUS_PENDING,
+        ).select_related('plan', 'invoice', 'submitted_by__user').first()
         return Response({
             'success': True,
             'data': {
                 'plan': PlanSerializer(subscription.plan).data,
+                # a lower plan the company chose; it starts at the next renewal (next_plan_from is set once that is paid)
+                'next_plan': PlanSerializer(subscription.next_plan).data if subscription.next_plan_id else None,
+                'next_plan_from': subscription.next_plan_from,
                 'status': subscription.status,
                 'started_on': subscription.started_on,
                 'timeline': services.subscription_summary(company),
                 'usage': services.usage(company),
+                # what the Billing page needs to offer Renew: the bill to pay, and a payment already waiting
+                'renewal_invoice': InvoiceSerializer(renewal).data if renewal else None,
+                'pending_payment': PaymentSerializer(pending).data if pending else None,
             },
         })
 
@@ -46,7 +57,7 @@ class InvoiceViewSet(PermissionRequiredMixin, viewsets.ReadOnlyModelViewSet):
     allow_when_restricted = True
 
     def get_queryset(self):
-        queryset = Invoice.objects.filter(company=self.request.user.company)
+        queryset = Invoice.objects.filter(company=self.request.user.company).select_related('company')
         status = self.request.query_params.get('status')
         return queryset.filter(status=status) if status else queryset
 
@@ -59,6 +70,33 @@ class QuoteViewSet(PermissionRequiredMixin, viewsets.ViewSet):
     def list(self, request):
         data = services.quote(request.user.company, request.query_params.get('plan'), request.query_params.get('months'))
         return Response({'success': True, 'data': data})
+
+
+class UpgradeQuoteViewSet(PermissionRequiredMixin, viewsets.ViewSet):
+    """GET /billing/upgrade-quote/?plan=<name or id>: the extra amount for the days left of a HIGHER plan. Saves nothing."""
+    permission_required = 'view_billing'
+    allow_when_restricted = True
+
+    def list(self, request):
+        return Response({'success': True, 'data': services.upgrade_quote(request.user.company, request.query_params.get('plan'))})
+
+
+class DowngradeViewSet(PermissionRequiredMixin, viewsets.ViewSet):
+    """
+    POST /billing/downgrade/ {plan}: choose a LOWER plan. It starts at the next renewal. POST /billing/downgrade/cancel/
+    forgets it again (only until its renewal has been paid).
+    """
+    permission_required = {'create': 'manage_billing', 'cancel': 'manage_billing'}
+    allow_when_restricted = True
+
+    def create(self, request):
+        subscription = services.schedule_downgrade(request.user.company, request.data.get('plan'))
+        return Response({'success': True, 'data': {'next_plan': PlanSerializer(subscription.next_plan).data}}, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'])
+    def cancel(self, request):
+        services.cancel_downgrade(request.user.company)
+        return Response({'success': True, 'data': {'next_plan': None}})
 
 
 class PaymentViewSet(
@@ -85,8 +123,9 @@ class PaymentViewSet(
         form.is_valid(raise_exception=True)
         d = form.validated_data
         payment = services.submit_payment(
-            request.user.employee, plan=d['plan'], months=d['months'], method=d['method'], payer_name=d['payer_name'],
+            request.user.employee, plan=d.get('plan'), months=d.get('months'), method=d['method'], payer_name=d['payer_name'],
             payer_number=d['payer_number'], transaction_id=d['transaction_id'], expected_amount=d.get('amount'),
+            invoice_id=d.get('invoice') or None, kind=d.get('kind') or None,
         )
         payment = self.get_queryset().get(pk=payment.pk)
         return Response(self.get_serializer(payment).data, status=status.HTTP_201_CREATED)

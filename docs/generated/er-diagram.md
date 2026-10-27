@@ -37,6 +37,7 @@ erDiagram
   COMPANY ||--o| SUBSCRIPTION : company
   DEPARTMENT |o--o{ EMPLOYEE : department
   DESIGNATION |o--o{ EMPLOYEE : designation
+  EMPLOYEE |o--o{ DEPARTMENT : head
   EMPLOYEE |o--o{ EMPLOYEE : reports_to
   EMPLOYEE |o--o{ PAYMENTSUBMISSION : submitted_by
   EMPLOYEE |o--o{ PAYSLIP : generated_by
@@ -55,12 +56,13 @@ erDiagram
   EMPLOYEE ||--o{ TASK : assigned_to
   EMPLOYEE ||--o{ TASKPROGRESSLOG : employee
   EMPLOYEE ||--o| SALARYSTRUCTURE : employee
-  INVOICE ||--o| PAYMENTSUBMISSION : invoice
+  INVOICE |o--o{ PAYMENTSUBMISSION : invoice
   LEAVETYPE ||--o{ LEAVEREQUEST : leave_type
   ROLE ||--o{ APPROVALSTEP : approver_role
   ROLE ||--o{ EMPLOYEEROLE : role
   ROLE }o--o{ PERMISSION : permissions
   SUBSCRIPTION ||--o{ INVOICE : subscription
+  SUBSCRIPTIONPLAN |o--o{ SUBSCRIPTION : next_plan
   SUBSCRIPTIONPLAN ||--o{ PAYMENTSUBMISSION : plan
   SUBSCRIPTIONPLAN ||--o{ SUBSCRIPTION : plan
   SUPPORTACCESSREQUEST ||--o{ IMPERSONATIONLOG : access_request
@@ -179,6 +181,8 @@ erDiagram
     Date paid_on
     Char10 payment_method
     Char64 transaction_id
+    Char10 kind
+    PositiveSmallInteger months
   }
   PAYMENTSUBMISSION {
     fk company
@@ -209,6 +213,8 @@ erDiagram
     Date current_period_end
     PositiveSmallInteger billing_months
     JSON reminders_sent
+    fk next_plan
+    Date next_plan_from
   }
   SUBSCRIPTIONPLAN {
     Char50 name
@@ -230,6 +236,7 @@ erDiagram
   DEPARTMENT {
     fk company
     Char100 name
+    fk head
   }
   DESIGNATION {
     fk company
@@ -297,6 +304,7 @@ erDiagram
     Text description
     Char20 status
     DateTime resolved_at
+    Char500 resolution_note
   }
   EMPLOYEEROLE {
     fk employee

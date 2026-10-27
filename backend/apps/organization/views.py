@@ -1,13 +1,16 @@
 from django.db import transaction
+from django.db.models import Count
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
+from core.exceptions import OrdinisException
 from core.mixins import AuditLoggingMixin, PermissionRequiredMixin
 from rbac.models import EmployeeRole
 
 from .models import Department, Designation, Employee
+from .overview import department_overview, designation_overview, in_use_message
 from .services import build_access, can_see_access, get_all_subordinates
 from .serializers import (
     DepartmentSerializer,
@@ -15,6 +18,18 @@ from .serializers import (
     EmployeeDetailSerializer,
     EmployeeSerializer,
 )
+
+
+class DepartmentInUse(OrdinisException):
+    code = "DEPARTMENT_IN_USE"
+    message = "This Department still has employees."
+    status_code = 409
+
+
+class DesignationInUse(OrdinisException):
+    code = "DESIGNATION_IN_USE"
+    message = "This Designation is still held by employees."
+    status_code = 409
 
 
 class DepartmentViewSet(
@@ -33,12 +48,29 @@ class DepartmentViewSet(
 
     def get_queryset(self):
         company = self.request.user.company
-        return Department.objects.filter(company=company).order_by('name', 'id')
+        return (
+            Department.objects.filter(company=company)
+            .select_related('head__user')
+            .annotate(member_total=Count('employees', distinct=True))
+            .order_by('name', 'id')
+        )
 
     def perform_create(self, serializer):
         company = self.request.user.company
         instance = serializer.save(company=company)
         self._log("CREATE", instance)
+
+    def perform_destroy(self, instance):
+        people = list(instance.employees.select_related('user').order_by('user__full_name', 'employee_code'))
+        if people:
+            raise DepartmentInUse(in_use_message(instance.name, people))
+        super().perform_destroy(instance)
+
+    @action(detail=True, methods=["get"])
+    def overview(self, request, pk=None):
+        """GET /departments/{id}/overview/ — members, task counts and the running tasks this viewer may see."""
+        department = self.get_object()  # company-scoped: another company's id returns 404
+        return Response(department_overview(department, request.user.employee))
 
 
 class DesignationViewSet(
@@ -57,12 +89,28 @@ class DesignationViewSet(
 
     def get_queryset(self):
         company = self.request.user.company
-        return Designation.objects.filter(company=company).order_by('title', 'id')
+        return (
+            Designation.objects.filter(company=company)
+            .annotate(holder_total=Count('employees', distinct=True))
+            .order_by('title', 'id')
+        )
 
     def perform_create(self, serializer):
         company = self.request.user.company
         instance = serializer.save(company=company)
         self._log("CREATE", instance)
+
+    def perform_destroy(self, instance):
+        people = list(instance.employees.select_related('user').order_by('user__full_name', 'employee_code'))
+        if people:
+            raise DesignationInUse(in_use_message(instance.title, people))
+        super().perform_destroy(instance)
+
+    @action(detail=True, methods=["get"])
+    def overview(self, request, pk=None):
+        """GET /designations/{id}/overview/ — who holds this Designation, with their Department."""
+        designation = self.get_object()  # company-scoped: another company's id returns 404
+        return Response(designation_overview(designation))
 
 
 class EmployeeViewSet(

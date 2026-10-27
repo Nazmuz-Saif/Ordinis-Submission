@@ -9,17 +9,37 @@ from .services import can_see_private_details, creates_reporting_cycle, get_all_
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
+    head_name = serializers.CharField(source='head.user.full_name', read_only=True, default='')
+    head_email = serializers.CharField(source='head.user.email', read_only=True, default='')
+    member_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Department
-        fields = ['id', 'name', 'company']
+        fields = ['id', 'name', 'company', 'head', 'head_name', 'head_email', 'member_count']
         read_only_fields = ['id', 'company']
+
+    def get_fields(self):
+        fields = super().get_fields()
+        # The head must be an Employee of the SAME company; another company's id is refused.
+        scope_queryset(fields['head'], Employee, company_of(self))
+        return fields
+
+    def get_member_count(self, obj):
+        total = getattr(obj, 'member_total', None)
+        return total if total is not None else obj.employees.count()
 
 
 class DesignationSerializer(serializers.ModelSerializer):
+    employee_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Designation
-        fields = ['id', 'title', 'company']
+        fields = ['id', 'title', 'company', 'employee_count']
         read_only_fields = ['id', 'company']
+
+    def get_employee_count(self, obj):
+        total = getattr(obj, 'holder_total', None)
+        return total if total is not None else obj.employees.count()
 
 
 class EmployeeSerializer(serializers.ModelSerializer):

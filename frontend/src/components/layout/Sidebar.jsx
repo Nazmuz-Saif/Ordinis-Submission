@@ -99,10 +99,10 @@ function Sidebar({ open, onClose }) {
 
   return (
     <>
-      {open && <div className="fixed inset-0 z-30 bg-[#14142B]/40 md:hidden" onClick={onClose} />}
+      {open && <div className="fixed inset-0 z-30 bg-[#14142B]/40 md:hidden print:hidden" onClick={onClose} />}
       <aside
         data-testid="sidebar"
-        className={`fixed md:sticky top-0 z-40 h-screen w-64 shrink-0 bg-white border-r border-[#EEEEF2] flex flex-col transition-transform duration-200 ${
+        className={`print:hidden fixed md:sticky top-0 z-40 h-screen w-64 shrink-0 bg-white border-r border-[#EEEEF2] flex flex-col transition-transform duration-200 ${
           open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >

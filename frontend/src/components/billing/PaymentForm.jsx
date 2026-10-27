@@ -11,7 +11,9 @@ const inputClass =
 //   quote         the answer of GET /billing/quote/ for this plan and number of months
 //   instructions  the answer of GET /billing/payment-instructions/
 //   initial       values to start with (after a rejection: the previous method and payer)
-function PaymentForm({ quote, instructions, initial = {}, submitLabel = 'Submit payment', onSubmitted, onAlreadyPending }) {
+//   invoiceId     the open renewal invoice being paid; the server then uses the invoice's plan, months and amount
+//   kind          'upgrade' when the quote is an upgrade quote (no months; the amount is the extra amount)
+function PaymentForm({ quote, instructions, initial = {}, invoiceId = '', kind = '', submitLabel = 'Submit payment', onSubmitted, onAlreadyPending }) {
   const methods = instructions?.methods || []
   const [method, setMethod] = useState(initial.method || methods[0]?.method || 'bkash')
   const [payerName, setPayerName] = useState(initial.payer_name || '')
@@ -30,12 +32,13 @@ function PaymentForm({ quote, instructions, initial = {}, submitLabel = 'Submit 
     try {
       const payment = await submitPayment({
         plan: quote.plan.name,
-        months: quote.months,
+        ...(kind === 'upgrade' ? { kind: 'upgrade' } : { months: quote.months }),
         method,
         payer_name: payerName,
         payer_number: payerNumber,
         transaction_id: transactionId,
         amount: quote.amount,
+        ...(invoiceId ? { invoice: invoiceId } : {}),
       })
       onSubmitted(payment)
     } catch (err) {

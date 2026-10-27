@@ -372,7 +372,7 @@ One row for one sensitive action: who did what, to which record, in which compan
 
 #### Invoice
 
-A monthly bill. It keeps the amount of that day: a later plan change never alters an old invoice.
+A bill. It keeps the amount of that day: a later plan change never alters an old invoice.
 
 | Field | Type | Default | Notes |
 |---|---|---|---|
@@ -390,6 +390,8 @@ A monthly bill. It keeps the amount of that day: a later plan change never alter
 | `paid_on` | Date |  | can be empty (null) |
 | `payment_method` | Char(10) |  |  |
 | `transaction_id` | Char(64) |  |  |
+| `kind` | Char(10) | 'monthly' | one of: monthly, renewal, payment, upgrade |
+| `months` | PositiveSmallInteger | 1 |  |
 
 Rule: `one_invoice_per_period` (unique)
 
@@ -418,11 +420,13 @@ A payment the company made OUTSIDE the system (bKash, Nagad, bank, cash) and rep
 | `review_note` | Char(500) |  |  |
 | `period_start` | Date |  | can be empty (null) |
 | `period_end` | Date |  | can be empty (null) |
-| `invoice` | FK to billing.Invoice |  | unique; can be empty (null); on delete: SET_NULL |
+| `invoice` | FK to billing.Invoice |  | can be empty (null); on delete: SET_NULL |
 
 Rule: `one_live_payment_per_transaction_id` (unique)
 
 Rule: `one_pending_payment_per_company` (unique)
+
+Rule: `one_live_payment_per_invoice` (unique)
 
 Rule: `payment_amount_positive` (check)
 
@@ -442,6 +446,8 @@ The plan a company is on now. One per company.
 | `current_period_end` | Date |  |  |
 | `billing_months` | PositiveSmallInteger | 12 |  |
 | `reminders_sent` | JSON | list() |  |
+| `next_plan` | FK to billing.SubscriptionPlan |  | can be empty (null); on delete: SET_NULL |
+| `next_plan_from` | Date |  | can be empty (null) |
 
 Rule: `subscription_period_end_not_before_start` (check)
 
@@ -484,6 +490,7 @@ One message for ONE employee ("you were assigned a task", "an approval needs you
 |---|---|---|---|
 | `company` | FK to tenants.Company |  | on delete: CASCADE |
 | `name` | Char(100) |  |  |
+| `head` | FK to organization.Employee |  | can be empty (null); on delete: SET_NULL |
 
 #### Designation
 
@@ -601,6 +608,7 @@ A problem report a company's employee sends to Ordinis support.
 | `description` | Text |  |  |
 | `status` | Char(20) | 'open' | one of: open, resolved |
 | `resolved_at` | DateTime |  | can be empty (null) |
+| `resolution_note` | Char(500) | '' |  |
 
 ### App `rbac`
 
@@ -711,7 +719,7 @@ One daily progress note on a task, written by the assignee.
 |---|---|---|
 | core | Shared foundation | `BaseModel`, standard response envelope and exception handler, permission classes (`IsCompanyActive`, `HasPermission`, `IsHierarchySuperior`, `IsPlatformAdmin`), pagination, the demo-data command, the documentation generator and checker |
 | tenants | Tenant management | Company and company settings (currency, time zone, fiscal year) |
-| accounts | Identity and auth | Custom `User`, JWT login/refresh/logout, atomic company self-registration, "who am I" |
+| accounts | Identity and auth | Custom `User` (with the full name), JWT login/refresh/logout, atomic company self-registration, "who am I", My Profile, change password and the temporary password |
 | organization | Hierarchy engine | Department, Designation, Employee CRUD; recursive subordinate and manager resolution |
 | rbac | Access control | Permission catalog, Role, EmployeeRole; `PermissionRequiredMixin` |
 | approvals | Workflow engine | Approval Chain, Step, Instance, Action; Delegation Rule; finish handlers |
@@ -721,19 +729,20 @@ One daily progress note on a task, written by the assignee.
 | notifications | Alerts and inbox | Notifications for task assignment and approvals; the Action Inbox |
 | dashboard | Role dashboards | One summary endpoint; sections depend on the user's Permissions |
 | analytics | Company health | Read-only overview (attendance rate, task completion, overdue tasks, workload, tasks by department); daily Company Health Snapshot |
-| platform_admin | Platform operation | Company list, suspend/activate, support tickets, Break-Glass access requests, access log |
+| platform_admin | Platform operation | Company list and detail page, suspend/activate with a note, the dashboard summary, support tickets with a resolution note, Break-Glass access requests, access log |
+| billing | Subscription and money | Plans, Subscription with a period, reminders, grace days and restricted mode, renewal and upgrade invoices, manual payments and their approval, plan change |
 
 ## 5.2 Detailed Component Design
 
 ### `organization` (Hierarchy Engine)
 
 - **Purpose:** model and query an arbitrary-depth organizational tree without hardcoded levels.
-- **Internal logic:** `services.py` has `get_all_subordinates(employee)` and `get_all_managers(employee)`, walking the `reports_to` self-FK. A save that would create a cycle is refused. An employee who still has a team, the last CEO-role holder, and yourself cannot be deleted.
+- **Internal logic:** `overview.py` builds the Department and Designation detail pages (people, task counts, running tasks); a task's title and assignee are shown only to a viewer who may see that task (the assignee, the person who assigned it, any manager above the assignee, or a holder of `create_task`), everybody else gets counts. A Department or Designation with employees cannot be deleted (`DEPARTMENT_IN_USE`, `DESIGNATION_IN_USE`). `services.py` has `get_all_subordinates(employee)` and `get_all_managers(employee)`, walking the `reports_to` self-FK. A save that would create a cycle is refused. An employee who still has a team, the last CEO-role holder, and yourself cannot be deleted.
 
 ### `rbac` (Access Control)
 
 - **Purpose:** decouple "what job title someone has" from "what they are allowed to do".
-- **Internal logic:** `Employee.has_permission(codename)` checks `EmployeeRole → Role → Permission`. `PermissionRequiredMixin` (`rbac/decorators.py`) lets a ViewSet declare `permission_required` (one codename, or one per action) and rejects the request with 403 when the employee lacks it. The CEO's system Role cannot be edited or deleted and receives every new Permission.
+- **Internal logic:** `Employee.has_permission(codename)` checks `EmployeeRole → Role → Permission`. `PermissionRequiredMixin` (`rbac/decorators.py`) lets a ViewSet declare `permission_required` (one codename, or one per action) and rejects the request with 403 when the employee lacks it. The CEO's system Role cannot be edited or deleted and receives every new Permission. The Permission catalog (a name, a plain-language description and a module for each codename) is one list in `rbac/catalog.py`; it is synced into the `Permission` table and the Roles page offers only Permissions from it. A Role that people still hold cannot be deleted (`ROLE_IN_USE`).
 
 ### `approvals` (Workflow Engine)
 
@@ -766,6 +775,18 @@ The chain is the company's first leave chain whose every step has an approver ot
 - **Purpose:** compute payslips reliably and prevent double payment.
 - **Internal logic:** `generate_payslip()` reads the Employee's `SalaryStructure`, computes gross, deductions and net, refuses a future month and a duplicate (`PayslipError`), and is backed by a database unique constraint. A payslip is a snapshot: later salary changes do not touch it. An employee sees only their own payslips unless they hold the finance Permission.
 
+### `accounts` (Profile and Password)
+
+- **Purpose:** real names, a profile each person keeps current, and a password nobody has to share.
+- **Internal logic:** the full name lives on `User`; phone, address and emergency contact live on `Employee`. `GET` and `PATCH /api/v1/auth/profile/` change only the caller's own record (the id is never taken from the client). `POST /api/v1/auth/change-password/` needs the current password and a new one that passes the password rules, then blacklists every refresh token except the one in use. A new employee gets a generated temporary password, shown once and never stored in clear text or in the audit log; while `must_change_password` is set every company endpoint answers 403 `PASSWORD_CHANGE_REQUIRED` except change-password, profile, me and logout.
+
+### `billing` (Subscription, Payments and Plan Change)
+
+- **Purpose:** one subscription per company with a period, paid for outside the system and approved by the platform team.
+- **Subscription period:** a `Subscription` has a start, an end date and the months it was bought for. `days_left` and `effective_state` are computed in the company's own time zone. Reminders go out 7, 3 and 1 days before the end; after the end there are 3 grace days; then the company is *restricted* (`SUBSCRIPTION_RESTRICTED`, 403): only Billing, the profile and support work. The check runs on every request, so it holds even when the daily `process_subscriptions` job did not run. The same job issues the renewal invoice once, 7 days before the end.
+- **Payments:** `PaymentSubmission` is a payment made outside the system (bKash, Nagad, bank, cash) and reported with the payer and a transaction id. The amount is always the server's quote (`quote`); one pending submission per company and one live submission per transaction id are database constraints. The Platform Admin approves (a plan starts or is extended, a paid invoice is written, the company is notified) or rejects with a note; approving twice changes nothing.
+- **Plan change:** a higher plan is paid for the days left: (new monthly price - current monthly price) x days left / 30, rounded to the taka (`upgrade_quote`); on approval the plan changes at once, the end date does not, and an invoice of kind `upgrade` is written. A lower plan is never started at once: `schedule_downgrade` sets `Subscription.next_plan` if the team fits in it, the renewal invoice bills it, and `apply_scheduled_plan` starts it when the new period begins (the first request or the daily job after that day).
+
 ### `analytics` (Company Health)
 
 - **Purpose:** show the CEO how healthy the company is, from the company's own attendance and task rows only.
@@ -779,6 +800,7 @@ The chain is the company's first leave chain whose every step has an approver ot
 ### `platform_admin` (Break-Glass Access)
 
 - **Purpose:** let the platform operator help a client without ever having default access to that client's data.
+- **Company pages:** `company_detail` builds the company detail page and `platform_summary` the dashboard from the platform's own records only (companies, subscriptions, invoices, payments, tickets, access requests, platform actions): no employee name, task, attendance or salary is read. The dashboard states are exclusive (suspended first, then restricted, then active) so they add up to the total, and the query count does not grow with the number of companies. Suspend, activate and ticket resolution need a written note of 10 to 255 characters (500 for a resolution) (`clean_note`).
 - **Internal logic:** the Platform Admin sends a `SupportAccessRequest` with a reason. The company's CEO (or a holder of `approve_support_access`) approves for 1 to 72 hours, denies, or revokes. While approved, the admin gets read-only access to a short list of resources (salary and payroll are never offered); every read is written to `ImpersonationLog`. Access ends by itself at `expires_at`. Suspend/activate and ticket actions are recorded in `PlatformActionLog`. A token issued before a suspension stops working.
 
 **Break-Glass flow:**
@@ -799,7 +821,7 @@ Platform Admin     SupportAccessRequest API        Company CEO
 
 **Design system in force:** "Modern Minimalist SaaS" (`ordinis-frontend-design-system.md`): navy `#14142B` and violet `#6C31D6` on an off-white background, subtle 150-300 ms animation, Tailwind CSS. The approved mockup set has been implemented for the screens below.
 
-**Screens built:** Login and Register; the first-payment steps a new company must pass before it can work (Choose your plan, Pay, Waiting for approval, with a rejected state that shows the platform team's note and a form to send the details again); role Dashboards (CEO, Manager, HR, Accountant, Employee sections chosen by Permission); Departments, Designations, Employees and Employee detail (with subordinates and roles); Roles and Employee roles; Approval Chains, Pending Approvals, Delegations; Tasks list and Kanban board with progress entries; Attendance (check-in/out and a monthly calendar with Present, Absent, On Leave and rate cards) and Leave (apply, balance, cancel, approval progress) and Leave Types; Action Inbox; Analytics (metric cards, attendance line chart, tasks-by-department bar chart); Payslips, My Payslips, Payslip view, Salary Structures; Support Access (company side of Break-Glass); platform Admin screens (Companies, Payments with a pending count on the sidebar, Subscriptions with days left, Tickets, Access Requests, Activity); a UI-kit showcase at `/dev/ui-kit` in development.
+**Screens built:** Login and Register; the first-payment steps a new company must pass before it can work (Choose your plan, Pay, Waiting for approval, with a rejected state that shows the platform team's note and a form to send the details again); role Dashboards (CEO, Manager, HR, Accountant, Employee sections chosen by Permission); Departments and Designations with a detail page each (people, task summary, running tasks, Department Head); Employees and Employee detail (with subordinates and roles); Roles and Employee roles; Approval Chains, Pending Approvals, Delegations; Tasks list and Kanban board with progress entries; Billing (a timeline card with days left, Renew against the renewal invoice, invoice detail with Print) and Change plan (an upgrade quote and payment, a lower plan at the next renewal); Attendance (check-in/out and a monthly calendar with Present, Absent, On Leave and rate cards) and Leave (apply, balance, cancel, approval progress) and Leave Types; Action Inbox; Analytics (metric cards, attendance line chart, tasks-by-department bar chart); Payslips, My Payslips, Payslip view, Salary Structures; Support Access (company side of Break-Glass); Help & Support (a company user's own tickets with the resolution note); platform Admin screens (Dashboard as the home, Companies with a detail page for each, Payments with a pending count on the sidebar, Subscriptions with days left, Tickets, Access Requests, Activity); a UI-kit showcase at `/dev/ui-kit` in development.
 
 **Shell:** a grouped, collapsible sidebar (an item is hidden when the user lacks its Permission), a top bar with page title, search, company name, notification bell and user menu, and a plan badge that shows only what the server sends.
 
@@ -880,6 +902,8 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | POST | `/api/v1/auth/refresh/` | TokenRefreshView | Public |
 | POST | `/api/v1/auth/register/` | CompanyRegisterView | Public |
 | GET | `/api/v1/billing/` | APIRootView | Any logged-in employee |
+| POST | `/api/v1/billing/downgrade/` | DowngradeViewSet / create | Permission `manage_billing` |
+| POST | `/api/v1/billing/downgrade/cancel/` | DowngradeViewSet / cancel | Permission `manage_billing` |
 | GET | `/api/v1/billing/invoices/` | InvoiceViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/billing/invoices/{id}/` | InvoiceViewSet / retrieve | Permission `view_billing` |
 | GET | `/api/v1/billing/payment-instructions/` | PaymentInstructionsViewSet / list | Permission `manage_billing` |
@@ -889,6 +913,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/billing/plans/` | PlanViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/billing/quote/` | QuoteViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/billing/subscription/` | SubscriptionViewSet / list | Permission `view_billing` |
+| GET | `/api/v1/billing/upgrade-quote/` | UpgradeQuoteViewSet / list | Permission `view_billing` |
 | GET | `/api/v1/dashboard/summary/` | DashboardSummaryView | Any logged-in employee |
 | GET | `/api/v1/notifications/` | NotificationViewSet / list | Any logged-in employee |
 | GET | `/api/v1/notifications/` | APIRootView | Any logged-in employee |
@@ -904,12 +929,14 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/organization/departments/{id}/` | DepartmentViewSet / update | Permission `manage_departments` |
 | PATCH | `/api/v1/organization/departments/{id}/` | DepartmentViewSet / partial_update | Permission `manage_departments` |
 | DELETE | `/api/v1/organization/departments/{id}/` | DepartmentViewSet / destroy | Permission `manage_departments` |
+| GET | `/api/v1/organization/departments/{id}/overview/` | DepartmentViewSet / overview | Any logged-in employee |
 | GET | `/api/v1/organization/designations/` | DesignationViewSet / list | Any logged-in employee |
 | POST | `/api/v1/organization/designations/` | DesignationViewSet / create | Permission `manage_designations` |
 | GET | `/api/v1/organization/designations/{id}/` | DesignationViewSet / retrieve | Any logged-in employee |
 | PUT | `/api/v1/organization/designations/{id}/` | DesignationViewSet / update | Permission `manage_designations` |
 | PATCH | `/api/v1/organization/designations/{id}/` | DesignationViewSet / partial_update | Permission `manage_designations` |
 | DELETE | `/api/v1/organization/designations/{id}/` | DesignationViewSet / destroy | Permission `manage_designations` |
+| GET | `/api/v1/organization/designations/{id}/overview/` | DesignationViewSet / overview | Any logged-in employee |
 | GET | `/api/v1/organization/employees/` | EmployeeViewSet / list | Any logged-in employee |
 | POST | `/api/v1/organization/employees/` | EmployeeViewSet / create | Permission `manage_employees` |
 | GET | `/api/v1/organization/employees/{id}/` | EmployeeViewSet / retrieve | Any logged-in employee |
@@ -933,6 +960,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | GET | `/api/v1/platform-admin/admin/access-requests/` | AdminAccessRequestViewSet / list | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/actions/` | AdminActionLogViewSet / list | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/companies/` | AdminCompanyViewSet / list | Platform Admin |
+| GET | `/api/v1/platform-admin/admin/companies/{id}/` | AdminCompanyViewSet / retrieve | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/companies/{id}/activate/` | AdminCompanyViewSet / activate | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/companies/{id}/suspend/` | AdminCompanyViewSet / suspend | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/payments/` | AdminPaymentViewSet / list | Platform Admin |
@@ -941,6 +969,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | POST | `/api/v1/platform-admin/admin/payments/{id}/approve/` | AdminPaymentViewSet / approve | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/payments/{id}/reject/` | AdminPaymentViewSet / reject | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/subscriptions/` | AdminSubscriptionViewSet / list | Platform Admin |
+| GET | `/api/v1/platform-admin/admin/summary/` | AdminSummaryViewSet / list | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/tickets/` | AdminTicketViewSet / list | Platform Admin |
 | GET | `/api/v1/platform-admin/admin/tickets/{id}/` | AdminTicketViewSet / retrieve | Platform Admin |
 | POST | `/api/v1/platform-admin/admin/tickets/{id}/reopen/` | AdminTicketViewSet / reopen | Platform Admin |
@@ -994,7 +1023,7 @@ Every endpoint under `/api/v1/`, read from the URL configuration. `{id}` is a re
 | PUT | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / update | Permission `manage_company_settings` |
 | PATCH | `/api/v1/tenants/settings/{id}/` | CompanySettingsViewSet / partial_update | Permission `manage_company_settings` |
 
-*172 endpoint methods on 120 routes.*
+*179 endpoint methods on 127 routes.*
 <!-- END GENERATED:api-table -->
 
 ## 6.4 Hardware Interfaces
@@ -1106,7 +1135,7 @@ Each requirement's **status (Done, Partly, Not built) and the story that deliver
 |---|---|---|
 | FR-1 to FR-4 (registration, login, who am I) | `accounts` | Atomic company and CEO creation; suspended company refused at login |
 | FR-5 to FR-9 (organization, hierarchy) | `organization` | `reports_to` self-FK and recursive `services.py` functions |
-| FR-10 to FR-13 (RBAC) | `rbac`, `core` permission classes | Designation and Role kept separate; FR-13 is Partly |
+| FR-10 to FR-13 (RBAC) | `rbac`, `core` permission classes | Designation and Role kept separate; FR-13 is Done since team attendance (ST-144) |
 | FR-14 to FR-16 (approval chain, actions, delegation) | `approvals` | `GenericForeignKey`-based instance; finish handlers |
 | FR-17 to FR-19 (tasks) | `tasks` | Kanban moves and progress entries; Projects, comments, attachments are future work |
 | FR-20 to FR-23 (attendance, leave) | `attendance` | Leave goes through the Approval Chain (ST-129); the monthly calendar (`month_calendar`) is ST-137; Holiday Calendar is future work |
@@ -1116,6 +1145,13 @@ Each requirement's **status (Done, Partly, Not built) and the story that deliver
 | FR-32 (analytics) | `analytics` | Overview and daily Company Health Snapshot; Permission `view_analytics` |
 | FR-33 (plan employee limit) | `billing` | Limit checked in the Employee serializer; Billing page; invoices |
 | FR-34 to FR-36 (Break-Glass) | `platform_admin` | Request, approve/deny/revoke, expiry, access log |
+| FR-37, FR-38 (Permission catalog, Role detail) | `rbac` | Catalog in `rbac/catalog.py`; Role detail and edit; `ROLE_IN_USE` |
+| FR-39, FR-40 (profile, password) | `accounts` | Section 5.2 `accounts` |
+| FR-41 (Employee detail) | `organization` | `employees/{id}/access/` lists the Permissions the person really has |
+| FR-42 (team attendance) | `attendance` | `team_scope` and `team_month`; another company's employee is a 404 |
+| FR-43 to FR-46, FR-48 (subscription, payments, invoices, plan change) | `billing` | Section 5.2 `billing` |
+| FR-47 (Department and Designation detail) | `organization` | `overview.py`; task titles only for those who may see the task |
+| FR-49 to FR-51 (company page, dashboard, notes, support) | `platform_admin` | `company_detail`, `platform_summary`, `clean_note`; Help & Support uses `company/tickets/` |
 | NFR-1 to NFR-4 (security) | `core`, `accounts`, `rbac` | Section 7 |
 | NFR-5, NFR-6 (performance) | `core.pagination.OrdinisPagination` | Applied to every list |
 | NFR-7 to NFR-9 (usability) | frontend design system and `dashboard` | Section 6.1 |

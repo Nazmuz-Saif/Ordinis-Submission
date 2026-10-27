@@ -2,7 +2,7 @@
 // the company's own today. Nothing here counts days.
 
 // Pages that stay open while the company is restricted (a company waiting for its first payment, or past its end date + grace).
-const OPEN_WHEN_RESTRICTED = ['/settings/billing', '/profile']
+const OPEN_WHEN_RESTRICTED = ['/settings/billing', '/settings/help', '/profile']
 
 export function isRestricted(me) {
   return Boolean(me?.subscription?.restricted)

@@ -12,6 +12,8 @@ from tasks.models import Task
 from tasks.serializers import TaskSerializer
 from . import services
 from .models import ImpersonationLog, SupportAccessRequest
+from .company_detail import company_detail
+from .summary import platform_summary
 from .serializers import AccessRequestCreateSerializer, AccessRequestSerializer, ImpersonationLogSerializer
 
 
@@ -138,7 +140,10 @@ from .serializers import (  # noqa: E402
 
 
 class AdminCompanyViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    """/api/v1/platform-admin/admin/companies/ : every company, with suspend / activate."""
+    """
+    /api/v1/platform-admin/admin/companies/ : every company, with suspend / activate (each needs a `note`, 10 to 255 characters).
+    /api/v1/platform-admin/admin/companies/{id}/ : the company's detail page: contacts and counts, never employee data.
+    """
     permission_classes = [IsPlatformAdmin]
     serializer_class = CompanyAdminSerializer
 
@@ -148,9 +153,12 @@ class AdminCompanyViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             pending_requests=Count('access_requests', filter=Q(access_requests__status='pending'), distinct=True),
         ).order_by('name', 'id')
 
+    def retrieve(self, request, pk=None):
+        return Response(company_detail(get_object_or_404(self.get_queryset(), pk=pk)))
+
     def _set(self, pk, active):
         company = get_object_or_404(self.get_queryset(), pk=pk)
-        services.set_company_active(self.request.user, company, active)
+        services.set_company_active(self.request.user, company, active, self.request.data.get('note'))
         return Response(self.get_serializer(get_object_or_404(self.get_queryset(), pk=pk)).data)
 
     @action(detail=True, methods=['post'])
@@ -220,6 +228,15 @@ class AdminSubscriptionViewSet(viewsets.GenericViewSet):
         return self.get_paginated_response(page)
 
 
+class AdminSummaryViewSet(viewsets.GenericViewSet):
+    """GET /api/v1/platform-admin/admin/summary/ : the Platform Admin home (companies by state, revenue, dues, attention)."""
+    permission_classes = [IsPlatformAdmin]
+    pagination_class = None
+
+    def list(self, request):
+        return Response(platform_summary())
+
+
 class AdminTicketViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """/api/v1/platform-admin/admin/tickets/?status=open|resolved"""
     permission_classes = [IsPlatformAdmin]
@@ -234,7 +251,7 @@ class AdminTicketViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, views
 
     @action(detail=True, methods=['post'])
     def resolve(self, request, pk=None):
-        ticket = services.set_ticket_resolved(request.user, self.get_object(), True)
+        ticket = services.set_ticket_resolved(request.user, self.get_object(), True, request.data.get('note'))
         return Response(self.get_serializer(ticket).data)
 
     @action(detail=True, methods=['post'])

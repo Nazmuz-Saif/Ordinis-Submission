@@ -127,7 +127,13 @@ class TraceabilityTests(SimpleTestCase):
 
     def test_every_requirement_of_the_srs_is_in_the_table(self):
         ids = [r[0] for r in traceability.rows()]
-        self.assertEqual(ids, [f'FR-{n}' for n in range(1, 37)] + [f'NFR-{n}' for n in range(1, 16)])
+        self.assertEqual(ids, [f'FR-{n}' for n in range(1, 52)] + [f'NFR-{n}' for n in range(1, 16)])
+
+    def test_every_requirement_is_written_in_section_3_of_the_srs(self):
+        import os
+        text = open(os.path.join(str(docgen.docs_dir()), 'Ordinis_SRS.md'), encoding='utf-8').read()
+        for rid in [r[0] for r in traceability.rows()]:
+            self.assertIn(f'**{rid}**', text, f'{rid} is in the table but not written in the SRS')
 
     def test_the_count_line_adds_up(self):
         rows = traceability.rows()

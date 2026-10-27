@@ -32,8 +32,21 @@ export async function createEmployee(payload) {
   return res.data
 }
 
-export async function updateDepartment(id, name) {
-  const res = await apiClient.patch(`/organization/departments/${id}/`, { name })
+// `head` is optional: an employee id, '' or null to clear it, undefined to leave it as it is.
+export async function updateDepartment(id, name, head) {
+  const payload = { name }
+  if (head !== undefined) payload.head = head || null
+  const res = await apiClient.patch(`/organization/departments/${id}/`, payload)
+  return res.data
+}
+
+export async function getDepartmentOverview(id) {
+  const res = await apiClient.get(`/organization/departments/${id}/overview/`)
+  return res.data
+}
+
+export async function getDesignationOverview(id) {
+  const res = await apiClient.get(`/organization/designations/${id}/overview/`)
   return res.data
 }
 
